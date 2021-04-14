@@ -24,14 +24,14 @@ const router = new express.Router();
 //        ROUTES
 //
 router.post(
-	'/lists/:projectId',
+	'/lists/projects/:projectId',
 	jwtAuthMiddleware,
 	projectToLeaderAuth,
 	createListHandler
 );
 
 router.get(
-	'/lists/project/:projectId',
+	'/lists/projects/:projectId',
 	jwtAuthMiddleware,
 	projectToMemberAuth,
 	getProjectsListsHandler

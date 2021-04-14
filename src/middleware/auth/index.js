@@ -9,6 +9,8 @@ const {
 	listToMemberAuth,
 	taskToLeaderAuth,
 	taskToMemberAuth,
+	assignAuth,
+	commentToLeaderAuth,
 } = require('./auth');
 module.exports = {
 	jwtAuthMiddleware,
@@ -21,4 +23,6 @@ module.exports = {
 	listToMemberAuth,
 	taskToLeaderAuth,
 	taskToMemberAuth,
+	assignAuth,
+	commentToLeaderAuth,
 };

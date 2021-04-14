@@ -9,13 +9,20 @@ function ownershipAuthMiddleware(
 	toMany
 ) {
 	return async (req, res, next) => {
+		if (req[requestSaveInProperty]) {
+			next();
+		}
 		try {
 			const parentId = lodash.get(req, parentIdPropertyPath);
 			const childId = lodash.get(req, childIdProrpertyPath);
 			const findQuery = {
 				_id: parentId,
-				[childIdentifierProperty]: toMany ? { $elemMatch: childId } : childId,
 			};
+			if (!req.admin) {
+				findQuery[childIdentifierProperty] = toMany
+					? { $elemMatch: childId }
+					: childId;
+			}
 			const model = await parentModel.findOne(findQuery);
 
 			if (!model) {

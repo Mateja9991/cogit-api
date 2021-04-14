@@ -4,20 +4,18 @@ const {
 	ownershipAuthMiddleware,
 	teamMemberAuth,
 } = require('../middleware/auth');
+
 const Team = require('../db/models/team.model');
 const User = require('../db/models/user.model');
 
 const {
 	createTeamHandler,
-	getMemberTeamsHandler,
+	getAllUserTeamsHandler,
 	getLeaderTeamsHandler,
 	getTeamHandler,
 	updateTeamHandler,
 	deleteTeamHandler,
 } = require('../services/team.service');
-const {
-	ownershipArrayAuthMiddleware,
-} = require('../middleware/auth/ownership_auth_middleware');
 
 const router = new express.Router();
 //
@@ -25,7 +23,7 @@ const router = new express.Router();
 //
 router.post('/teams', jwtAuthMiddleware, createTeamHandler);
 
-router.get('/teams/me', jwtAuthMiddleware, getMemberTeamsHandler);
+router.get('/teams/me', jwtAuthMiddleware, getAllUserTeamsHandler);
 
 router.get('/teams/me/leader', jwtAuthMiddleware, getLeaderTeamsHandler);
 

@@ -5,8 +5,6 @@ const User = require('../db/models/user.model');
 const {
 	jwtAuthMiddleware,
 	ownershipAuthMiddleware,
-	taskToLeaderAuth,
-	teamLeaderAuth,
 } = require('../middleware/auth/index');
 
 const {
@@ -15,12 +13,14 @@ const {
 	logoutUserHandler,
 	getProfileHandler,
 	getUserHandler,
+	getAllUsersHandler,
 	updateUserHandler,
 	deleteUserHandler,
 	sendTeamInvitationHandler,
 	getTeamInvitationsHandler,
 	acceptTeamInvitationHandler,
 	declineTeamInvitationHandler,
+	deleteAnyUserHandler,
 } = require('../services/user.service');
 
 const router = new express.Router();
@@ -33,14 +33,7 @@ router.post('/users/login', loginUserHandler);
 
 router.post('/users/logout', jwtAuthMiddleware, logoutUserHandler);
 
-router.get('/users/all', async (req, res) => {
-	try {
-		const users = await User.find({});
-		res.send(users);
-	} catch (e) {
-		res.status(400).send(users);
-	}
-});
+router.get('/users/all', jwtAuthMiddleware, getAllUsersHandler);
 
 router.get('/users/me', jwtAuthMiddleware, getProfileHandler);
 
@@ -55,7 +48,7 @@ router.get(
 router.patch('/users/me', jwtAuthMiddleware, updateUserHandler);
 
 router.patch(
-	'/users/invitations/send/:userId/:teamId',
+	'/users/:userId/teams/:teamId',
 	jwtAuthMiddleware,
 	ownershipAuthMiddleware(
 		Team,
@@ -80,6 +73,8 @@ router.patch(
 );
 
 router.delete('/users/me', jwtAuthMiddleware, deleteUserHandler);
+
+router.delete('/users/:userId', jwtAuthMiddleware, deleteAnyUserHandler);
 //
 //
 //

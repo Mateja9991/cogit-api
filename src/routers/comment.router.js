@@ -2,8 +2,8 @@ const express = require('express');
 const {
 	jwtAuthMiddleware,
 	taskToMemberAuth,
-	taskToLeaderAuth,
 	ownershipAuthMiddleware,
+	commentToLeaderAuth,
 } = require('../middleware/auth');
 const {
 	createCommentHandler,
@@ -20,14 +20,14 @@ const router = new express.Router();
 //              ROUTES
 //
 router.post(
-	'/comment/:taskId',
+	'/comments/tasks/:taskId',
 	jwtAuthMiddleware,
 	taskToMemberAuth,
 	createCommentHandler
 );
 
 router.get(
-	'/comment/:taskId',
+	'/comments/tasks/:taskId',
 	jwtAuthMiddleware,
 	taskToMemberAuth,
 	getTaskCommentsHandler
@@ -35,13 +35,31 @@ router.get(
 
 // router.get('/comment/:commentId', jwtAuthMiddleware, taskToMemberAuth, getSpecificCommentHandler);
 
-router.get(
-	'/comment/:commentId',
+router.patch(
+	'/comments/:commentId',
 	jwtAuthMiddleware,
-	ownershipAuthMiddleware(Comment, 'params.commentId', 'comment', 'user._id'),
+	ownershipAuthMiddleware(
+		Comment,
+		'params.commentId',
+		'comment',
+		'creatorId',
+		'user._id'
+	),
 	updateCommentHandler
 );
 
-router.delete('/comment/:commentId', jwtAuthMiddleware, deleteCommentHandler);
+router.delete(
+	'/comments/:commentId',
+	jwtAuthMiddleware,
+	commentToLeaderAuth,
+	ownershipAuthMiddleware(
+		Comment,
+		'params.commentId',
+		'comment',
+		'creatorId',
+		'user._id'
+	),
+	deleteCommentHandler
+);
 
 module.exports = router;

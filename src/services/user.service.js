@@ -24,6 +24,9 @@ function sendMessageEvent(room, message) {
 async function createUserHandler(req, res) {
 	{
 		try {
+			if (req.body.role) {
+				delete req.body.role;
+			}
 			const user = new User(req.body);
 			await user.save();
 			const token = await user.generateAuthToken();
@@ -181,16 +184,54 @@ async function deleteUserHandler(req, res) {
 		res.status(500).send({ error: e.message });
 	}
 }
+//
+//				ADMIN ROUTES
+//
+
+async function getAllUsersHandler() {
+	try {
+		if (!req.admin) {
+			throw new Error('You are not admin');
+		}
+		const users = await User.find({});
+		res.send(users);
+	} catch (e) {
+		res.status(500).send({ error: e.message });
+	}
+}
+
+async function deleteAnyUserHandler(req, res) {
+	try {
+		if (!req.admin) {
+			throw new Error('You are not admin');
+		}
+		const user = User.findById(req.params.userId);
+		if (user.teams.length) {
+			user.teams.forEach((team) => {
+				if (team.leaderId.equals(user._id)) {
+					deleteSingleTeamHandler(team);
+				}
+			});
+		}
+		await user.remove();
+		res.send(user);
+	} catch (e) {
+		res.status(500).send({ error: e.message });
+	}
+}
+
 module.exports = {
 	createUserHandler,
 	loginUserHandler,
 	logoutUserHandler,
 	getProfileHandler,
 	getUserHandler,
+	getAllUsersHandler,
 	updateUserHandler,
 	deleteUserHandler,
 	sendTeamInvitationHandler,
 	getTeamInvitationsHandler,
 	acceptTeamInvitationHandler,
 	declineTeamInvitationHandler,
+	deleteAnyUserHandler,
 };

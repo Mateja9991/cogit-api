@@ -28,18 +28,27 @@ const taskSchema = new Schema(
 			type: Boolean,
 			default: false,
 		},
-		editors: [
+		isArchived: {
+			type: Boolean,
+			default: false,
+		},
+		creatorId: {
+			type: Schema.Types.ObjectId,
+			required: true,
+			ref: MODEL_NAMES.USER,
+		},
+		isTeamPriority: {
+			type: Boolean,
+			default: false,
+		},
+		usersPriority: [
 			{
 				type: Schema.Types.ObjectId,
 				required: true,
 				ref: MODEL_NAMES.USER,
 			},
 		],
-		isTeamPriority: {
-			type: Boolean,
-			default: false,
-		},
-		usersPriority: [
+		editors: [
 			{
 				type: Schema.Types.ObjectId,
 				required: true,

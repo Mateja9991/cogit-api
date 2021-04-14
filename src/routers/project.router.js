@@ -25,7 +25,7 @@ const router = new express.Router();
 //        ROUTES
 //
 router.post(
-	'/projects/:teamId',
+	'/projects/team/:teamId',
 	jwtAuthMiddleware,
 	ownershipAuthMiddleware(
 		Team,
@@ -38,7 +38,7 @@ router.post(
 );
 
 router.get(
-	'/projects/team/:teamId',
+	'/projects/teams/:teamId',
 	jwtAuthMiddleware,
 	teamMemberAuth,
 	getTeamsProjectsHandler

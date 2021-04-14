@@ -10,7 +10,11 @@ const jwtAuthMiddleware = async (req, res, next) => {
 		if (!user) {
 			throw new Error();
 		}
+		if (req.user.role === 'admin') {
+			req.admin = user;
+		}
 		req.user = user;
+
 		req.token = token;
 		next();
 	} catch (e) {

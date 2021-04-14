@@ -12,23 +12,6 @@ const userSchema = new Schema({
 		required: true,
 		trim: true,
 	},
-	role: {
-		type: String,
-		default: 'user',
-		enum: ['user', 'admin'],
-	},
-	email: {
-		type: String,
-		required: true,
-		unique: true,
-		trim: true,
-		lowercase: true,
-		validate(value) {
-			if (!validator.isEmail(value)) {
-				throw new Error('Not an email.');
-			}
-		},
-	},
 	password: {
 		type: String,
 		required: true,
@@ -37,20 +20,6 @@ const userSchema = new Schema({
 		minlength: [7, 'Password too short (<7).'],
 	},
 	lastActiveAt: Date,
-	teams: [
-		{
-			type: Schema.Types.ObjectId,
-			required: true,
-			ref: MODEL_NAMES.TEAM,
-		},
-	],
-	invitations: [
-		{
-			type: Schema.Types.ObjectId,
-			required: true,
-			ref: MODEL_NAMES.TEAM,
-		},
-	],
 	avatar: {
 		type: Buffer,
 	},
@@ -109,12 +78,12 @@ userSchema.pre('save', async function (next) {
 //
 //              Model methods
 //
-userSchema.statics.findByCredentials = async (email, password) => {
-	const user = await User.findOne({ email });
-	if (!user) {
+userSchema.statics.findByCredentials = async (username, password) => {
+	const admin = await Admin.findOne({ username });
+	if (!admin) {
 		throw new Error('Unable to login.');
 	}
-	if (!(await bcrypt.compare(password, user.password))) {
+	if (!(await bcrypt.compare(password, admin.password))) {
 		throw new Error('Unable to login.');
 	}
 	return user;
@@ -122,19 +91,18 @@ userSchema.statics.findByCredentials = async (email, password) => {
 //
 //              Document methods
 //
-userSchema.methods.toJSON = function () {
+adminSchema.methods.toJSON = function () {
 	const user = this;
 	const userObject = user.toObject();
 
 	delete userObject.password;
-	delete userObject.tokens;
 
 	return userObject;
 };
 
-userSchema.methods.generateAuthToken = async function () {
-	const user = this;
-	const token = jwt.sign({ _id: user._id.toString() }, process.env.TOKEN_KEY, {
+adminSchema.methods.generateAuthToken = async function () {
+	const admin = this;
+	const token = jwt.sign({ _id: admin._id.toString() }, process.env.TOKEN_KEY, {
 		expiresIn: '7 days',
 	});
 	return token;
@@ -142,6 +110,6 @@ userSchema.methods.generateAuthToken = async function () {
 //
 //
 //
-const User = model(MODEL_NAMES.USER, userSchema);
+const Admin = model(MODEL_NAMES.ADMIN, adminSchema);
 
 module.exports = User;

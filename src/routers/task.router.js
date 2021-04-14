@@ -8,6 +8,7 @@ const {
 	taskToLeaderAuth,
 	taskToMemberAuth,
 	teamMemberAuth,
+	assignAuth,
 } = require('../middleware/auth');
 const Task = require('../db/models/task.model');
 const Team = require('../db/models/team.model');
@@ -21,7 +22,12 @@ const {
 	getUserPriorityTasksHandler,
 	updateTaskHandler,
 	deleteTaskHandler,
-	assingUserHandler,
+	assignUserHandler,
+	archiveTaskHandler,
+	setUsersPriorityHandler,
+	setTeamsPriorityHandler,
+	changeListHandler,
+	getTasksFromListHandler,
 } = require('../services/task.service');
 //
 //				ROUTES
@@ -63,15 +69,38 @@ router.get(
 );
 
 router.get(
-	'/tasks/team/priority/:teamId',
+	'/tasks/list/:listId',
 	jwtAuthMiddleware,
-	teamMemberAuth,
-	getTeamPriorityTasksHandler
+	listToMemberAuth,
+	getTasksFromListHandler
 );
 
+// router.get(
+// 	'/tasks/team/priority/:teamId',
+// 	jwtAuthMiddleware,
+// 	teamMemberAuth,
+// 	getTeamPriorityTasksHandler
+// );
+
+//				UPDATE TASK
 router.patch(
 	'/tasks/:taskId',
 	jwtAuthMiddleware,
+	taskToLeaderAuth,
+	ownershipAuthMiddleware(
+		Task,
+		'params.taskId',
+		'task',
+		'creatorId',
+		'user._id'
+	),
+	updateTaskHandler
+);
+//				SET USERS PRIORITY
+router.patch(
+	'/tasks/me/priority/:taskId',
+	jwtAuthMiddleware,
+	taskToLeaderAuth,
 	ownershipAuthMiddleware(
 		Task,
 		'params.taskId',
@@ -80,27 +109,64 @@ router.patch(
 		'user._id',
 		true
 	),
-	updateTaskHandler
+	setUsersPriorityHandler
 );
-
+//				SET TEAMS PRIORITY
 router.patch(
-	'/tasks/assign/:taskId/:userId',
+	'/tasks/:taskId/team_priority',
 	jwtAuthMiddleware,
 	taskToLeaderAuth,
-	assingUserHandler
+	setTeamsPriorityHandler
 );
-
+//				CHANGE LIST
 router.patch(
-	'/tasks/archive/:taskId',
+	'/tasks/:taskId/lists/:listId',
 	jwtAuthMiddleware,
 	taskToLeaderAuth,
-	assingUserHandler
+	ownershipAuthMiddleware(
+		Task,
+		'params.taskId',
+		'task',
+		'editors',
+		'user._id',
+		true
+	),
+	changeListHandler
 );
-
+//				ASSING USER TO TASK
+router.patch(
+	'/tasks/:taskId/users/:userId',
+	jwtAuthMiddleware,
+	taskToLeaderAuth,
+	assignAuth,
+	assignUserHandler
+);
+//				ARCHIVE TASK
+router.patch(
+	'/tasks/:taskId/archive',
+	jwtAuthMiddleware,
+	taskToLeaderAuth,
+	ownershipAuthMiddleware(
+		Task,
+		'params.taskId',
+		'task',
+		'creatorId',
+		'user._id'
+	),
+	archiveTaskHandler
+);
+//				DEL
 router.delete(
 	'/tasks/:taskId',
 	jwtAuthMiddleware,
 	taskToLeaderAuth,
+	ownershipAuthMiddleware(
+		Task,
+		'params.taskId',
+		'task',
+		'creatorId',
+		'user._id'
+	),
 	deleteTaskHandler
 );
 

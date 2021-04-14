@@ -22,7 +22,7 @@ async function createTeamHandler(req, res) {
 	}
 }
 
-async function getMemberTeamsHandler(req, res) {
+async function getAllUserTeamsHandler(req, res) {
 	try {
 		await req.user.populate('teams').execPopulate();
 		res.send(req.user.teams);
@@ -108,7 +108,7 @@ async function deleteSingleTeamHandler(team) {
 }
 module.exports = {
 	createTeamHandler,
-	getMemberTeamsHandler,
+	getAllUserTeamsHandler,
 	getLeaderTeamsHandler,
 	getTeamHandler,
 	updateTeamHandler,
