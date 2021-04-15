@@ -4,18 +4,21 @@ const { MODEL_NAMES } = require('../../constants/model_names');
 //              Schema
 //
 const sessionSchema = new Schema({
+	teamId: {
+		type: Schema.Types.ObjectId,
+		ref: MODEL_NAMES.TEAM,
+	},
 	participants: [
 		{
-			type: Schema.Types.ObjectId,
-			required: true,
-			ref: MODEL_NAMES.USER,
-		},
-	],
-	messages: [
-		{
-			type: Schema.Types.ObjectId,
-			required: true,
-			ref: MODEL_NAMES.MESSAGE,
+			newMessages: {
+				type: Number,
+				default: 0,
+			},
+			userId: {
+				type: Schema.Types.ObjectId,
+				required: true,
+				ref: MODEL_NAMES.USER,
+			},
 		},
 	],
 });

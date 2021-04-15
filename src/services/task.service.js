@@ -1,35 +1,47 @@
 const Task = require('../db/models/task.model');
 const User = require('../db/models/user.model');
+const Comment = require('../db/models/comment.model');
+const { deleteSingleCommentHandler } = require('./comment.service');
 
 async function createTaskHandler(req, res) {
-	await createTask(res, {
+	await createTask(res, req, {
 		...req.body,
-		list: req.list._id,
+		listId: req.list._id,
 	});
 }
 
 async function createSubTaskHandler(req, res) {
 	try {
 		const parentTask = await Task.findOne({ _id: req.params.taskId });
-		await createTask(res, {
+		await createTask(res, req, {
 			...req.body,
-			list: parentTask.list,
+			listId: parentTask.listId,
 			parentTaskId: parentTask._id,
+			editors: parentTask.editors,
+			isArchived: parentTask.isArchived,
+			isTeamPriority: parentTask.isTeamPriority,
+			usersPriority: parentTask.usersPriority,
 		});
 	} catch (e) {
-		res.status(400).send();
+		res.status(400).send({ error: e.message });
 	}
 }
 
-async function createTask(res, task) {
+async function createTask(res, req, task) {
 	try {
 		const newTask = new Task({ ...task });
-		newTask.creatorId.push(req.user._id);
-		newTask.editors.push(req.user._id);
+		newTask.creatorId = req.user._id;
+		if (
+			!Array.from(newTask.editors).find((editor) =>
+				editor._id.equals(req.user._id)
+			)
+		) {
+			newTask.editors.push(req.user._id);
+		}
 		await newTask.save();
 		res.send(newTask);
 	} catch (e) {
-		res.status(400).send();
+		res.status(400).send({ error: e.message });
 	}
 }
 
@@ -43,24 +55,20 @@ async function getUserTasksHandler(req, res) {
 	}
 	try {
 		const usersTask = await Task.find({
-			editors: { $elemMatch: req.user._id },
+			editors: req.user._id,
 		})
 			.limit(parseInt(req.query.limit))
 			.skip(req.query.skip)
 			.sort(sort);
 		res.send(usersTask);
 	} catch (e) {
-		console.log(e);
 		res.status(400).send({ error: e.message });
 	}
 }
 
 async function getSpecificTaskHandler(req, res) {
 	try {
-		if (!req.task) {
-			res.status(404).send();
-		}
-		res.send(task);
+		res.send(req.task);
 	} catch (e) {
 		res.status(400).send({ error: e.message });
 	}
@@ -69,7 +77,7 @@ async function getSpecificTaskHandler(req, res) {
 async function getTeamPriorityTasksHandler(req, res) {
 	try {
 		const priorityTasks = await Task.find({
-			editors: { $elemMatch: req.user._id },
+			editors: req.user._id,
 			isTeamPriority: true,
 		});
 		res.send(priorityTasks);
@@ -81,8 +89,8 @@ async function getTeamPriorityTasksHandler(req, res) {
 async function getUserPriorityTasksHandler(req, res) {
 	try {
 		const priorityTasks = await Task.find({
-			editors: { $elemMatch: req.user._id },
-			usersPriority: { $elemMatch: req.user._id },
+			editors: req.user._id,
+			usersPriority: req.user._id,
 		});
 		res.send(priorityTasks);
 	} catch (e) {
@@ -92,12 +100,18 @@ async function getUserPriorityTasksHandler(req, res) {
 
 async function getTasksFromListHandler(req, res) {
 	try {
-		const tasks = Task.find({
+		const match = {
+			isArchived: req.query.isArchived ? req.query.isArchived : false,
+			isTeamPriority: req.query.isTeamPriority
+				? req.query.isTeamPriority
+				: false,
+			isCompleted: req.query.isCompleted ? req.query.isCompleted : false,
+		};
+		const tasks = await Task.find({
 			listId: req.list._id,
-			isArchived: req.query.isArchived,
-			isTeamPriority: req.query.isTeamPriority,
-			isCompleted: req.query.isCompleted,
+			...match,
 		});
+		console.log(tasks);
 		res.send(tasks);
 	} catch (e) {
 		res.status(400).send({ error: e.message });
@@ -137,7 +151,7 @@ async function setUsersPriorityHandler(req, res) {
 //	team priority set
 async function setTeamsPriorityHandler(req, res) {
 	try {
-		req.task.isTeamPriority = req.body.isTeamPriority;
+		req.task.isTeamPriority = req.body.isTeamPriority === true;
 		await req.task.save();
 		res.send(req.task);
 	} catch (e) {
@@ -155,9 +169,21 @@ async function changeListHandler(req, res) {
 	}
 }
 //
-async function assignUserHandler(res, req) {
+async function assignUserHandler(req, res) {
 	try {
 		req.task.editors.push(req.assignee._id);
+		await req.task.save();
+
+		res.send(req.task);
+	} catch (e) {
+		console.log(e);
+		res.status(400).send({ error: e.message });
+	}
+}
+
+async function archiveTaskHandler(req, res) {
+	try {
+		req.task.isArchived = req.body.isArchived === true;
 		await req.task.save();
 
 		res.send(req.task);
@@ -166,24 +192,27 @@ async function assignUserHandler(res, req) {
 	}
 }
 
-async function archiveTaskHandler(req, res) {
+async function deleteTaskHandler(req, res) {
 	try {
-		req.task.isArchived = req.body.isArchived;
-		await task.save();
-
-		res.send(task);
+		await deleteSingleTaskHandler(req.task);
+		res.send({ success: true });
 	} catch (e) {
 		res.status(400).send({ error: e.message });
 	}
 }
 
-async function deleteTaskHandler(req, res) {
-	try {
-		await req.task.remove();
-		res.send(req.task);
-	} catch (e) {
-		res.status(400).send({ error: e.message });
+async function deleteSingleTaskHandler(task) {
+	await task.populate('subTasks').execPopulate();
+	for (const subTask of task.subTasks) {
+		await deleteSingleTaskHandler(subTask);
 	}
+	const commentsToRemove = await Comment.find({
+		taskId: task._id,
+	});
+	for (const comment of commentsToRemove) {
+		await deleteSingleCommentHandler(comment);
+	}
+	await task.remove();
 }
 
 module.exports = {
@@ -197,6 +226,7 @@ module.exports = {
 	updateTaskHandler,
 	archiveTaskHandler,
 	deleteTaskHandler,
+	deleteSingleTaskHandler,
 	assignUserHandler,
 	setUsersPriorityHandler,
 	setTeamsPriorityHandler,

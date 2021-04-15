@@ -1,12 +1,11 @@
 const lodash = require('lodash');
 
 function ownershipAuthMiddleware(
-	parentModel, // Task
-	parentIdPropertyPath, // taskId
-	requestSaveInProperty, // task
-	childIdentifierProperty, // editors
-	childIdProrpertyPath, //
-	toMany
+	parentModel,
+	parentIdPropertyPath,
+	requestSaveInProperty,
+	childIdentifierProperty,
+	childIdProrpertyPath
 ) {
 	return async (req, res, next) => {
 		if (req[requestSaveInProperty]) {
@@ -18,22 +17,22 @@ function ownershipAuthMiddleware(
 			const findQuery = {
 				_id: parentId,
 			};
+			const searchedModel = await parentModel.findOne(findQuery);
 			if (!req.admin) {
-				findQuery[childIdentifierProperty] = toMany
-					? { $elemMatch: childId }
-					: childId;
+				findQuery[childIdentifierProperty] = childId;
 			}
 			const model = await parentModel.findOne(findQuery);
-
-			if (!model) {
-				throw new Error("You don't have permission to access this model");
+			if (!searchedModel) {
+				throw new Error('Dcoument doesent exist.');
 			}
-
+			if (!model) {
+				throw new Error('You dont have permission to access this document');
+			}
 			req[requestSaveInProperty] = model;
 			next();
 		} catch (e) {
 			res.status(401).send({
-				error: 'Please Authenticate	',
+				error: e.message,
 			});
 		}
 	};

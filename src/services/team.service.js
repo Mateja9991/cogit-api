@@ -1,5 +1,6 @@
 const Team = require('../db/models/team.model');
-const { deleteProjectHandler } = require('./project.service');
+const User = require('../db/models/user.model');
+const { deleteSingleProjectHandler } = require('./project.service');
 const { duplicateHandler } = require('./utils/utils');
 //
 //				ROUTER HANDLERS
@@ -33,9 +34,7 @@ async function getAllUserTeamsHandler(req, res) {
 
 async function getLeaderTeamsHandler(req, res) {
 	try {
-		console.log(req.user);
 		await req.user.populate('teams').execPopulate();
-		console.log(req.user.teams);
 		const teams = req.user.teams.filter((item) =>
 			item.leaderId.equals(req.user._id)
 		);
@@ -52,6 +51,18 @@ async function getTeamHandler(req, res) {
 		res.status(400).send({ error: e.message });
 	}
 }
+
+async function getMembersHandler(req, res) {
+	try {
+		const members = await User.find({
+			teams: req.team._id,
+		});
+		res.send(members);
+	} catch (e) {
+		res.status(400).send({ error: e.message });
+	}
+}
+
 async function updateTeamHandler(req, res) {
 	const updates = Object.keys(req.body);
 	const allowedToUpdate = ['name', 'leaderId'];
@@ -88,22 +99,19 @@ async function deleteTeamHandler(req, res) {
 async function deleteSingleTeamHandler(team) {
 	await team.populate('projects').execPopulate();
 	if (team.projects.length) {
-		await Promise.all(
-			team.projects.forEach(async (project) => {
-				await deleteSingleProjectHandler(project);
-			})
-		);
+		for (project of team.projects) {
+			await deleteSingleProjectHandler(project);
+		}
 	}
 	const users = await User.find({
-		teams: { $elemMatch: team._id },
+		teams: team._id,
 	});
-	await Promise.all(
-		users.forEach(async (user) => {
-			user.teams.splice(user.teams.findIndex(team._id), 1);
-			await user.save();
-		})
-	);
-
+	console.log(users);
+	for (const user of users) {
+		user.teams.splice(user.teams.indexOf(team._id), 1);
+		await user.save();
+	}
+	console.log(team);
 	await team.remove();
 }
 module.exports = {
@@ -114,4 +122,5 @@ module.exports = {
 	updateTeamHandler,
 	deleteTeamHandler,
 	deleteSingleTeamHandler,
+	getMembersHandler,
 };

@@ -65,14 +65,19 @@ const taskSchema = new Schema(
 //
 //              Virtuals
 //
-taskSchema.virtual('tasks', {
+taskSchema.virtual('subTasks', {
 	ref: 'Task',
 	localField: '_id',
 	foreignField: 'parentTaskId',
 });
 //
 //
-//
+//				DOCUMENT METHODS
+taskSchema.methods.toJSON = function () {
+	const task = this;
+	taskObject = task.toObject();
+	return taskObject;
+};
 const Task = model(MODEL_NAMES.TASK, taskSchema);
 
 module.exports = Task;

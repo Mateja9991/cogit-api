@@ -15,6 +15,7 @@ const {
 	getTeamHandler,
 	updateTeamHandler,
 	deleteTeamHandler,
+	getMembersHandler,
 } = require('../services/team.service');
 
 const router = new express.Router();
@@ -28,6 +29,13 @@ router.get('/teams/me', jwtAuthMiddleware, getAllUserTeamsHandler);
 router.get('/teams/me/leader', jwtAuthMiddleware, getLeaderTeamsHandler);
 
 router.get('/teams/:teamId', jwtAuthMiddleware, teamMemberAuth, getTeamHandler);
+
+router.get(
+	'/teams/:teamId/members',
+	jwtAuthMiddleware,
+	teamMemberAuth,
+	getMembersHandler
+);
 
 router.patch(
 	'/teams/:teamId',

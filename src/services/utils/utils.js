@@ -1,6 +1,6 @@
-async function duplicateHandler(model, parent, parentId, child) {
+async function duplicateHandler(model, parentPropertyPath, parentId, child) {
 	const isDuplicate = await model.findOne({
-		[parent]: parentId,
+		[parentPropertyPath]: parentId,
 		...child,
 	});
 	if (isDuplicate) {

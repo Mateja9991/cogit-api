@@ -57,11 +57,15 @@ async function updateCommentHandler(req, res) {
 
 async function deleteCommentHandler(req, res) {
 	try {
-		await req.comment.remove();
+		await deleteSingleCommentHandler(req.comment);
 		res.send(task);
 	} catch (e) {
 		res.status(400).send({ error: e.message });
 	}
+}
+
+async function deleteSingleCommentHandler(comment) {
+	await comment.remove();
 }
 
 module.exports = {
@@ -70,4 +74,5 @@ module.exports = {
 	getSpecificCommentHandler,
 	updateCommentHandler,
 	deleteCommentHandler,
+	deleteSingleCommentHandler,
 };

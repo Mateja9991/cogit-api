@@ -67,7 +67,10 @@ async function updateProjectHandler(req, res) {
 		if (!isValidUpdate) {
 			throw new Error('Invalid update fields.');
 		}
-		await duplicateHandler(Project, 'teamId', req.team._id, req.body);
+		await duplicateHandler(Project, 'teamId', req.project.teamId, req.body);
+		updates.forEach((update) => {
+			req.project[update] = req.body[update];
+		});
 		await req.project.save();
 		res.send(req.project);
 	} catch (e) {
@@ -87,9 +90,9 @@ async function deleteProjectHandler(req, res) {
 }
 async function deleteSingleProjectHandler(project) {
 	await project.populate('lists').execPopulate();
-	project.lists.forEach((list) => {
-		deleteSingleListHandler(list);
-	});
+	for (const list of project.lists) {
+		await deleteSingleListHandler(list);
+	}
 	await project.remove();
 }
 

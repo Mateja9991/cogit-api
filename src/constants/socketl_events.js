@@ -1,7 +1,7 @@
 const SOCKET_EVENTS = {
-  NEW_MESSAGE: "message-created",
+	NEW_MESSAGE: 'new-message',
 };
 
 module.exports = {
-  NEW_MESSAGE,
+	SOCKET_EVENTS,
 };

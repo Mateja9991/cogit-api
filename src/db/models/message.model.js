@@ -14,10 +14,6 @@ const messageSchema = new Schema({
 		required: true,
 		ref: MODEL_NAMES.SESSION,
 	},
-	isSeen: {
-		type: Bolean,
-		required: true,
-	},
 	from: {
 		type: Schema.Types.ObjectId,
 		required: true,
@@ -25,7 +21,6 @@ const messageSchema = new Schema({
 	},
 	sentAt: Date,
 	receivedAt: Date,
-	seenAt: Date,
 });
 //
 //

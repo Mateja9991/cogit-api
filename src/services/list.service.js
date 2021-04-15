@@ -1,7 +1,7 @@
 const List = require('../db/models/list.model');
 const Task = require('../db/models/task.model');
 const { duplicateHandler } = require('./utils/utils');
-
+const { deleteSingleTaskHandler } = require('./task.service');
 //
 //				ROUTER HANDLERS
 //
@@ -45,10 +45,10 @@ async function updateListHandler(req, res) {
 		if (!isValidUpdate) {
 			throw new Error('Invalid update fields.');
 		}
-		await duplicateHandler(List, 'projectId', req.project._id, req.body);
+		await duplicateHandler(List, 'projectId', req.list.projectId, req.body);
 
 		updates.forEach((update) => {
-			req.list[update] = req.list[update];
+			req.list[update] = req.body[update];
 		});
 		await req.list.save();
 		res.send(req.list);
@@ -59,7 +59,7 @@ async function updateListHandler(req, res) {
 
 async function deleteListHandler(req, res) {
 	try {
-		await deleteSisngleProjectHandler(req.list);
+		await deleteSingleListHandler(req.list);
 		res.send({
 			success: true,
 		});
@@ -71,9 +71,9 @@ async function deleteSingleListHandler(list) {
 	const tasksToDelete = await Task.find({
 		listId: list._id,
 	});
-	list.tasks.forEach((list) => {
-		console.log('deleteSingleTaskHandler(task)');
-	});
+	for (const task of tasksToDelete) {
+		await deleteSingleTaskHandler(task);
+	}
 	await list.remove();
 }
 

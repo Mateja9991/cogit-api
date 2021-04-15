@@ -188,17 +188,13 @@ async function taskToMemberAuth(req, res, next) {
 				populate: {
 					path: 'projectId',
 					model: MODEL_NAMES.PROJECT,
-					populate: {
-						path: 'teamId',
-						model: MODEL_NAMES.TEAM,
-					},
 				},
 			})
 			.execPopulate();
 		const users = await User.find({
-			teams: { $elemMatch: task.listId.projectId.teamId },
+			teams: task.listId.projectId.teamId,
 		});
-		if (!req.admin && !users.includes(req.user)) {
+		if (!req.admin && !users.find((user) => user._id.equals(req.user._id))) {
 			throw new Error('You are not team Member');
 		}
 		req.task = task;
@@ -223,7 +219,7 @@ async function assignAuth(req, res, next) {
 			})
 			.execPopulate();
 		const user = await User.findById(req.params.userId);
-		if (!user.teams.includes(task.listId.projectId.teamId)) {
+		if (!user.teams.includes(req.task.listId.projectId.teamId)) {
 			throw new Error('User is not team Member');
 		}
 		req.assignee = user;

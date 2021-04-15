@@ -18,7 +18,6 @@ const {
 	createSubTaskHandler,
 	getUserTasksHandler,
 	getSpecificTaskHandler,
-	getTeamPriorityTasksHandler,
 	getUserPriorityTasksHandler,
 	updateTaskHandler,
 	deleteTaskHandler,
@@ -33,14 +32,14 @@ const {
 //				ROUTES
 //
 router.post(
-	'/tasks/:listId',
+	'/tasks/lists/:listId',
 	jwtAuthMiddleware,
 	listToLeaderAuth,
 	createTaskHandler
 );
 
 router.post(
-	'/tasks/sub/:taskId',
+	'/tasks/:taskId/sub',
 	jwtAuthMiddleware,
 	ownershipAuthMiddleware(
 		Task,
@@ -69,7 +68,7 @@ router.get(
 );
 
 router.get(
-	'/tasks/list/:listId',
+	'/tasks/lists/:listId',
 	jwtAuthMiddleware,
 	listToMemberAuth,
 	getTasksFromListHandler
@@ -98,9 +97,8 @@ router.patch(
 );
 //				SET USERS PRIORITY
 router.patch(
-	'/tasks/me/priority/:taskId',
+	'/tasks/:taskId/me/priority',
 	jwtAuthMiddleware,
-	taskToLeaderAuth,
 	ownershipAuthMiddleware(
 		Task,
 		'params.taskId',
@@ -113,7 +111,7 @@ router.patch(
 );
 //				SET TEAMS PRIORITY
 router.patch(
-	'/tasks/:taskId/team_priority',
+	'/tasks/:taskId/team-priority',
 	jwtAuthMiddleware,
 	taskToLeaderAuth,
 	setTeamsPriorityHandler
