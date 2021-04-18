@@ -195,24 +195,34 @@ async function archiveTaskHandler(req, res) {
 async function deleteTaskHandler(req, res) {
 	try {
 		await deleteSingleTaskHandler(req.task);
-		res.send({ success: true });
+		return res.json({ message: 'Successfully deleted' });
 	} catch (e) {
-		res.status(400).send({ error: e.message });
+		console.log(e);
+		return res.status(400).json({ error: e.message });
 	}
 }
 
 async function deleteSingleTaskHandler(task) {
-	await task.populate('subTasks').execPopulate();
-	for (const subTask of task.subTasks) {
-		await deleteSingleTaskHandler(subTask);
+	let stack = [];
+	stack.push(task);
+	const promises = [];
+	while (stack.length > 0) {
+		let currentTask = stack.pop();
+		await currentTask.populate('subTasks').execPopulate();
+		for (const sub of currentTask.subTasks) {
+			stack.push(sub);
+		}
+		const commentsToRemove = await Comment.find({
+			taskId: currentTask._id,
+		});
+		if (commentsToRemove.length > 0) {
+			for (const comment of commentsToRemove) {
+				primises.push(comment.remove());
+			}
+		}
+		promises.push(currentTask.remove());
 	}
-	const commentsToRemove = await Comment.find({
-		taskId: task._id,
-	});
-	for (const comment of commentsToRemove) {
-		await deleteSingleCommentHandler(comment);
-	}
-	await task.remove();
+	await Promise.all(promises);
 }
 
 module.exports = {

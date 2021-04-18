@@ -7,6 +7,7 @@ const sessionSchema = new Schema({
 	teamId: {
 		type: Schema.Types.ObjectId,
 		ref: MODEL_NAMES.TEAM,
+		unique: true,
 	},
 	participants: [
 		{

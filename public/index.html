@@ -4,9 +4,15 @@
 <head>
 
 </head>
-s
-
-<body>
+    <button class="msg-button">POSALJI</button>
+    <div>
+    <label>To:</label>    
+    <input class="user-input" type="text">
+    <label>Message:</label>    
+    <input class="msg-input" type="text" autocomplete="off">
+</div>
+    <div id="messages"></div>
+    
     <script src="/socket.io/socket.io.js"></script>
     <script src="/js/chat.js"></script>
 </body>

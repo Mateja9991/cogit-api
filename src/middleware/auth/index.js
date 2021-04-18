@@ -1,17 +1,21 @@
 const { jwtAuthMiddleware } = require('./jwt_authorization_middleware');
 const { ownershipAuthMiddleware } = require('./ownership_auth_middleware');
+const { teamMemberAuth, teamLeaderAuth } = require('./team.authorization.js');
 const {
-	teamMemberAuth,
-	teamLeaderAuth,
 	projectToLeaderAuth,
 	projectToMemberAuth,
+} = require('./project.authorization.js');
+const {
 	listToLeaderAuth,
 	listToMemberAuth,
+} = require('./list.authorization.js');
+const {
 	taskToLeaderAuth,
 	taskToMemberAuth,
 	assignAuth,
-	commentToLeaderAuth,
-} = require('./auth');
+} = require('./task.authorization.js');
+const { commentToLeaderAuth } = require('./comment.authorization.js');
+
 module.exports = {
 	jwtAuthMiddleware,
 	ownershipAuthMiddleware,

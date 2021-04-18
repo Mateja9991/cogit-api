@@ -7,7 +7,8 @@ const MODEL_NAMES = {
 	COMMENT: 'Comment',
 	MESSAGE: 'Message',
 	SESSION: 'Session',
-	ADMIN: 'ADMIN',
+	CALENDAR: 'Calendar',
+	EVENT: 'Event',
 };
 
 module.exports = {

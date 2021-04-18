@@ -15,9 +15,9 @@ const messageSchema = new Schema({
 		ref: MODEL_NAMES.SESSION,
 	},
 	from: {
-		type: Schema.Types.ObjectId,
+		type: String,
 		required: true,
-		ref: MODEL_NAMES.USER,
+		maxlength: [250, 'Username too long. (>250)'],
 	},
 	sentAt: Date,
 	receivedAt: Date,

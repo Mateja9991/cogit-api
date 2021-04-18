@@ -11,7 +11,6 @@ const {
 	assignAuth,
 } = require('../middleware/auth');
 const Task = require('../db/models/task.model');
-const Team = require('../db/models/team.model');
 const router = new express.Router();
 const {
 	createTaskHandler,
@@ -41,14 +40,7 @@ router.post(
 router.post(
 	'/tasks/:taskId/sub',
 	jwtAuthMiddleware,
-	ownershipAuthMiddleware(
-		Task,
-		'params.taskId',
-		'task',
-		'editors',
-		'user._id',
-		true
-	),
+	ownershipAuthMiddleware(Task, 'params.taskId', 'task', 'editors', 'user._id'),
 	createSubTaskHandler
 );
 
@@ -99,14 +91,7 @@ router.patch(
 router.patch(
 	'/tasks/:taskId/me/priority',
 	jwtAuthMiddleware,
-	ownershipAuthMiddleware(
-		Task,
-		'params.taskId',
-		'task',
-		'editors',
-		'user._id',
-		true
-	),
+	ownershipAuthMiddleware(Task, 'params.taskId', 'task', 'editors', 'user._id'),
 	setUsersPriorityHandler
 );
 //				SET TEAMS PRIORITY
@@ -121,14 +106,7 @@ router.patch(
 	'/tasks/:taskId/lists/:listId',
 	jwtAuthMiddleware,
 	taskToLeaderAuth,
-	ownershipAuthMiddleware(
-		Task,
-		'params.taskId',
-		'task',
-		'editors',
-		'user._id',
-		true
-	),
+	ownershipAuthMiddleware(Task, 'params.taskId', 'task', 'editors', 'user._id'),
 	changeListHandler
 );
 //				ASSING USER TO TASK

@@ -14,11 +14,10 @@ const calendarRouter = require('./routers/calendar.router');
 const messageRouter = require('./routers/message.router');
 const commentRouter = require('./routers/comment.router');
 
-const SocketService = require('./socket/socket');
-
 const app = express();
 const server = http.createServer(app);
 
+const SocketService = require('./socket/socket');
 SocketService.initializeSocketServer(server);
 
 const port = process.env.PORT;

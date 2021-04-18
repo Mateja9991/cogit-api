@@ -1,10 +1,22 @@
 const User = require('../db/models/user.model');
-const Team = require('../db/models/team.model');
+const Calendar = require('../db/models/calendar.model');
 const { deleteSingleTeamHandler } = require('./team.service');
+
+const {
+	getSessionMessagesHandler,
+	getSessionHandler,
+} = require('../services/session.service');
+
+const Socket = require('../socket/socket');
+
+function sendMessageEvent(room, message) {
+	console.log(Socket);
+	Socket.sendEventToRoom(room, 'new-message', message);
+}
+
 //
 //        ROUTER HANDLERS
 //
-
 async function createUserHandler(req, res) {
 	{
 		try {
@@ -12,7 +24,11 @@ async function createUserHandler(req, res) {
 				delete req.body.role;
 			}
 			const user = new User(req.body);
+			const userCalendar = new Calendar({
+				userId: user._id,
+			});
 			await user.save();
+			await userCalendar.save();
 			const token = await user.generateAuthToken();
 			res.send({ user, token });
 		} catch (e) {
@@ -30,6 +46,7 @@ async function loginUserHandler(req, res) {
 		const token = await user.generateAuthToken();
 		res.send({ user, token });
 	} catch (e) {
+		console.log(e);
 		res.status(400).send(e);
 	}
 }
@@ -66,7 +83,7 @@ async function getTeamInvitationsHandler(req, res) {
 		await req.user.populate('invitations').execPopulate();
 		res.send(req.user.invitations);
 	} catch (e) {
-		res.status(400).send();
+		res.status(400).send({ error: e.message });
 	}
 }
 
@@ -199,6 +216,51 @@ async function deleteAnyUserHandler(req, res) {
 	}
 }
 
+async function getUserMessagesHandler(req, res) {
+	try {
+		const receiver = await User.findById(req.params.userId);
+		const messages = await getSessionMessagesHandler(
+			{
+				limit: req.query.limit,
+				skip: req.query.skip,
+			},
+			[req.user._id, receiver._id]
+		);
+		console.log(messages);
+		res.send(messages);
+	} catch (e) {
+		res.status(400).send({ error: e.message });
+	}
+}
+
+async function getTeamMessagesHandler(req, res) {
+	try {
+		const messages = await getSessionMessagesHandler(
+			{
+				limit: req.query.limit,
+				skip: req.query.skip,
+			},
+			undefined,
+			req.params.teamId
+		);
+		res.send(messages);
+	} catch (e) {
+		res.status(400).send({ error: e.message });
+	}
+}
+
+async function getUserByEmailHandler(req, res) {
+	try {
+		const user = await User.findOne({ email: req.params.email });
+		if (!user) {
+			throw new Error('No user with that email found.');
+		}
+		res.send({ user });
+	} catch (e) {
+		res.status(400).send({ error: e.message });
+	}
+}
+
 module.exports = {
 	createUserHandler,
 	loginUserHandler,
@@ -213,4 +275,8 @@ module.exports = {
 	acceptTeamInvitationHandler,
 	declineTeamInvitationHandler,
 	deleteAnyUserHandler,
+
+	getUserByEmailHandler,
+	getUserMessagesHandler,
+	getTeamMessagesHandler,
 };

@@ -13,6 +13,7 @@ const {
 	logoutUserHandler,
 	getProfileHandler,
 	getUserHandler,
+	getUserByEmailHandler,
 	getAllUsersHandler,
 	updateUserHandler,
 	deleteUserHandler,
@@ -21,6 +22,8 @@ const {
 	acceptTeamInvitationHandler,
 	declineTeamInvitationHandler,
 	deleteAnyUserHandler,
+	getUserMessagesHandler,
+	getTeamMessagesHandler,
 } = require('../services/user.service');
 
 const router = new express.Router();
@@ -44,6 +47,20 @@ router.get(
 	jwtAuthMiddleware,
 	getTeamInvitationsHandler
 );
+
+router.get(
+	'/users/:userId/me/messages',
+	jwtAuthMiddleware,
+	getUserMessagesHandler
+);
+
+router.get(
+	'/users/me/teams/:teamId/messages',
+	jwtAuthMiddleware,
+	getTeamMessagesHandler
+);
+
+router.get('/users/email/:email', jwtAuthMiddleware, getUserByEmailHandler);
 
 router.patch('/users/me', jwtAuthMiddleware, updateUserHandler);
 
