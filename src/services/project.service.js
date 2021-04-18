@@ -1,6 +1,11 @@
 const Project = require('../db/models/project.model');
-const { duplicateHandler } = require('./utils/utils');
 const { deleteSingleListHandler } = require('./list.service');
+const {
+	duplicateHandler,
+	optionsBuilder,
+	queryHandler,
+	matchBuilder,
+} = require('./utils/services.utils');
 //
 //				ROUTER HANDLERS
 //
@@ -21,8 +26,14 @@ async function createProjectHandler(req, res) {
 
 async function getTeamsProjectsHandler(req, res) {
 	try {
-		const teamProjects = await getProjectsFromOneTeam(req.team);
-		res.send(teamProjects);
+		const options = optionsBuilder(
+			req.query.limit,
+			req.query.skip,
+			req.query.sortBy,
+			req.query.sortValue
+		);
+		const requestedProjects = await getProjectsFromOneTeam(req.team, options);
+		res.send(requestedProjects);
 	} catch (e) {
 		res.status(400).send({ error: e.message });
 	}
@@ -34,19 +45,28 @@ async function getMyProjectsHandler(req, res) {
 		if (!req.user.teams.length) {
 			throw new Error('User Has No Teams');
 		}
-		const usersProjects = await Promise.all(
-			req.user.teams.map(async (team) => await getProjectsFromOneTeam(team))
-		);
-		res.send(usersProjects);
+		let allProjects = [];
+		for (const team of req.user.teams) {
+			const teamProjects = await getProjectsFromOneTeam(team);
+			teamProjects.forEach((project) => {
+				allProjects.push(project);
+			});
+		}
+		const requestedProjects = queryHandler(allProjects, req.query);
+		res.send(requestedProjects);
 	} catch (e) {
 		res.status(400).send({ error: e.message });
 	}
 }
 
-async function getProjectsFromOneTeam(team) {
-	const teamProjects = await Project.find({
-		teamId: team._id,
-	});
+async function getProjectsFromOneTeam(team, options) {
+	const teamProjects = await Project.find(
+		{
+			teamId: team._id,
+		},
+		'name -_id',
+		options
+	);
 
 	return teamProjects;
 }

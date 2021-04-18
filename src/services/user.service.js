@@ -1,6 +1,7 @@
 const User = require('../db/models/user.model');
 const Calendar = require('../db/models/calendar.model');
 const { deleteSingleTeamHandler } = require('./team.service');
+const { optionsBuilder, queryHandler } = require('./utils/services.utils');
 
 const {
 	getSessionMessagesHandler,
@@ -59,7 +60,9 @@ async function logoutUserHandler(req, res) {
 		res.status(500).send();
 	}
 }
-//  GET YOUR PROFILE
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////									GET ROUTES								////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 async function getProfileHandler(req, res) {
 	req.user.populate('teams');
 	res.send(req.user);
@@ -80,12 +83,80 @@ async function getUserHandler(req, res) {
 
 async function getTeamInvitationsHandler(req, res) {
 	try {
-		await req.user.populate('invitations').execPopulate();
+		const options = optionsBuilder(
+			req.query.limit,
+			req.query.skip,
+			req.query.sortBy,
+			req.query.sortValue
+		);
+		const match = matchBuilder(req.query);
+		await req.user
+			.populate({
+				path: 'invitations',
+				match,
+				options,
+			})
+			.execPopulate();
 		res.send(req.user.invitations);
 	} catch (e) {
 		res.status(400).send({ error: e.message });
 	}
 }
+
+async function getUserMessagesHandler(req, res) {
+	try {
+		const receiver = await User.findById(req.params.userId);
+		const options = optionsBuilder(
+			req.query.limit,
+			req.query.skip,
+			'createdAt',
+			-1
+		);
+		const messages = await getSessionMessagesHandler(options, [
+			req.user._id,
+			receiver._id,
+		]);
+		console.log(messages);
+		res.send(messages);
+	} catch (e) {
+		res.status(400).send({ error: e.message });
+	}
+}
+
+async function getTeamMessagesHandler(req, res) {
+	try {
+		const options = optionsBuilder(
+			req.query.limit,
+			req.query.skip,
+			'createdAt',
+			-1
+		);
+		const messages = await getSessionMessagesHandler(
+			options,
+			undefined,
+			req.params.teamId
+		);
+		res.send(messages);
+	} catch (e) {
+		res.status(400).send({ error: e.message });
+	}
+}
+
+async function getUserByEmailHandler(req, res) {
+	try {
+		const user = await User.findOne({ email: req.params.email });
+		if (!user) {
+			throw new Error('No user with that email found.');
+		}
+		res.send({ user });
+	} catch (e) {
+		res.status(400).send({ error: e.message });
+	}
+}
+
+//
+//
+//
 
 async function updateUserHandler(req, res) {
 	const updates = Object.keys(req.body);
@@ -213,51 +284,6 @@ async function deleteAnyUserHandler(req, res) {
 		res.send(user);
 	} catch (e) {
 		res.status(500).send({ error: e.message });
-	}
-}
-
-async function getUserMessagesHandler(req, res) {
-	try {
-		const receiver = await User.findById(req.params.userId);
-		const messages = await getSessionMessagesHandler(
-			{
-				limit: req.query.limit,
-				skip: req.query.skip,
-			},
-			[req.user._id, receiver._id]
-		);
-		console.log(messages);
-		res.send(messages);
-	} catch (e) {
-		res.status(400).send({ error: e.message });
-	}
-}
-
-async function getTeamMessagesHandler(req, res) {
-	try {
-		const messages = await getSessionMessagesHandler(
-			{
-				limit: req.query.limit,
-				skip: req.query.skip,
-			},
-			undefined,
-			req.params.teamId
-		);
-		res.send(messages);
-	} catch (e) {
-		res.status(400).send({ error: e.message });
-	}
-}
-
-async function getUserByEmailHandler(req, res) {
-	try {
-		const user = await User.findOne({ email: req.params.email });
-		if (!user) {
-			throw new Error('No user with that email found.');
-		}
-		res.send({ user });
-	} catch (e) {
-		res.status(400).send({ error: e.message });
 	}
 }
 

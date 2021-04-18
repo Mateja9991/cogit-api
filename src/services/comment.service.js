@@ -1,5 +1,13 @@
 const Comment = require('../db/models/comment.model');
 
+const {
+	optionsBuilder,
+	matchBuilder,
+	queryHandler,
+} = require('./utils/services.utils');
+
+const selectFieldsGlobal = 'text likes -_id';
+
 async function createCommentHandler(req, res) {
 	try {
 		const comment = new Comment({
@@ -16,8 +24,7 @@ async function createCommentHandler(req, res) {
 
 async function getSpecificCommentHandler(req, res) {
 	try {
-		await comment.save();
-		res.send(comment);
+		res.send(req.comment);
 	} catch (e) {
 		res.status(400).send({ error: e.message });
 	}
@@ -25,9 +32,21 @@ async function getSpecificCommentHandler(req, res) {
 
 async function getTaskCommentsHandler(req, res) {
 	try {
-		const comments = Comment.find({
-			taskId: req.task._id,
-		});
+		const options = optionsBuilder(
+			req.query.limit,
+			req.query.skip,
+			req.query.sortBy,
+			req.query.sortValue
+		);
+		const match = matchBuilder(req.query);
+		const comments = await Comment.find(
+			{
+				taskId: req.task._id,
+				...match,
+			},
+			selectFields,
+			options
+		);
 		res.send(comments);
 	} catch (e) {
 		res.status(400).send({ error: e.message });

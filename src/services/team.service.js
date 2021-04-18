@@ -1,7 +1,12 @@
 const Team = require('../db/models/team.model');
 const User = require('../db/models/user.model');
 const { deleteSingleProjectHandler } = require('./project.service');
-const { duplicateHandler } = require('./utils/utils');
+const {
+	duplicateHandler,
+	optionsBuilder,
+	queryHandler,
+	matchBuilder,
+} = require('./utils/services.utils');
 //
 //				ROUTER HANDLERS
 //
@@ -25,7 +30,21 @@ async function createTeamHandler(req, res) {
 
 async function getAllUserTeamsHandler(req, res) {
 	try {
-		await req.user.populate('teams').execPopulate();
+		const options = optionsBuilder(
+			req.query.limit,
+			req.query.skip,
+			req.query.sortBy,
+			req.query.sortValue
+		);
+		const match = matchBuilder(req.query);
+		console.log(match.name);
+		await req.user
+			.populate({
+				path: 'teams',
+				match,
+				options,
+			})
+			.execPopulate();
 		res.send(req.user.teams);
 	} catch (e) {
 		res.status(400).send({ error: e.message });
@@ -35,10 +54,11 @@ async function getAllUserTeamsHandler(req, res) {
 async function getLeaderTeamsHandler(req, res) {
 	try {
 		await req.user.populate('teams').execPopulate();
-		const teams = req.user.teams.filter((item) =>
+		const allLeaderTeams = req.user.teams.filter((item) =>
 			item.leaderId.equals(req.user._id)
 		);
-		res.send(teams);
+		const requestedTeams = queryHandler(allLeaderTeams, req.query);
+		res.send(requestedTeams);
 	} catch (e) {
 		res.status(400).send({ error: e.message });
 	}
@@ -54,10 +74,21 @@ async function getTeamHandler(req, res) {
 
 async function getMembersHandler(req, res) {
 	try {
-		const members = await User.find({
-			teams: req.team._id,
-		});
-		res.send(members);
+		const options = optionsBuilder(
+			req.query.limit,
+			req.query.skip,
+			req.query.sortBy,
+			req.quert.sortValue
+		);
+		const requestedMembers = await User.find(
+			{
+				teams: req.team._id,
+			},
+			'username email -_id',
+			options
+		);
+
+		res.send(requestedMembers);
 	} catch (e) {
 		res.status(400).send({ error: e.message });
 	}

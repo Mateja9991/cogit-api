@@ -49,13 +49,6 @@ async function newSessionHandler(sessionParticipants, teamId) {
 
 async function getSessionMessagesHandler(options, sessionParticipants, teamId) {
 	try {
-		if (!options.limit && !options.skip) {
-			options = {};
-		}
-		const sort = {
-			sentAt: -1,
-		};
-		options.sort = sort;
 		let session;
 		if (teamId) {
 			session = await getTeamSessionHandler(teamId);
@@ -66,7 +59,7 @@ async function getSessionMessagesHandler(options, sessionParticipants, teamId) {
 			{
 				sessionId: session._id,
 			},
-			'from text sentAt -_id',
+			'from text createdAt -_id',
 			options
 		);
 		console.log(sessionMessages);

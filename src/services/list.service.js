@@ -1,6 +1,6 @@
 const List = require('../db/models/list.model');
 const Task = require('../db/models/task.model');
-const { duplicateHandler } = require('./utils/utils');
+const { duplicateHandler } = require('./utils/services.utils');
 const { deleteSingleTaskHandler } = require('./task.service');
 //
 //				ROUTER HANDLERS

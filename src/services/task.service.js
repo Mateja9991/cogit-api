@@ -3,6 +3,16 @@ const User = require('../db/models/user.model');
 const Comment = require('../db/models/comment.model');
 const { deleteSingleCommentHandler } = require('./comment.service');
 
+const {
+	duplicateHandler,
+	queryHandler,
+	optionsBuilder,
+	matchBuilder,
+} = require('./utils/services.utils');
+
+const selectFieldsGlobal =
+	'name description isCompleted isArchived isTeamPriority -_id';
+
 async function createTaskHandler(req, res) {
 	await createTask(res, req, {
 		...req.body,
@@ -46,21 +56,13 @@ async function createTask(res, req, task) {
 }
 
 async function getUserTasksHandler(req, res) {
-	const sort = {};
-	req.query.sortBy
-		? (sort[req.query.sortBy] = req.query.sort ? req.query.sort : 1)
-		: (sort.createdAt = req.query.sort ? req.query.sort : 1);
-	if (req.query.isCompleted) {
-		match.isCompleted = req.query.isCompleted === true;
-	}
 	try {
-		const usersTask = await Task.find({
-			editors: req.user._id,
-		})
-			.limit(parseInt(req.query.limit))
-			.skip(req.query.skip)
-			.sort(sort);
-		res.send(usersTask);
+		const usersTasks = getTasksHandler(
+			req,
+			{ editors: req.user._id },
+			selectFieldsGlobal
+		);
+		res.send(usersTasks);
 	} catch (e) {
 		res.status(400).send({ error: e.message });
 	}
@@ -76,10 +78,11 @@ async function getSpecificTaskHandler(req, res) {
 
 async function getTeamPriorityTasksHandler(req, res) {
 	try {
-		const priorityTasks = await Task.find({
-			editors: req.user._id,
-			isTeamPriority: true,
-		});
+		const priorityTasks = getTasksHandler(
+			req,
+			{ editors: req.user._id, isTeamPriority: true },
+			selectFieldsGlobal
+		);
 		res.send(priorityTasks);
 	} catch (e) {
 		res.status(400).send({ error: e.message });
@@ -88,10 +91,11 @@ async function getTeamPriorityTasksHandler(req, res) {
 
 async function getUserPriorityTasksHandler(req, res) {
 	try {
-		const priorityTasks = await Task.find({
-			editors: req.user._id,
-			usersPriority: req.user._id,
-		});
+		const priorityTasks = getTasksHandler(
+			req,
+			{ editors: req.user._id, usersPriority: req.user._id },
+			selectFieldsGlobal
+		);
 		res.send(priorityTasks);
 	} catch (e) {
 		res.status(400).send({ error: e.message });
@@ -100,22 +104,34 @@ async function getUserPriorityTasksHandler(req, res) {
 
 async function getTasksFromListHandler(req, res) {
 	try {
-		const match = {
-			isArchived: req.query.isArchived ? req.query.isArchived : false,
-			isTeamPriority: req.query.isTeamPriority
-				? req.query.isTeamPriority
-				: false,
-			isCompleted: req.query.isCompleted ? req.query.isCompleted : false,
-		};
-		const tasks = await Task.find({
-			listId: req.list._id,
-			...match,
-		});
-		console.log(tasks);
+		const tasks = getTasksHandler(
+			req,
+			{ listId: req.list._id },
+			selectFieldsGlobal
+		);
 		res.send(tasks);
 	} catch (e) {
 		res.status(400).send({ error: e.message });
 	}
+}
+
+async function getTasksHandler(req, queryFields, selectFields) {
+	const options = optionsBuilder(
+		req.query.limit,
+		req.query.skip,
+		req.query.sortBy,
+		req.query.sortValue
+	);
+	const match = matchBuilder(req.query);
+	const tasks = await Task.find(
+		{
+			...queryFields,
+			...match,
+		},
+		selectFields,
+		options
+	);
+	return tasks;
 }
 
 async function updateTaskHandler(req, res) {
