@@ -23,6 +23,12 @@ socket.on('message-history', (history) => {
 		$messageBoard.innerHTML += `<p>${msg}</p>`;
 	});
 });
+socket.on('error', (error) => {
+	console.log(error);
+});
+socket.on('new-invitation', ({ invited }) => {
+	console.log(invited);
+});
 const $messageBoard = document.querySelector('#messages');
 
 fetch('http://localhost:3000/users/login', {
@@ -44,45 +50,63 @@ fetch('http://localhost:3000/users/login', {
 			const $button = document.querySelector('.msg-button');
 			const $input = document.querySelector('.msg-input');
 			const $user = document.querySelector('.user-input');
+			const $team = document.querySelector('.team-input');
+			const $teamMessage = document.querySelector('.team-msg-input');
 
 			$button.addEventListener('click', () => {
 				const receiverEmail = $user.value;
-				fetch(`http://localhost:3000/users/email/${receiverEmail}`, {
-					method: 'GET',
-					headers: {
-						'Content-Type': 'application/json',
-						Authorization: `Bearer ${fetchedToken}`,
-					},
-				})
-					.then((response) => {
-						return response.json();
+				const teamId = $team.value;
+				if (receiverEmail) {
+					fetch(`http://localhost:3000/users/email/${receiverEmail}`, {
+						method: 'GET',
+						headers: {
+							'Content-Type': 'application/json',
+							Authorization: `Bearer ${fetchedToken}`,
+						},
 					})
-					.then((receiver) => {
-						console.log(receiver.user._id);
-						fetch(
-							`http://localhost:3000/users/${receiver.user._id}/me/messages`,
-							{
-								method: 'GET',
-								headers: {
-									'Content-Type': 'application/json',
-									Authorization: `Bearer ${fetchedToken}`,
-								},
-							}
-						)
-							.then((response) => {
-								return response.json();
-							})
-							.then((data) => {
-								$messageBoard.innerHTML = '';
-								data.forEach(({ text, from }) => {
-									$messageBoard.innerHTML += `<p>${from}:${text}</p>`;
+						.then((response) => {
+							return response.json();
+						})
+						.then((receiver) => {
+							console.log(receiver.user._id);
+							fetch(
+								`http://localhost:3000/users/${receiver.user._id}/me/messages`,
+								{
+									method: 'GET',
+									headers: {
+										'Content-Type': 'application/json',
+										Authorization: `Bearer ${fetchedToken}`,
+									},
+								}
+							)
+								.then((response) => {
+									return response.json();
+								})
+								.then((data) => {
+									$messageBoard.innerHTML = '';
+									data.forEach(({ text, from }) => {
+										$messageBoard.innerHTML += `<p>${from}:${text}</p>`;
+									});
 								});
-							});
-					});
+						});
 
-				socket.emit('newMessageToUser', receiverEmail, $input.value, (id) => {
-					console.log(id);
-				});
+					socket.emit('newMessageToUser', receiverEmail, $input.value, (id) => {
+						console.log(id);
+					});
+				} else {
+					console.log('pre-if(teamId)');
+					if (teamId) {
+						console.log('pre-emit');
+						socket.emit(
+							'newMessageToTeam',
+							teamId,
+							$teamMessage.value,
+							(res) => {
+								console.log(res);
+							}
+						);
+					}
+				}
 			});
 		});
 	})

@@ -3,71 +3,119 @@ const validator = require('validator');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { MODEL_NAMES } = require('../../constants/model_names');
+const { ObjectId } = require('bson');
 //
 //              Schema
 //
-const userSchema = new Schema({
-	username: {
-		type: String,
-		required: true,
-		trim: true,
-	},
-	role: {
-		type: String,
-		default: 'user',
-		enum: ['user', 'admin'],
-	},
-	email: {
-		type: String,
-		required: true,
-		unique: true,
-		trim: true,
-		lowercase: true,
-		validate(value) {
-			if (!validator.isEmail(value)) {
-				throw new Error('Not an email.');
-			}
-		},
-	},
-	password: {
-		type: String,
-		required: true,
-		unique: true,
-		trim: true,
-		minlength: [7, 'Password too short (<7).'],
-	},
-	lastActiveAt: Date,
-	teams: [
-		{
-			type: Schema.Types.ObjectId,
+const userSchema = new Schema(
+	{
+		username: {
+			type: String,
 			required: true,
-			ref: MODEL_NAMES.TEAM,
+			trim: true,
 		},
-	],
-	invitations: [
-		{
-			type: Schema.Types.ObjectId,
+		tag: {
+			type: String,
 			required: true,
-			ref: MODEL_NAMES.TEAM,
+			unique: true,
+			maxlength: [10, 'No space.'],
 		},
-	],
-	avatar: {
-		type: Buffer,
-	},
-	settings: [
-		{
-			theme: {
-				type: String,
-				required: true,
-			},
-			taskView: {
-				type: String,
-				required: true,
+		role: {
+			type: String,
+			default: 'user',
+			enum: ['user', 'admin'],
+		},
+		email: {
+			type: String,
+			required: true,
+			unique: true,
+			trim: true,
+			lowercase: true,
+			validate(value) {
+				if (!validator.isEmail(value)) {
+					throw new Error('Not an email.');
+				}
 			},
 		},
-	],
-	notifications: [{}],
-});
+		password: {
+			type: String,
+			required: true,
+			unique: true,
+			trim: true,
+			minlength: [7, 'Password too short (<7).'],
+		},
+		lastActiveAt: Date,
+		teams: [
+			{
+				type: Schema.Types.ObjectId,
+				required: true,
+				ref: MODEL_NAMES.TEAM,
+			},
+		],
+		invitations: [
+			{
+				teamId: {
+					type: Schema.Types.ObjectId,
+					required: true,
+					ref: MODEL_NAMES.TEAM,
+				},
+				receivedAt: {
+					type: Date,
+					default: Date.now(),
+				},
+			},
+		],
+		avatar: {
+			type: Buffer,
+		},
+		settings: [
+			{
+				theme: {
+					type: String,
+					required: true,
+				},
+				taskView: {
+					type: String,
+					required: true,
+				},
+			},
+		],
+		notifications: [
+			{
+				seen: {
+					type: Boolean,
+					default: false,
+				},
+				event: {
+					text: {
+						type: String,
+						required: true,
+					},
+					reference: {
+						_id: {
+							type: ObjectId,
+							required: true,
+						},
+						eventType: {
+							type: String,
+							enum: ['invitation', 'assignment', 'message'],
+							required: true,
+						},
+					},
+				},
+				receivedAt: {
+					type: Date,
+					default: Date.now(),
+				},
+			},
+		],
+	},
+	{
+		timestamps: true,
+		toJSON: { virtuals: true },
+		toObject: { virtuals: true },
+	}
+);
 //
 //              Virtuals
 //
@@ -118,6 +166,15 @@ userSchema.statics.findByCredentials = async (email, password) => {
 		throw new Error('Unable to login.');
 	}
 	return user;
+};
+userSchema.statics.generateTag = async () => {
+	const lastTag = await User.countDocuments({});
+
+	let tag = lastTag + 1;
+	tag = tag.toString();
+	tag = '#' + tag.padStart(9, '0');
+
+	return tag;
 };
 //
 //              Document methods

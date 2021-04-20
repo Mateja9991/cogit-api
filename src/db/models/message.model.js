@@ -20,8 +20,6 @@ const messageSchema = new Schema(
 			required: true,
 			maxlength: [250, 'Username too long. (>250)'],
 		},
-		sentAt: Date,
-		receivedAt: Date,
 	},
 	{ timestamps: true }
 );

@@ -3,37 +3,44 @@ const { MODEL_NAMES } = require('../../constants/model_names');
 //
 //              Schema
 //
-const projectSchema = new Schema({
-	name: {
-		type: String,
-		required: true,
-	},
-	teamId: {
-		type: Schema.Types.ObjectId,
-		required: true,
-		ref: MODEL_NAMES.TEAM,
-	},
-	taggs: [
-		{
+const projectSchema = new Schema(
+	{
+		name: {
 			type: String,
 			required: true,
 		},
-	],
-	isArchived: {
-		type: Boolean,
-		default: false,
-	},
-	isTeamplate: {
-		type: Boolean,
-		default: false,
-	},
-	links: [
-		{
-			type: String,
+		teamId: {
+			type: Schema.Types.ObjectId,
 			required: true,
+			ref: MODEL_NAMES.TEAM,
 		},
-	],
-});
+		taggs: [
+			{
+				type: String,
+				required: true,
+			},
+		],
+		isArchived: {
+			type: Boolean,
+			default: false,
+		},
+		isTeamplate: {
+			type: Boolean,
+			default: false,
+		},
+		links: [
+			{
+				type: String,
+				required: true,
+			},
+		],
+	},
+	{
+		timestamps: true,
+		toJSON: { virtuals: true },
+		toObject: { virtuals: true },
+	}
+);
 //
 //              Virtuals
 //

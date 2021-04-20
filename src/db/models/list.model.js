@@ -3,17 +3,24 @@ const { MODEL_NAMES } = require('../../constants/model_names');
 //
 //              Schema
 //
-const listSchema = new Schema({
-	name: {
-		type: String,
-		required: true,
+const listSchema = new Schema(
+	{
+		name: {
+			type: String,
+			required: true,
+		},
+		projectId: {
+			type: Schema.Types.ObjectId,
+			required: true,
+			ref: MODEL_NAMES.PROJECT,
+		},
 	},
-	projectId: {
-		type: Schema.Types.ObjectId,
-		required: true,
-		ref: MODEL_NAMES.PROJECT,
-	},
-});
+	{
+		timestamps: true,
+		toJSON: { virtuals: true },
+		toObject: { virtuals: true },
+	}
+);
 //
 //              Virtuals
 //

@@ -3,6 +3,9 @@ const User = require('../db/models/user.model');
 const Comment = require('../db/models/comment.model');
 const { deleteSingleCommentHandler } = require('./comment.service');
 
+const Socket = require('../socket/socket');
+const { SOCKET_EVENTS } = require('../constants/socket_events');
+
 const {
 	duplicateHandler,
 	queryHandler,
@@ -10,8 +13,8 @@ const {
 	matchBuilder,
 } = require('./utils/services.utils');
 
-const selectFieldsGlobal =
-	'name description isCompleted isArchived isTeamPriority -_id';
+const selectFieldsGlobal_View =
+	'name description isCompleted parentTaskId isArchived isTeamPriority';
 
 async function createTaskHandler(req, res) {
 	await createTask(res, req, {
@@ -57,10 +60,10 @@ async function createTask(res, req, task) {
 
 async function getUserTasksHandler(req, res) {
 	try {
-		const usersTasks = getTasksHandler(
+		const usersTasks = await getTasksHandler(
 			req,
 			{ editors: req.user._id },
-			selectFieldsGlobal
+			selectFieldsGlobal_View
 		);
 		res.send(usersTasks);
 	} catch (e) {
@@ -78,10 +81,10 @@ async function getSpecificTaskHandler(req, res) {
 
 async function getTeamPriorityTasksHandler(req, res) {
 	try {
-		const priorityTasks = getTasksHandler(
+		const priorityTasks = await getTasksHandler(
 			req,
 			{ editors: req.user._id, isTeamPriority: true },
-			selectFieldsGlobal
+			selectFieldsGlobal_View
 		);
 		res.send(priorityTasks);
 	} catch (e) {
@@ -91,10 +94,10 @@ async function getTeamPriorityTasksHandler(req, res) {
 
 async function getUserPriorityTasksHandler(req, res) {
 	try {
-		const priorityTasks = getTasksHandler(
+		const priorityTasks = await getTasksHandler(
 			req,
 			{ editors: req.user._id, usersPriority: req.user._id },
-			selectFieldsGlobal
+			selectFieldsGlobal_View
 		);
 		res.send(priorityTasks);
 	} catch (e) {
@@ -104,10 +107,10 @@ async function getUserPriorityTasksHandler(req, res) {
 
 async function getTasksFromListHandler(req, res) {
 	try {
-		const tasks = getTasksHandler(
+		const tasks = await getTasksHandler(
 			req,
 			{ listId: req.list._id },
-			selectFieldsGlobal
+			selectFieldsGlobal_View
 		);
 		res.send(tasks);
 	} catch (e) {
@@ -115,7 +118,7 @@ async function getTasksFromListHandler(req, res) {
 	}
 }
 
-async function getTasksHandler(req, queryFields, selectFields) {
+async function getTasksHandler(req, queryFields) {
 	const options = optionsBuilder(
 		req.query.limit,
 		req.query.skip,
@@ -123,14 +126,16 @@ async function getTasksHandler(req, queryFields, selectFields) {
 		req.query.sortValue
 	);
 	const match = matchBuilder(req.query);
+
 	const tasks = await Task.find(
 		{
 			...queryFields,
 			...match,
 		},
-		selectFields,
+		selectFieldsGlobal_View,
 		options
 	);
+
 	return tasks;
 }
 
@@ -188,11 +193,29 @@ async function changeListHandler(req, res) {
 async function assignUserHandler(req, res) {
 	try {
 		req.task.editors.push(req.assignee._id);
+
+		if (Socket.io.sockets.adapter.rooms[req.assignee._id].length > 0) {
+			Socket.sendEventToRoom(req.assignee._id, SOCKET_EVENTS.ASSIGNED, {
+				assignedTo: req.task,
+			});
+		} else {
+			const newEvent = {
+				event: {
+					text: 'You have been assigned to new task.',
+					reference: {
+						_id: req.task._id,
+						eventType: 'assignment',
+					},
+				},
+			};
+			req.assignee.notifications.push(newEvent);
+			await req.assignee.save();
+		}
 		await req.task.save();
 
 		res.send(req.task);
 	} catch (e) {
-		console.log(e);
+		console.log(e.message);
 		res.status(400).send({ error: e.message });
 	}
 }
@@ -213,32 +236,35 @@ async function deleteTaskHandler(req, res) {
 		await deleteSingleTaskHandler(req.task);
 		return res.json({ message: 'Successfully deleted' });
 	} catch (e) {
-		console.log(e);
 		return res.status(400).json({ error: e.message });
 	}
 }
-
+process.on('unhandledRejection', (reason, promise) => {
+	console.log(reason, promise);
+});
 async function deleteSingleTaskHandler(task) {
-	let stack = [];
-	stack.push(task);
-	const promises = [];
-	while (stack.length > 0) {
-		let currentTask = stack.pop();
-		await currentTask.populate('subTasks').execPopulate();
-		for (const sub of currentTask.subTasks) {
-			stack.push(sub);
-		}
-		const commentsToRemove = await Comment.find({
-			taskId: currentTask._id,
-		});
-		if (commentsToRemove.length > 0) {
-			for (const comment of commentsToRemove) {
-				primises.push(comment.remove());
+	try {
+		const stack = [];
+		stack.push(task);
+		const promises = [];
+		while (stack.length > 0) {
+			let currentTask = stack.pop();
+			await currentTask.populate('subTasks').execPopulate();
+			for (const sub of currentTask.subTasks) {
+				stack.push(sub);
 			}
+			const commentsToRemove = await Comment.find({
+				taskId: currentTask._id,
+			});
+			if (commentsToRemove && commentsToRemove.length > 0) {
+				for (const comment of commentsToRemove) {
+					promises.push(comment.remove());
+				}
+			}
+			promises.push(currentTask.remove());
 		}
-		promises.push(currentTask.remove());
-	}
-	await Promise.all(promises);
+		await Promise.all(promises);
+	} catch (e) {}
 }
 
 module.exports = {

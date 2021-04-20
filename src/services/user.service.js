@@ -1,7 +1,11 @@
 const User = require('../db/models/user.model');
 const Calendar = require('../db/models/calendar.model');
 const { deleteSingleTeamHandler } = require('./team.service');
-const { optionsBuilder, queryHandler } = require('./utils/services.utils');
+const {
+	optionsBuilder,
+	matchBuilder,
+	queryHandler,
+} = require('./utils/services.utils');
 
 const {
 	getSessionMessagesHandler,
@@ -9,11 +13,7 @@ const {
 } = require('../services/session.service');
 
 const Socket = require('../socket/socket');
-
-function sendMessageEvent(room, message) {
-	console.log(Socket);
-	Socket.sendEventToRoom(room, 'new-message', message);
-}
+const { SOCKET_EVENTS } = require('../constants/socket_events');
 
 //
 //        ROUTER HANDLERS
@@ -24,7 +24,14 @@ async function createUserHandler(req, res) {
 			if (req.body.role) {
 				delete req.body.role;
 			}
-			const user = new User(req.body);
+			if (req.body.tag) {
+				delete req.body.tag;
+			}
+			const tag = await User.generateTag();
+			const user = new User({
+				...req.body,
+				tag,
+			});
 			const userCalendar = new Calendar({
 				userId: user._id,
 			});
@@ -33,7 +40,8 @@ async function createUserHandler(req, res) {
 			const token = await user.generateAuthToken();
 			res.send({ user, token });
 		} catch (e) {
-			res.status(400).send(e);
+			console.log(e);
+			res.status(400).send({ error: e.message });
 		}
 	}
 }
@@ -44,8 +52,12 @@ async function loginUserHandler(req, res) {
 			req.body.email,
 			req.body.password
 		);
+		const notificationNumber = user.notifications.reduce(
+			(acc, notif) => acc + (notif.seen ? 0 : 1),
+			0
+		);
 		const token = await user.generateAuthToken();
-		res.send({ user, token });
+		res.send({ user, token, notificationNumber });
 	} catch (e) {
 		console.log(e);
 		res.status(400).send(e);
@@ -81,6 +93,23 @@ async function getUserHandler(req, res) {
 	}
 }
 
+async function getAllNotificationsHandler(req, res) {
+	try {
+		const requestedNotifications = queryHandler(
+			req.user.notifications,
+			req.query
+		);
+		req.user.notifications.forEach((notif) => {
+			if (requestedNotifications.includes(notif) && !notif.seen)
+				notif.seen = true;
+		});
+		await req.user.save();
+		res.send(requestedNotifications);
+	} catch (e) {
+		res.status(400).send({ error: e.message });
+	}
+}
+
 async function getTeamInvitationsHandler(req, res) {
 	try {
 		const options = optionsBuilder(
@@ -110,13 +139,13 @@ async function getUserMessagesHandler(req, res) {
 			req.query.limit,
 			req.query.skip,
 			'createdAt',
-			-1
+			1
 		);
+
 		const messages = await getSessionMessagesHandler(options, [
 			req.user._id,
 			receiver._id,
 		]);
-		console.log(messages);
 		res.send(messages);
 	} catch (e) {
 		res.status(400).send({ error: e.message });
@@ -144,14 +173,28 @@ async function getTeamMessagesHandler(req, res) {
 
 async function getUserByEmailHandler(req, res) {
 	try {
-		const user = await User.findOne({ email: req.params.email });
-		if (!user) {
-			throw new Error('No user with that email found.');
-		}
+		const user = await getSingleUserHandler({ email: req.params.email });
 		res.send({ user });
 	} catch (e) {
 		res.status(400).send({ error: e.message });
 	}
+}
+
+async function getUserByTagHandler(req, res) {
+	try {
+		const user = await getSingleUserHandler({ tag: req.params.tag });
+		res.send({ user });
+	} catch (e) {
+		res.status(400).send({ error: e.message });
+	}
+}
+
+async function getSingleUserHandler(queryObject) {
+	const user = await User.findOne(queryObject);
+	if (!user) {
+		throw new Error('No user found.');
+	}
+	return user;
 }
 
 //
@@ -187,17 +230,35 @@ async function sendTeamInvitationHandler(req, res) {
 			throw new Error('User not found.');
 		}
 		if (
-			user.invitations.includes(req.team._id) ||
+			user.invitations
+				.map((invitation) => invitation.teamId)
+				.includes(req.team._id) ||
 			user.teams.includes(req.team._id)
 		) {
-			throw new Error('Already invited');
+			throw new Error('Already invited or joined.');
 		}
 
-		if (user.invitations.length < 20) {
-			user.invitations.push(req.team._id);
-			await user.save();
-			res.send({ num: user.invitations.length });
+		user.invitations.push({ teamId: req.team._id });
+		const usersRoom = Socket.io.sockets.adapter.rooms[user._id];
+		if (usersRoom && usersRoom.length > 0) {
+			Socket.sendEventToRoom(user._id, SOCKET_EVENTS.NEW_INVITATIONS, {
+				invited: req.team,
+			});
+		} else {
+			const newEvent = {
+				event: {
+					text: 'You have been invited to new team.',
+					reference: {
+						_id: req.team._id,
+						eventType: 'invitation',
+					},
+				},
+			};
+			user.notifications.push(newEvent);
 		}
+		console.log(user);
+		await user.save();
+		res.send({ num: user.invitations.length });
 	} catch (e) {
 		res.status(400).send({ error: e.message });
 	}
@@ -205,16 +266,15 @@ async function sendTeamInvitationHandler(req, res) {
 
 async function acceptTeamInvitationHandler(req, res) {
 	try {
-		console.log(req.user.invitations);
-		console.log(req.params.teamId);
-		req.user.invitations = req.user.invitations.filter((invitationId) => {
-			if (invitationId.equals(req.params.teamId)) {
+		req.user.invitations = req.user.invitations.filter((invitation) => {
+			if (invitation.teamId.equals(req.params.teamId)) {
 				req.user.teams.push(req.params.teamId);
 				return false;
 			}
 			return true;
 		});
 		await req.user.save();
+		// 						CE VIDIMO ZA OVO			Socket.sendEventToRoom(team.leaderId,SOCKET_EVENTS.INVITATION_ACCEPTED, req.user);
 		res.send(req.user.invitations);
 	} catch (e) {
 		res.status(400).send({ error: e.message });
@@ -224,7 +284,7 @@ async function acceptTeamInvitationHandler(req, res) {
 async function declineTeamInvitationHandler(req, res) {
 	try {
 		req.user.invitations = req.user.invitations.filter(
-			(invitationId) => !invitationId.equals(req.params.teamId)
+			(invitation) => !invitation.teamId.equals(req.params.teamId)
 		);
 		await req.user.save();
 		res.send(req.user.invitations);
@@ -301,8 +361,9 @@ module.exports = {
 	acceptTeamInvitationHandler,
 	declineTeamInvitationHandler,
 	deleteAnyUserHandler,
-
+	getAllNotificationsHandler,
 	getUserByEmailHandler,
 	getUserMessagesHandler,
 	getTeamMessagesHandler,
+	getUserByTagHandler,
 };

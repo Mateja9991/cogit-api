@@ -1,5 +1,5 @@
-const { jwt_socketAuth } = require('./jwt_authorization');
+const { jwtSocketAuth } = require('./jwt_authorization');
 
 module.exports = {
-	jwt_socketAuth,
+	jwtSocketAuth,
 };

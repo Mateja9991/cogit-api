@@ -78,16 +78,18 @@ async function getMembersHandler(req, res) {
 			req.query.limit,
 			req.query.skip,
 			req.query.sortBy,
-			req.quert.sortValue
+			req.query.sortValue
 		);
+		const match = matchBuilder(req.query);
 		const requestedMembers = await User.find(
 			{
 				teams: req.team._id,
+				...match,
 			},
-			'username email -_id',
+			'username email',
 			options
 		);
-
+		console.log(requestedMembers);
 		res.send(requestedMembers);
 	} catch (e) {
 		res.status(400).send({ error: e.message });

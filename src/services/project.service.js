@@ -9,6 +9,8 @@ const {
 //
 //				ROUTER HANDLERS
 //
+selectFieldsGlobal_View = 'name tags isArchived isTemplate teamId ';
+
 async function createProjectHandler(req, res) {
 	try {
 		await duplicateHandler(Project, 'teamId', req.team._id, req.body);
@@ -64,7 +66,7 @@ async function getProjectsFromOneTeam(team, options) {
 		{
 			teamId: team._id,
 		},
-		'name -_id',
+		selectFieldsGlobal_View,
 		options
 	);
 

@@ -3,17 +3,24 @@ const { MODEL_NAMES } = require('../../constants/model_names');
 //
 //              Schema
 //
-const teamSchema = new Schema({
-	name: {
-		type: String,
-		required: true,
+const teamSchema = new Schema(
+	{
+		name: {
+			type: String,
+			required: true,
+		},
+		leaderId: {
+			type: Schema.Types.ObjectId,
+			required: true,
+			ref: MODEL_NAMES.USER,
+		},
 	},
-	leaderId: {
-		type: Schema.Types.ObjectId,
-		required: true,
-		ref: MODEL_NAMES.USER,
-	},
-});
+	{
+		timestamps: true,
+		toJSON: { virtuals: true },
+		toObject: { virtuals: true },
+	}
+);
 //
 //              Virtuals
 //

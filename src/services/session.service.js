@@ -1,13 +1,14 @@
 const Session = require('../db/models/session.model');
 const Message = require('../db/models/message.model');
+const User = require('../db/models/user.model');
 
 async function getSessionHandler(sessionParticipants, teamId) {
 	try {
 		let session;
 		if (teamId) {
-			session = getTeamSessionHandler(teamId);
+			session = await getTeamSessionHandler(teamId);
 		} else {
-			session = getPrivateSessionHandler(sessionParticipants);
+			session = await getPrivateSessionHandler(sessionParticipants);
 		}
 		return session
 			? session
@@ -20,9 +21,8 @@ async function getSessionHandler(sessionParticipants, teamId) {
 async function newSessionHandler(sessionParticipants, teamId) {
 	try {
 		const newSession = new Session({
-			teamId: teamId,
+			teamId: teamId ? teamId : undefined,
 		});
-
 		if (teamId) {
 			users = await User.find({
 				teams: teamId,
@@ -42,6 +42,7 @@ async function newSessionHandler(sessionParticipants, teamId) {
 			});
 		}
 		await newSession.save();
+		return newSession;
 	} catch (e) {
 		console.log(e);
 	}
@@ -62,7 +63,6 @@ async function getSessionMessagesHandler(options, sessionParticipants, teamId) {
 			'from text createdAt -_id',
 			options
 		);
-		console.log(sessionMessages);
 		return sessionMessages;
 	} catch (e) {
 		console.log(e);
@@ -73,19 +73,16 @@ async function getTeamSessionHandler(teamId) {
 	const session = await Session.findOne({
 		teamId,
 	});
-	if (!session) {
-		throw new Error('No such team session.');
-	}
+	console.log(teamId);
+	console.log(session);
 	return session;
 }
 
 async function getPrivateSessionHandler(sessionParticipants) {
 	let result = null;
-	console.log(sessionParticipants);
 	const sessions = await Session.find({
 		participants: { $elemMatch: { userId: { $in: sessionParticipants } } },
 	});
-	console.log('proslo');
 	sessions.forEach((session) => {
 		session.userIds = session.participants.map(
 			(participant) => participant.userId
@@ -97,10 +94,6 @@ async function getPrivateSessionHandler(sessionParticipants) {
 			result = session;
 		}
 	});
-	console.log('result:	', result);
-	if (!result) {
-		throw new Error('No such private session.');
-	}
 	return result;
 }
 

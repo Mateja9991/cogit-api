@@ -24,6 +24,8 @@ const {
 	deleteAnyUserHandler,
 	getUserMessagesHandler,
 	getTeamMessagesHandler,
+	getAllNotificationsHandler,
+	getUserByTagHandler,
 } = require('../services/user.service');
 
 const router = new express.Router();
@@ -49,6 +51,12 @@ router.get(
 );
 
 router.get(
+	'/users/me/notifications',
+	jwtAuthMiddleware,
+	getAllNotificationsHandler
+);
+
+router.get(
 	'/users/:userId/me/messages',
 	jwtAuthMiddleware,
 	getUserMessagesHandler
@@ -61,6 +69,8 @@ router.get(
 );
 
 router.get('/users/email/:email', jwtAuthMiddleware, getUserByEmailHandler);
+
+router.get('/users/tag/:tag', jwtAuthMiddleware, getUserByTagHandler);
 
 router.patch('/users/me', jwtAuthMiddleware, updateUserHandler);
 
