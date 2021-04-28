@@ -5,7 +5,7 @@ const { deleteSingleTaskHandler } = require('./task.service');
 //
 //				ROUTER HANDLERS
 //
-async function createListHandler(req, res) {
+async function createListHandler(req, res, next) {
 	try {
 		await duplicateHandler(List, 'projectId', req.project._id, req.body);
 		const list = new List({
@@ -19,7 +19,7 @@ async function createListHandler(req, res) {
 	}
 }
 
-async function getProjectsListsHandler(req, res) {
+async function getProjectsListsHandler(req, res, next) {
 	try {
 		await req.project.populate('lists').execPopulate();
 		res.send(req.project.lists);
@@ -28,11 +28,11 @@ async function getProjectsListsHandler(req, res) {
 	}
 }
 
-async function getSpecificListHandler(req, res) {
+async function getSpecificListHandler(req, res, next) {
 	res.send(req.list);
 }
 
-async function updateListHandler(req, res) {
+async function updateListHandler(req, res, next) {
 	const updates = Object.keys(req.body);
 	const allowedToUpdate = ['name'];
 	const isValidUpdate = updates.every((update) =>
@@ -55,7 +55,7 @@ async function updateListHandler(req, res) {
 	}
 }
 
-async function deleteListHandler(req, res) {
+async function deleteListHandler(req, res, next) {
 	try {
 		await deleteSingleListHandler(req.list);
 		res.send({

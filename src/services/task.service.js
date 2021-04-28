@@ -16,14 +16,14 @@ const {
 const selectFieldsGlobal_View =
 	'name description isCompleted parentTaskId isArchived isTeamPriority';
 
-async function createTaskHandler(req, res) {
+async function createTaskHandler(req, res, next) {
 	await createTask(res, req, {
 		...req.body,
 		listId: req.list._id,
 	});
 }
 
-async function createSubTaskHandler(req, res) {
+async function createSubTaskHandler(req, res, next) {
 	try {
 		const parentTask = await Task.findOne({ _id: req.params.taskId });
 		await createTask(res, req, {
@@ -58,7 +58,7 @@ async function createTask(res, req, task) {
 	}
 }
 
-async function getUserTasksHandler(req, res) {
+async function getUserTasksHandler(req, res, next) {
 	try {
 		const usersTasks = await getTasksHandler(
 			req,
@@ -71,7 +71,7 @@ async function getUserTasksHandler(req, res) {
 	}
 }
 
-async function getSpecificTaskHandler(req, res) {
+async function getSpecificTaskHandler(req, res, next) {
 	try {
 		res.send(req.task);
 	} catch (e) {
@@ -79,7 +79,7 @@ async function getSpecificTaskHandler(req, res) {
 	}
 }
 
-async function getTeamPriorityTasksHandler(req, res) {
+async function getTeamPriorityTasksHandler(req, res, next) {
 	try {
 		const priorityTasks = await getTasksHandler(
 			req,
@@ -92,7 +92,7 @@ async function getTeamPriorityTasksHandler(req, res) {
 	}
 }
 
-async function getUserPriorityTasksHandler(req, res) {
+async function getUserPriorityTasksHandler(req, res, next) {
 	try {
 		const priorityTasks = await getTasksHandler(
 			req,
@@ -105,7 +105,7 @@ async function getUserPriorityTasksHandler(req, res) {
 	}
 }
 
-async function getTasksFromListHandler(req, res) {
+async function getTasksFromListHandler(req, res, next) {
 	try {
 		const tasks = await getTasksHandler(
 			req,
@@ -139,7 +139,7 @@ async function getTasksHandler(req, queryFields) {
 	return tasks;
 }
 
-async function updateTaskHandler(req, res) {
+async function updateTaskHandler(req, res, next) {
 	const updates = Object.keys(req.body);
 	const allowedToUpdate = ['name', 'description', 'isCompleted'];
 	const isValidUpdate = updates.every((update) =>
@@ -160,7 +160,7 @@ async function updateTaskHandler(req, res) {
 	}
 }
 //	user priority set
-async function setUsersPriorityHandler(req, res) {
+async function setUsersPriorityHandler(req, res, next) {
 	try {
 		req.task.usersPriority.push(req.user._id);
 		await req.task.save();
@@ -170,7 +170,7 @@ async function setUsersPriorityHandler(req, res) {
 	}
 }
 //	team priority set
-async function setTeamsPriorityHandler(req, res) {
+async function setTeamsPriorityHandler(req, res, next) {
 	try {
 		if (!req.task) throw new Error('You are not authorized.');
 		req.task.isTeamPriority = req.body.isTeamPriority === true;
@@ -181,7 +181,7 @@ async function setTeamsPriorityHandler(req, res) {
 	}
 }
 //	change listId (promena liste)
-async function changeListHandler(req, res) {
+async function changeListHandler(req, res, next) {
 	try {
 		req.task.listId = req.params.listId;
 		await req.task.save();
@@ -191,7 +191,7 @@ async function changeListHandler(req, res) {
 	}
 }
 //
-async function assignUserHandler(req, res) {
+async function assignUserHandler(req, res, next) {
 	try {
 		req.task.editors.push(req.assignee._id);
 
@@ -223,7 +223,7 @@ async function assignUserHandler(req, res) {
 	}
 }
 
-async function archiveTaskHandler(req, res) {
+async function archiveTaskHandler(req, res, next) {
 	try {
 		req.task.isArchived = req.body.isArchived === true;
 		await req.task.save();
@@ -234,7 +234,7 @@ async function archiveTaskHandler(req, res) {
 	}
 }
 
-async function deleteTaskHandler(req, res) {
+async function deleteTaskHandler(req, res, next) {
 	try {
 		return res.json(await deleteSingleTaskHandler(req.task));
 	} catch (e) {

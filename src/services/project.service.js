@@ -10,7 +10,7 @@ const {
 //
 selectFieldsGlobal_View = 'name tags isArchived isTemplate teamId ';
 
-async function createProjectHandler(req, res) {
+async function createProjectHandler(req, res, next) {
 	try {
 		const project = new Project({
 			...req.body,
@@ -23,7 +23,7 @@ async function createProjectHandler(req, res) {
 	}
 }
 
-async function getTeamsProjectsHandler(req, res) {
+async function getTeamsProjectsHandler(req, res, next) {
 	try {
 		const options = optionsBuilder(
 			req.query.limit,
@@ -38,7 +38,7 @@ async function getTeamsProjectsHandler(req, res) {
 	}
 }
 
-async function getMyProjectsHandler(req, res) {
+async function getMyProjectsHandler(req, res, next) {
 	try {
 		await req.user.populate('teams').execPopulate();
 		if (!req.user.teams.length) {
@@ -70,11 +70,11 @@ async function getProjectsFromOneTeam(team, options) {
 	return teamProjects;
 }
 
-async function getSpecificProjectHandler(req, res) {
+async function getSpecificProjectHandler(req, res, next) {
 	res.send(req.project);
 }
 
-async function updateProjectHandler(req, res) {
+async function updateProjectHandler(req, res, next) {
 	const updates = Object.keys(req.body);
 	const allowedToUpdate = [
 		'name',
@@ -101,7 +101,7 @@ async function updateProjectHandler(req, res) {
 		next(e);
 	}
 }
-async function addLinkToProjectHandler(req, res) {
+async function addLinkToProjectHandler(req, res, next) {
 	const updates = Object.keys(req.body);
 
 	try {
@@ -117,7 +117,7 @@ async function addLinkToProjectHandler(req, res) {
 	}
 }
 
-async function deleteProjectHandler(req, res) {
+async function deleteProjectHandler(req, res, next) {
 	try {
 		await deleteSingleProjectHandler(req.project);
 		res.send({

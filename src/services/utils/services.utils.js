@@ -1,3 +1,4 @@
+const lodash = require('lodash');
 async function duplicateHandler(model, parentPropertyPath, parentId, child) {
 	const isDuplicate = await model.findOne({
 		[parentPropertyPath]: parentId,
@@ -37,17 +38,24 @@ function matchBuilder(query) {
 }
 
 function queryHandler(allItems, query) {
+	const sortBy = query.sortBy;
+	const sortValue = query.sortValue ? query.sortValue : 1;
 	const skip = query.skip ? query.skip : 0;
 	const offset = query.limit ? query.limit : allItems.length - skip;
-	const requestedItems = allItems.slice(
-		Number(skip),
-		Number(skip) + Number(offset)
+	const match = matchBuilder(query);
+	const matchKeys = Object.keys(match);
+
+	let requestedItems = allItems.filter(
+		(item) =>
+			matchKeys.length ===
+			matchKeys.filter((key) => lodash.get(item, key).toString() === match[key])
+				.length
 	);
-	const sortValue = query.sortValue ? query.sortValue : 1;
-	if (query.sortBy) {
-		requestedItems.sort((a, b) => {
-			let valueA = a[query.sortBy];
-			let valueB = b[query.sortBy];
+
+	if (sortBy) {
+		allItems.sort((a, b) => {
+			let valueA = a[sortBy];
+			let valueB = b[sortBy];
 			if (typeof valueA === 'string' || valueA instanceof String) {
 				valueA = valueA.toUpperCase();
 				valueB = valueB.toUpperCase();
@@ -61,6 +69,12 @@ function queryHandler(allItems, query) {
 			return 0;
 		});
 	}
+
+	requestedItems = requestedItems.slice(
+		Number(skip),
+		Number(skip) + Number(offset)
+	);
+
 	return requestedItems;
 }
 

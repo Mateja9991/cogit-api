@@ -14,6 +14,20 @@ const teamSchema = new Schema(
 			required: true,
 			ref: MODEL_NAMES.USER,
 		},
+		visit: [
+			{
+				userId: {
+					type: Schema.Types.ObjectId,
+					required: true,
+				},
+				dates: [
+					{
+						type: Date,
+						required: true,
+					},
+				],
+			},
+		],
 	},
 	{
 		timestamps: true,

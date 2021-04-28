@@ -116,6 +116,7 @@ const userSchema = new Schema(
 		toObject: { virtuals: true },
 	}
 );
+
 //
 //              Middleware
 //

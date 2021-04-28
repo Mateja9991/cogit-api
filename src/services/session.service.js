@@ -115,7 +115,7 @@ async function addParticipantHandler(teamId, userId) {
 	}
 }
 
-async function createPrivateSessionHandler(req, res) {
+async function createPrivateSessionHandler(req, res, next) {
 	try {
 		const session = getSessionHandler([
 			req.user._id.toString(),
@@ -127,7 +127,7 @@ async function createPrivateSessionHandler(req, res) {
 	}
 }
 
-async function getUsersPrivateSessions(req, res) {
+async function getUsersPrivateSessions(req, res, next) {
 	try {
 		const sessions = await Session.find({
 			participants: { $elemMatch: { userId: req.user._id } },
@@ -139,7 +139,7 @@ async function getUsersPrivateSessions(req, res) {
 	}
 }
 
-async function getOnePrivateSession(req, res) {
+async function getOnePrivateSession(req, res, next) {
 	try {
 		const session = await getPrivateSessionHandler([
 			req.user._id,
@@ -151,7 +151,7 @@ async function getOnePrivateSession(req, res) {
 	}
 }
 
-async function teamSessionHandler(req, res) {
+async function teamSessionHandler(req, res, next) {
 	try {
 		const session = await Session.findOne({
 			teamId: req.params.teamId,
@@ -162,7 +162,7 @@ async function teamSessionHandler(req, res) {
 	}
 }
 
-async function getMessagesHandler(req, res) {
+async function getMessagesHandler(req, res, next) {
 	try {
 		const options = optionsBuilder(
 			req.query.limit,

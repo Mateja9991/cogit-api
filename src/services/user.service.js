@@ -21,7 +21,7 @@ const { SOCKET_EVENTS } = require('../constants/socket_events');
 //'images',
 //        ROUTER HANDLERS
 //
-async function createUserHandler(req, res) {
+async function createUserHandler(req, res, next) {
 	{
 		try {
 			if (req.body.role) {
@@ -49,7 +49,7 @@ async function createUserHandler(req, res) {
 	}
 }
 
-async function loginUserHandler(req, res) {
+async function loginUserHandler(req, res, next) {
 	try {
 		const user = await User.findByCredentials(
 			req.body.email,
@@ -66,7 +66,7 @@ async function loginUserHandler(req, res) {
 	}
 }
 
-async function uploadAvatarHandler(req, res) {
+async function uploadAvatarHandler(req, res, next) {
 	try {
 		const avatarBuffer = await sharp(req.file.buffer)
 			.resize({ width: 250, height: 250 })
@@ -80,7 +80,7 @@ async function uploadAvatarHandler(req, res) {
 	}
 }
 
-async function logoutUserHandler(req, res) {
+async function logoutUserHandler(req, res, next) {
 	try {
 		await req.user.save();
 		res.send();
@@ -91,12 +91,12 @@ async function logoutUserHandler(req, res) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////									GET ROUTES								////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-async function getProfileHandler(req, res) {
+async function getProfileHandler(req, res, next) {
 	req.user.populate('teams');
 	res.send(req.user);
 }
 
-async function getAvatarHandler(req, res) {
+async function getAvatarHandler(req, res, next) {
 	try {
 		res.set('Content-Type', 'image/png');
 		res.send(
@@ -109,7 +109,7 @@ async function getAvatarHandler(req, res) {
 	}
 }
 
-async function getUserHandler(req, res) {
+async function getUserHandler(req, res, next) {
 	try {
 		const user = await User.findById(req.params.id);
 		if (!user) {
@@ -122,24 +122,46 @@ async function getUserHandler(req, res) {
 	}
 }
 
-async function getAllNotificationsHandler(req, res) {
+async function getAllNotificationsHandler(req, res, next) {
 	try {
+		const sortBy = req.query.sortBy;
 		const requestedNotifications = queryHandler(
 			req.user.notifications,
 			req.query
 		);
-		req.user.notifications.forEach((notif) => {
-			if (requestedNotifications.includes(notif) && !notif.seen)
-				notif.seen = true;
-		});
-		await req.user.save();
-		res.send(requestedNotifications);
+
+		//// ZASTO?!
+
+		let i = 0;
+		let subArray;
+		let result = [];
+		console.log(requestedNotifications[i]);
+		while (i < requestedNotifications.length) {
+			subArray = requestedNotifications.filter((notif) =>
+				sortBy ? notif[sortBy] === requestedNotifications[i][sortBy] : true
+			);
+			subArray.sort((a, b) => {
+				return a.receivedAt.getTime() < b.receivedAt.getTime() ? 1 : -1;
+			});
+			i += subArray.length;
+			result = result.concat(subArray);
+		}
+		res.send(result);
+
+		///// MARK AS READ KAO POSEBNA FUNKCIJA KOJA HANDLUJE ERROR BEZ RESPONSE-A (HEADERS CANT BE SET MOZE DA SE DESI)
+
+		// req.user.notifications.forEach((notif) => {
+		// 	if (requestedNotifications.includes(notif) && !notif.seen)
+		// 		notif.seen = true;
+		// });
+		// await req.user.save();
 	} catch (e) {
+		console.log(e);
 		next(e);
 	}
 }
 
-async function getTeamInvitationsHandler(req, res) {
+async function getTeamInvitationsHandler(req, res, next) {
 	try {
 		const options = optionsBuilder(
 			req.query.limit,
@@ -161,7 +183,7 @@ async function getTeamInvitationsHandler(req, res) {
 	}
 }
 
-async function getUserMessagesHandler(req, res) {
+async function getUserMessagesHandler(req, res, next) {
 	try {
 		const receiver = await User.findById(req.params.userId);
 		const options = optionsBuilder(
@@ -181,7 +203,7 @@ async function getUserMessagesHandler(req, res) {
 	}
 }
 
-async function getTeamMessagesHandler(req, res) {
+async function getTeamMessagesHandler(req, res, next) {
 	try {
 		const options = optionsBuilder(
 			req.query.limit,
@@ -200,7 +222,7 @@ async function getTeamMessagesHandler(req, res) {
 	}
 }
 
-async function getUserByEmailHandler(req, res) {
+async function getUserByEmailHandler(req, res, next) {
 	try {
 		const user = await getSingleUserHandler({ email: req.params.email });
 		res.send({ user });
@@ -209,7 +231,7 @@ async function getUserByEmailHandler(req, res) {
 	}
 }
 
-async function getUserByUsernameHandler(req, res) {
+async function getUserByUsernameHandler(req, res, next) {
 	try {
 		const user = await getSingleUserHandler({ username: req.params.username });
 		res.send({ user });
@@ -230,7 +252,7 @@ async function getSingleUserHandler(queryObject) {
 //
 //
 
-async function updateUserHandler(req, res) {
+async function updateUserHandler(req, res, next) {
 	const updates = Object.keys(req.body);
 	const allowedToUpdate = ['username', 'email', 'password'];
 	const isValidUpdate = updates.every((update) =>
@@ -252,7 +274,7 @@ async function updateUserHandler(req, res) {
 	}
 }
 
-async function sendTeamInvitationHandler(req, res) {
+async function sendTeamInvitationHandler(req, res, next) {
 	try {
 		const user = await User.findOne({ _id: req.params.userId });
 		if (!user) {
@@ -297,7 +319,7 @@ async function sendTeamInvitationHandler(req, res) {
 	}
 }
 
-async function acceptTeamInvitationHandler(req, res) {
+async function acceptTeamInvitationHandler(req, res, next) {
 	try {
 		if (
 			!req.user.invitations.filter((inv) =>
@@ -342,7 +364,7 @@ async function acceptTeamInvitationHandler(req, res) {
 	}
 }
 
-async function declineTeamInvitationHandler(req, res) {
+async function declineTeamInvitationHandler(req, res, next) {
 	try {
 		req.user.invitations = req.user.invitations.filter(
 			(invitation) => !invitation.teamId.equals(req.params.teamId)
@@ -354,7 +376,7 @@ async function declineTeamInvitationHandler(req, res) {
 	}
 }
 
-async function deleteUserHandler(req, res) {
+async function deleteUserHandler(req, res, next) {
 	try {
 		if (req.user.teams.length > 0) {
 			await req.user.populate('teams').execPopulate();
@@ -374,7 +396,7 @@ async function deleteUserHandler(req, res) {
 //				ADMIN ROUTES
 //
 
-async function getAllUsersHandler(req, res) {
+async function getAllUsersHandler(req, res, next) {
 	try {
 		// if (!req.admin) {
 		// 	throw new Error('You are not admin');
@@ -386,7 +408,7 @@ async function getAllUsersHandler(req, res) {
 	}
 }
 
-async function deleteAnyUserHandler(req, res) {
+async function deleteAnyUserHandler(req, res, next) {
 	try {
 		if (!req.admin) {
 			throw new Error('You are not admin');
@@ -405,7 +427,7 @@ async function deleteAnyUserHandler(req, res) {
 		next(e);
 	}
 }
-async function deleteAvatarHandler(req, res) {
+async function deleteAvatarHandler(req, res, next) {
 	try {
 		if (req.user.avatar) {
 			req.user.avatar = null;

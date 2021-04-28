@@ -11,7 +11,7 @@ const {
 //
 //				ROUTER HANDLERS
 //
-async function createTeamHandler(req, res) {
+async function createTeamHandler(req, res, next) {
 	try {
 		await req.user.populate('teams').execPopulate();
 		// await duplicateHandler(Team, 'leaderId', req.user._id, req.body);
@@ -29,7 +29,7 @@ async function createTeamHandler(req, res) {
 	}
 }
 
-async function getAllUserTeamsHandler(req, res) {
+async function getAllUserTeamsHandler(req, res, next) {
 	try {
 		const options = optionsBuilder(
 			req.query.limit,
@@ -45,18 +45,26 @@ async function getAllUserTeamsHandler(req, res) {
 				options,
 			})
 			.execPopulate();
-		res.send(req.user.teams);
+		res.send(await sortUserTeams(req.user));
 	} catch (e) {
 		next(e);
 	}
 }
 
-async function getLeaderTeamsHandler(req, res) {
+async function getLeaderTeamsHandler(req, res, next) {
 	try {
+		let allLeaderTeams;
 		await req.user.populate('teams').execPopulate();
-		const allLeaderTeams = req.user.teams.filter((item) =>
-			item.leaderId.equals(req.user._id)
-		);
+		if (req.query.sortBy) {
+			allLeaderTeams = req.user.teams.filter((item) =>
+				item.leaderId.equals(req.user._id)
+			);
+		} else {
+			const sortedTeams = await sortUserTeams(req.user);
+			allLeaderTeams = sortedTeams.filter((item) =>
+				item.leaderId.equals(req.user._id)
+			);
+		}
 		const requestedTeams = queryHandler(allLeaderTeams, req.query);
 		res.send(requestedTeams);
 	} catch (e) {
@@ -64,15 +72,48 @@ async function getLeaderTeamsHandler(req, res) {
 	}
 }
 
-async function getTeamHandler(req, res) {
+async function sortUserTeams(user) {
+	const teams = user.teams;
+	const tmp = teams.map((team) => {
+		const userVisitsIndex = team.visit.findIndex((vis) =>
+			vis.userId.equals(user._id)
+		);
+		console.log(userVisitsIndex);
+		return {
+			team,
+			numberOfVisits:
+				userVisitsIndex === -1 ? 0 : team.visit[userVisitsIndex].dates.length,
+		};
+	});
+	tmp.sort((a, b) => {
+		if (a.numberOfVisits < b.numberOfVisits) return 1;
+		return -1;
+	});
+	console.log(tmp.map((vis) => vis.numberOfVisits));
+	return tmp.map((vis) => vis.team);
+}
+
+async function getTeamHandler(req, res, next) {
 	try {
-		res.send(req.team);
+		for (const visit of req.team.visit) {
+			if (visit.userId.equals(req.user._id)) {
+				visit.dates.push(Date.now());
+				await req.team.save();
+				return res.send(req.team);
+			}
+		}
+		req.team.visit.push({
+			userId: req.user._id,
+			dates: [Date.now()],
+		});
+		await req.team.save();
+		return res.send(req.team);
 	} catch (e) {
 		next(e);
 	}
 }
 
-async function getMembersHandler(req, res) {
+async function getMembersHandler(req, res, next) {
 	try {
 		const options = optionsBuilder(
 			req.query.limit,
@@ -96,7 +137,7 @@ async function getMembersHandler(req, res) {
 	}
 }
 
-async function updateTeamHandler(req, res) {
+async function updateTeamHandler(req, res, next) {
 	const updates = Object.keys(req.body);
 	const allowedToUpdate = ['name', 'leaderId'];
 	const isValidUpdate = updates.every((update) =>
@@ -118,7 +159,7 @@ async function updateTeamHandler(req, res) {
 	}
 }
 
-async function deleteTeamHandler(req, res) {
+async function deleteTeamHandler(req, res, next) {
 	try {
 		await deleteSingleTeamHandler(req.team);
 		res.send({

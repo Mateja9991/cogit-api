@@ -8,7 +8,7 @@ const {
 
 const selectFieldsGlobal_View = 'text taskId likes';
 
-async function createCommentHandler(req, res) {
+async function createCommentHandler(req, res, next) {
 	try {
 		const comment = new Comment({
 			...req.body,
@@ -22,7 +22,7 @@ async function createCommentHandler(req, res) {
 	}
 }
 
-async function getSpecificCommentHandler(req, res) {
+async function getSpecificCommentHandler(req, res, next) {
 	try {
 		res.send(req.comment);
 	} catch (e) {
@@ -30,7 +30,7 @@ async function getSpecificCommentHandler(req, res) {
 	}
 }
 
-async function getTaskCommentsHandler(req, res) {
+async function getTaskCommentsHandler(req, res, next) {
 	try {
 		const options = optionsBuilder(
 			req.query.limit,
@@ -53,7 +53,7 @@ async function getTaskCommentsHandler(req, res) {
 	}
 }
 
-async function updateCommentHandler(req, res) {
+async function updateCommentHandler(req, res, next) {
 	const updates = Object.keys(req.body);
 	const allowedToUpdate = ['text'];
 	const isValidUpdate = updates.every((update) =>
@@ -74,7 +74,7 @@ async function updateCommentHandler(req, res) {
 	}
 }
 
-async function likeCommentHandler(req, res) {
+async function likeCommentHandler(req, res, next) {
 	try {
 		const index = req.comment.likes.findIndex((userId) =>
 			userId.equals(req.user._id)
@@ -94,7 +94,7 @@ async function likeCommentHandler(req, res) {
 	}
 }
 
-async function deleteCommentHandler(req, res) {
+async function deleteCommentHandler(req, res, next) {
 	try {
 		await deleteSingleCommentHandler(req.comment);
 		res.send(req.comment);
