@@ -36,7 +36,7 @@ async function createSubTaskHandler(req, res) {
 			usersPriority: parentTask.usersPriority,
 		});
 	} catch (e) {
-		res.status(400).send({ error: e.message });
+		next(e);
 	}
 }
 
@@ -54,7 +54,7 @@ async function createTask(res, req, task) {
 		await newTask.save();
 		res.send(newTask);
 	} catch (e) {
-		res.status(400).send({ error: e.message });
+		next(e);
 	}
 }
 
@@ -67,7 +67,7 @@ async function getUserTasksHandler(req, res) {
 		);
 		res.send(usersTasks);
 	} catch (e) {
-		res.status(400).send({ error: e.message });
+		next(e);
 	}
 }
 
@@ -75,7 +75,7 @@ async function getSpecificTaskHandler(req, res) {
 	try {
 		res.send(req.task);
 	} catch (e) {
-		res.status(400).send({ error: e.message });
+		next(e);
 	}
 }
 
@@ -88,7 +88,7 @@ async function getTeamPriorityTasksHandler(req, res) {
 		);
 		res.send(priorityTasks);
 	} catch (e) {
-		res.status(400).send({ error: e.message });
+		next(e);
 	}
 }
 
@@ -101,7 +101,7 @@ async function getUserPriorityTasksHandler(req, res) {
 		);
 		res.send(priorityTasks);
 	} catch (e) {
-		res.status(400).send({ error: e.message });
+		next(e);
 	}
 }
 
@@ -114,7 +114,7 @@ async function getTasksFromListHandler(req, res) {
 		);
 		res.send(tasks);
 	} catch (e) {
-		res.status(400).send({ error: e.message });
+		next(e);
 	}
 }
 
@@ -156,7 +156,7 @@ async function updateTaskHandler(req, res) {
 		await req.task.save();
 		res.send(req.task);
 	} catch (e) {
-		res.status(400).send({ error: e.message });
+		next(e);
 	}
 }
 //	user priority set
@@ -166,17 +166,18 @@ async function setUsersPriorityHandler(req, res) {
 		await req.task.save();
 		res.send(req.task);
 	} catch (e) {
-		res.status(400).send({ error: e.message });
+		next(e);
 	}
 }
 //	team priority set
 async function setTeamsPriorityHandler(req, res) {
 	try {
+		if (!req.task) throw new Error('You are not authorized.');
 		req.task.isTeamPriority = req.body.isTeamPriority === true;
 		await req.task.save();
 		res.send(req.task);
 	} catch (e) {
-		res.status(400).send({ error: e.message });
+		next(e);
 	}
 }
 //	change listId (promena liste)
@@ -186,7 +187,7 @@ async function changeListHandler(req, res) {
 		await req.task.save();
 		res.send(req.task);
 	} catch (e) {
-		res.status(400).send({ error: e.message });
+		next(e);
 	}
 }
 //
@@ -194,29 +195,31 @@ async function assignUserHandler(req, res) {
 	try {
 		req.task.editors.push(req.assignee._id);
 
-		if (Socket.io.sockets.adapter.rooms[req.assignee._id].length > 0) {
-			Socket.sendEventToRoom(req.assignee._id, SOCKET_EVENTS.ASSIGNED, {
+		Socket.sendEventToRoom(
+			req.assignee._id,
+			SOCKET_EVENTS.NEW_NOTIFICATION,
+			{
 				assignedTo: req.task,
-			});
-		} else {
-			const newEvent = {
-				event: {
-					text: 'You have been assigned to new task.',
-					reference: {
-						_id: req.task._id,
-						eventType: 'assignment',
-					},
+			},
+			'users'
+		);
+		const newEvent = {
+			event: {
+				text: 'You have been assigned to new task.',
+				reference: {
+					_id: req.task._id,
+					eventType: 'assignment',
 				},
-			};
-			req.assignee.notifications.push(newEvent);
-			await req.assignee.save();
-		}
+			},
+			receivedAt: Date.now(),
+		};
+		req.assignee.notifications.push(newEvent);
+		await req.assignee.save();
 		await req.task.save();
 
 		res.send(req.task);
 	} catch (e) {
-		console.log(e.message);
-		res.status(400).send({ error: e.message });
+		next(e);
 	}
 }
 
@@ -225,46 +228,22 @@ async function archiveTaskHandler(req, res) {
 		req.task.isArchived = req.body.isArchived === true;
 		await req.task.save();
 
-		res.send(req.task);
+		return res.json(req.task);
 	} catch (e) {
-		res.status(400).send({ error: e.message });
+		next(e);
 	}
 }
 
 async function deleteTaskHandler(req, res) {
 	try {
-		await deleteSingleTaskHandler(req.task);
-		return res.json({ message: 'Successfully deleted' });
+		return res.json(await deleteSingleTaskHandler(req.task));
 	} catch (e) {
-		return res.status(400).json({ error: e.message });
+		next(e);
 	}
 }
-process.on('unhandledRejection', (reason, promise) => {
-	console.log(reason, promise);
-});
-async function deleteSingleTaskHandler(task) {
-	try {
-		const stack = [];
-		stack.push(task);
-		const promises = [];
-		while (stack.length > 0) {
-			let currentTask = stack.pop();
-			await currentTask.populate('subTasks').execPopulate();
-			for (const sub of currentTask.subTasks) {
-				stack.push(sub);
-			}
-			const commentsToRemove = await Comment.find({
-				taskId: currentTask._id,
-			});
-			if (commentsToRemove && commentsToRemove.length > 0) {
-				for (const comment of commentsToRemove) {
-					promises.push(comment.remove());
-				}
-			}
-			promises.push(currentTask.remove());
-		}
-		await Promise.all(promises);
-	} catch (e) {}
+
+async function deleteSingleTaskHandler(currentTask) {
+	return currentTask.remove();
 }
 
 module.exports = {

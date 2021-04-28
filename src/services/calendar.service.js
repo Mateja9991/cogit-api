@@ -11,7 +11,7 @@ async function getCalendarHandler(req, res) {
 		}
 		res.send(calendar);
 	} catch (e) {
-		res.status(400).send({ error: e.message });
+		next(e);
 	}
 }
 
@@ -24,7 +24,7 @@ async function addEventHandler(req, res) {
 		await newEvent.save();
 		res.send(newEvent);
 	} catch (e) {
-		res.status(400).send({ error: e.message });
+		next(e);
 	}
 }
 
@@ -33,7 +33,7 @@ async function deleteEventHandler(req, res) {
 		await req.event.remove();
 		res.send({ success: true });
 	} catch (e) {
-		res.status(400).send({ error: e.message });
+		next(e);
 	}
 }
 
@@ -42,7 +42,7 @@ async function deleteCalendarHandler(req, res) {
 		await req.calendar.remove();
 		res.send({ success: true });
 	} catch (e) {
-		res.status(400).send({ error: e.message });
+		next(e);
 	}
 }
 

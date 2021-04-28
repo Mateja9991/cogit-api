@@ -7,9 +7,6 @@ const {
 	projectToMemberAuth,
 } = require('../middleware/auth');
 const Team = require('../db/models/team.model');
-const User = require('../db/models/user.model');
-const Project = require('../db/models/project.model');
-const List = require('../db/models/list.model');
 
 const {
 	createProjectHandler,
@@ -17,6 +14,7 @@ const {
 	getMyProjectsHandler,
 	getSpecificProjectHandler,
 	updateProjectHandler,
+	addLinkToProjectHandler,
 	deleteProjectHandler,
 } = require('../services/project.service');
 
@@ -53,13 +51,18 @@ router.get(
 	getSpecificProjectHandler
 );
 
-//NAKNADNO
-
 router.patch(
 	'/projects/:projectId',
 	jwtAuthMiddleware,
 	projectToLeaderAuth,
 	updateProjectHandler
+);
+
+router.patch(
+	'/projects/links/:projectId',
+	jwtAuthMiddleware,
+	projectToMemberAuth,
+	addLinkToProjectHandler
 );
 
 router.delete(

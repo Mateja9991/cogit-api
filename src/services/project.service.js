@@ -1,7 +1,6 @@
 const Project = require('../db/models/project.model');
 const { deleteSingleListHandler } = require('./list.service');
 const {
-	duplicateHandler,
 	optionsBuilder,
 	queryHandler,
 	matchBuilder,
@@ -13,7 +12,6 @@ selectFieldsGlobal_View = 'name tags isArchived isTemplate teamId ';
 
 async function createProjectHandler(req, res) {
 	try {
-		await duplicateHandler(Project, 'teamId', req.team._id, req.body);
 		const project = new Project({
 			...req.body,
 			teamId: req.team._id,
@@ -21,8 +19,7 @@ async function createProjectHandler(req, res) {
 		await project.save();
 		res.send(project);
 	} catch (e) {
-		console.log(e);
-		res.status(400).send({ error: e.message });
+		next(e);
 	}
 }
 
@@ -37,7 +34,7 @@ async function getTeamsProjectsHandler(req, res) {
 		const requestedProjects = await getProjectsFromOneTeam(req.team, options);
 		res.send(requestedProjects);
 	} catch (e) {
-		res.status(400).send({ error: e.message });
+		next(e);
 	}
 }
 
@@ -57,7 +54,7 @@ async function getMyProjectsHandler(req, res) {
 		const requestedProjects = queryHandler(allProjects, req.query);
 		res.send(requestedProjects);
 	} catch (e) {
-		res.status(400).send({ error: e.message });
+		next(e);
 	}
 }
 
@@ -78,9 +75,15 @@ async function getSpecificProjectHandler(req, res) {
 }
 
 async function updateProjectHandler(req, res) {
-	console.log(123);
 	const updates = Object.keys(req.body);
-	const allowedToUpdate = ['name'];
+	const allowedToUpdate = [
+		'name',
+		'description',
+		'deadline',
+		'isArchived',
+		'isTemplate',
+		'taggs',
+	];
 	const isValidUpdate = updates.every((update) =>
 		allowedToUpdate.includes(update)
 	);
@@ -89,14 +92,28 @@ async function updateProjectHandler(req, res) {
 		if (!isValidUpdate) {
 			throw new Error('Invalid update fields.');
 		}
-		await duplicateHandler(Project, 'teamId', req.project.teamId, req.body);
 		updates.forEach((update) => {
 			req.project[update] = req.body[update];
 		});
 		await req.project.save();
 		res.send(req.project);
 	} catch (e) {
-		res.status(400).send({ error: e.message });
+		next(e);
+	}
+}
+async function addLinkToProjectHandler(req, res) {
+	const updates = Object.keys(req.body);
+
+	try {
+		if (!updates.includes('link')) throw new Error('Invalid update fields.');
+		const url = new URL(updates.link);
+		if (url.protocol !== 'http:' && url.protocol !== 'https:')
+			throw new Error('Invalid protocol');
+		req.project.links.push(updates.link);
+		await req.project.save();
+		res.send(req.project);
+	} catch (e) {
+		next(e);
 	}
 }
 
@@ -107,7 +124,7 @@ async function deleteProjectHandler(req, res) {
 			success: true,
 		});
 	} catch (e) {
-		res.status(400).send({ error: e.message });
+		next(e);
 	}
 }
 async function deleteSingleProjectHandler(project) {
@@ -124,6 +141,7 @@ module.exports = {
 	getMyProjectsHandler,
 	getSpecificProjectHandler,
 	updateProjectHandler,
+	addLinkToProjectHandler,
 	deleteProjectHandler,
 	deleteSingleProjectHandler,
 };

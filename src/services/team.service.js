@@ -1,6 +1,7 @@
 const Team = require('../db/models/team.model');
 const User = require('../db/models/user.model');
 const { deleteSingleProjectHandler } = require('./project.service');
+const { newSessionHandler } = require('./session.service');
 const {
 	duplicateHandler,
 	optionsBuilder,
@@ -13,18 +14,18 @@ const {
 async function createTeamHandler(req, res) {
 	try {
 		await req.user.populate('teams').execPopulate();
-		await duplicateHandler(Team, 'leaderId', req.user._id, req.body);
+		// await duplicateHandler(Team, 'leaderId', req.user._id, req.body);
 		const team = new Team({
 			...req.body,
 			leaderId: req.user._id,
 		});
 		await team.save();
 		req.user.teams.push(team._id);
-		console.log(req.user.teams);
 		await req.user.save();
+		newSessionHandler(undefined, team._id);
 		res.send(team);
 	} catch (e) {
-		res.status(400).send({ error: e.message });
+		next(e);
 	}
 }
 
@@ -37,7 +38,6 @@ async function getAllUserTeamsHandler(req, res) {
 			req.query.sortValue
 		);
 		const match = matchBuilder(req.query);
-		console.log(match.name);
 		await req.user
 			.populate({
 				path: 'teams',
@@ -47,7 +47,7 @@ async function getAllUserTeamsHandler(req, res) {
 			.execPopulate();
 		res.send(req.user.teams);
 	} catch (e) {
-		res.status(400).send({ error: e.message });
+		next(e);
 	}
 }
 
@@ -60,7 +60,7 @@ async function getLeaderTeamsHandler(req, res) {
 		const requestedTeams = queryHandler(allLeaderTeams, req.query);
 		res.send(requestedTeams);
 	} catch (e) {
-		res.status(400).send({ error: e.message });
+		next(e);
 	}
 }
 
@@ -68,7 +68,7 @@ async function getTeamHandler(req, res) {
 	try {
 		res.send(req.team);
 	} catch (e) {
-		res.status(400).send({ error: e.message });
+		next(e);
 	}
 }
 
@@ -89,10 +89,10 @@ async function getMembersHandler(req, res) {
 			'username email',
 			options
 		);
-		console.log(requestedMembers);
+
 		res.send(requestedMembers);
 	} catch (e) {
-		res.status(400).send({ error: e.message });
+		next(e);
 	}
 }
 
@@ -107,14 +107,14 @@ async function updateTeamHandler(req, res) {
 		if (!isValidUpdate) {
 			throw new Error('Invalid update fields');
 		}
-		await duplicateHandler(Team, 'leaderId', req.user._id, req.body);
+		// await duplicateHandler(Team, 'leaderId', req.user._id, req.body);
 		updates.forEach((update) => {
 			req.team[update] = req.body[update];
 		});
 		await req.team.save();
 		res.send(req.team);
 	} catch (e) {
-		res.status(400).send({ error: e.message });
+		next(e);
 	}
 }
 
@@ -125,7 +125,7 @@ async function deleteTeamHandler(req, res) {
 			success: true,
 		});
 	} catch (e) {
-		res.status(400).send({ error: e.message });
+		next(e);
 	}
 }
 
@@ -144,7 +144,7 @@ async function deleteSingleTeamHandler(team) {
 		user.teams.splice(user.teams.indexOf(team._id), 1);
 		await user.save();
 	}
-	console.log(team);
+	console.log(users);
 	await team.remove();
 }
 module.exports = {

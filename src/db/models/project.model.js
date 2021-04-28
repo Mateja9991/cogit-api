@@ -28,6 +28,11 @@ const projectSchema = new Schema(
 			type: Boolean,
 			default: false,
 		},
+		deadline: Date,
+		description: {
+			type: String,
+			required: true,
+		},
 		links: [
 			{
 				type: String,
@@ -41,6 +46,8 @@ const projectSchema = new Schema(
 		toObject: { virtuals: true },
 	}
 );
+
+projectSchema.index({ name: 1, teamId: 1 }, { unique: true });
 //
 //              Virtuals
 //

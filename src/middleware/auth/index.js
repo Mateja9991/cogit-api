@@ -14,7 +14,10 @@ const {
 	taskToMemberAuth,
 	assignAuth,
 } = require('./task.authorization.js');
-const { commentToLeaderAuth } = require('./comment.authorization.js');
+const {
+	commentToLeaderAuth,
+	commentToMemberAuth,
+} = require('./comment.authorization.js');
 
 module.exports = {
 	jwtAuthMiddleware,
@@ -29,4 +32,5 @@ module.exports = {
 	taskToMemberAuth,
 	assignAuth,
 	commentToLeaderAuth,
+	commentToMemberAuth,
 };

@@ -13,6 +13,7 @@ const teamRouter = require('./routers/team.router');
 const calendarRouter = require('./routers/calendar.router');
 const messageRouter = require('./routers/message.router');
 const commentRouter = require('./routers/comment.router');
+const sessionRouter = require('./routers/session.router');
 
 const app = express();
 const server = http.createServer(app);
@@ -32,7 +33,13 @@ app.use(teamRouter);
 app.use(calendarRouter);
 app.use(messageRouter);
 app.use(commentRouter);
+app.use(sessionRouter);
 app.use(express.static(publicPath));
+
+app.use(function (err, req, res, next) {
+	console.error('Error caught.');
+	return res.status(500).json({ error: err.message });
+});
 
 server.listen(port, () => {
 	console.log(`Server is up on port: ${port}`);

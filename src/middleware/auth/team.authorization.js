@@ -10,9 +10,7 @@ async function teamMemberAuth(req, res, next) {
 		req.team = team;
 		next();
 	} catch (e) {
-		res.status(401).send({
-			error: 'You are not team Member.',
-		});
+		next(e);
 	}
 }
 
@@ -35,9 +33,7 @@ async function teamLeaderAuth(req, res, next) {
 		req.team = team;
 		next();
 	} catch (e) {
-		res.status(401).send({
-			error: e.message,
-		});
+		next(e);
 	}
 }
 

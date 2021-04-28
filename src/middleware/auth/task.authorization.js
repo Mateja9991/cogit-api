@@ -4,36 +4,26 @@ const { MODEL_NAMES } = require('../../constants/model_names');
 
 async function taskToLeaderAuth(req, res, next) {
 	try {
-		const task = await Task.findById(req.params.taskId);
+		const task = await Task.findById(req.params.taskId).populate({
+			path: 'listId',
+			model: MODEL_NAMES.LIST,
+			populate: {
+				path: 'projectId',
+				model: MODEL_NAMES.PROJECT,
+				populate: {
+					path: 'teamId',
+					model: MODEL_NAMES.TEAM,
+				},
+			},
+		});
 		if (!task) {
 			throw new Error('Task not found');
 		}
-		await task
-			.populate({
-				path: 'listId',
-				model: MODEL_NAMES.LIST,
-				populate: {
-					path: 'projectId',
-					model: MODEL_NAMES.PROJECT,
-					populate: {
-						path: 'teamId',
-						model: MODEL_NAMES.TEAM,
-					},
-				},
-			})
-			.execPopulate();
-		if (
-			!req.admin &&
-			!task.listId.projectId.teamId.leaderId.equals(req.user._id)
-		) {
-			throw new Error('You are not team Leader');
-		}
-		req.task = task;
+		if (task.listId.projectId.teamId.leaderId.equals(req.user._id))
+			req.task = task;
 		next();
 	} catch (e) {
-		res.status(401).send({
-			error: e.message,
-		});
+		next(e);
 	}
 }
 
@@ -62,14 +52,13 @@ async function taskToMemberAuth(req, res, next) {
 		req.task = task;
 		next();
 	} catch (e) {
-		res.status(401).send({
-			error: e.message,
-		});
+		next(e);
 	}
 }
 
 async function assignAuth(req, res, next) {
 	try {
+		if (!req.task) throw new Error('You are not team leader.');
 		await req.task
 			.populate({
 				path: 'listId',
@@ -87,9 +76,7 @@ async function assignAuth(req, res, next) {
 		req.assignee = user;
 		next();
 	} catch (e) {
-		res.status(401).send({
-			error: e.message,
-		});
+		next(e);
 	}
 }
 

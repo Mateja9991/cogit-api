@@ -1,5 +1,6 @@
 const { Schema, model } = require('mongoose');
 const { MODEL_NAMES } = require('../../constants/model_names');
+const User = require('./user.model');
 //
 //              Schema
 //
@@ -25,6 +26,8 @@ const sessionSchema = new Schema({
 });
 //
 //              Middleware
+//
+sessionSchema.methods.updateParticipants = async function () {};
 //
 const Session = model(MODEL_NAMES.SESSION, sessionSchema);
 

@@ -1,5 +1,6 @@
 const { Schema, model } = require('mongoose');
 const { MODEL_NAMES } = require('../../constants/model_names');
+const Comment = require('../models/comment.model');
 //
 //              Schema
 //
@@ -78,6 +79,19 @@ taskSchema.methods.toJSON = function () {
 	taskObject = task.toObject();
 	return taskObject;
 };
+
+taskSchema.pre('remove', async function () {
+	const comments = await Comment.find({ taskId: this._id });
+	const subTasks = await Task.find({ parentTaskId: this._id }).exec();
+	for (const comment of comments) {
+		comment.remove();
+	}
+	for (const task of subTasks) {
+		task.remove();
+	}
+	console.log('Done');
+});
+
 const Task = model(MODEL_NAMES.TASK, taskSchema);
 
 module.exports = Task;

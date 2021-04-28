@@ -1,5 +1,3 @@
-const socket = io.connect('http://localhost:3000');
-console.log(socket);
 const queryParamsString = window.location.search.substr(1);
 const queryParams = queryParamsString
 	.split('&')
@@ -10,26 +8,6 @@ const queryParams = queryParamsString
 	}, {});
 console.log(queryParams.email);
 console.log(queryParams.password);
-
-var fetchedToken;
-
-socket.on('new-message', ({ username, message }) => {
-	console.log(username, message);
-	$messageBoard.innerHTML += `<p>${username}:${message}</p>`;
-});
-socket.on('message-history', (history) => {
-	$messageBoard.innerHTML = '';
-	history.forEach((msg) => {
-		$messageBoard.innerHTML += `<p>${msg}</p>`;
-	});
-});
-socket.on('error', (error) => {
-	console.log(error);
-});
-socket.on('new-invitation', ({ invited }) => {
-	console.log(invited);
-});
-const $messageBoard = document.querySelector('#messages');
 
 fetch('http://localhost:3000/users/login', {
 	method: 'POST',
@@ -45,69 +23,91 @@ fetch('http://localhost:3000/users/login', {
 		return response.json();
 	})
 	.then(({ token }) => {
-		fetchedToken = token;
-		socket.emit('authenticate', { token }, () => {
-			const $button = document.querySelector('.msg-button');
-			const $input = document.querySelector('.msg-input');
-			const $user = document.querySelector('.user-input');
-			const $team = document.querySelector('.team-input');
-			const $teamMessage = document.querySelector('.team-msg-input');
+		console.log(token);
+		const socket = io('/users', {
+			query: {
+				token,
+			},
+		});
+		var fetchedToken = token;
+		console.log(socket);
+		socket.on('connect_error', (err) => {
+			console.log(err.message); // prints the message associated with the error
+		});
 
-			$button.addEventListener('click', () => {
-				const receiverEmail = $user.value;
-				const teamId = $team.value;
-				if (receiverEmail) {
-					fetch(`http://localhost:3000/users/email/${receiverEmail}`, {
-						method: 'GET',
-						headers: {
-							'Content-Type': 'application/json',
-							Authorization: `Bearer ${fetchedToken}`,
-						},
-					})
-						.then((response) => {
-							return response.json();
-						})
-						.then((receiver) => {
-							console.log(receiver.user._id);
-							fetch(
-								`http://localhost:3000/users/${receiver.user._id}/me/messages`,
-								{
-									method: 'GET',
-									headers: {
-										'Content-Type': 'application/json',
-										Authorization: `Bearer ${fetchedToken}`,
-									},
-								}
-							)
-								.then((response) => {
-									return response.json();
-								})
-								.then((data) => {
-									$messageBoard.innerHTML = '';
-									data.forEach(({ text, from }) => {
-										$messageBoard.innerHTML += `<p>${from}:${text}</p>`;
-									});
-								});
-						});
-
-					socket.emit('newMessageToUser', receiverEmail, $input.value, (id) => {
-						console.log(id);
-					});
-				} else {
-					console.log('pre-if(teamId)');
-					if (teamId) {
-						console.log('pre-emit');
-						socket.emit(
-							'newMessageToTeam',
-							teamId,
-							$teamMessage.value,
-							(res) => {
-								console.log(res);
-							}
-						);
-					}
-				}
+		socket.on('new-message', ({ username, message }) => {
+			console.log(username, message);
+			$messageBoard.innerHTML += `<p>${username}:${message}</p>`;
+		});
+		socket.on('message-history', (history) => {
+			$messageBoard.innerHTML = '';
+			history.forEach((msg) => {
+				$messageBoard.innerHTML += `<p>${msg}</p>`;
 			});
+		});
+		socket.on('error', (error) => {
+			console.log(error);
+		});
+		socket.on('new-notification', (notif) => {
+			console.log(notif);
+		});
+		const $messageBoard = document.querySelector('#messages');
+
+		const $button = document.querySelector('.msg-button');
+		const $input = document.querySelector('.msg-input');
+		const $user = document.querySelector('.user-input');
+		const $team = document.querySelector('.team-input');
+		const $teamMessage = document.querySelector('.team-msg-input');
+
+		$button.addEventListener('click', () => {
+			const receiverEmail = $user.value;
+			const teamId = $team.value;
+			if (receiverEmail) {
+				fetch(`http://localhost:3000/users/email/${receiverEmail}`, {
+					method: 'GET',
+					headers: {
+						'Content-Type': 'application/json',
+						Authorization: `Bearer ${fetchedToken}`,
+					},
+				})
+					.then((response) => {
+						return response.json();
+					})
+					.then((receiver) => {
+						console.log(receiver.user._id);
+						fetch(
+							`http://localhost:3000/users/${receiver.user._id}/me/messages`,
+							{
+								method: 'GET',
+								headers: {
+									'Content-Type': 'application/json',
+									Authorization: `Bearer ${fetchedToken}`,
+								},
+							}
+						)
+							.then((response) => {
+								return response.json();
+							})
+							.then((data) => {
+								$messageBoard.innerHTML = '';
+								data.forEach(({ text, from }) => {
+									$messageBoard.innerHTML += `<p>${from}:${text}</p>`;
+								});
+							});
+					});
+
+				socket.emit('newMessageToUser', receiverEmail, $input.value, (id) => {
+					console.log(id);
+				});
+			} else {
+				console.log('pre-if(teamId)');
+				if (teamId) {
+					console.log('pre-emit');
+					socket.emit('newMessageToTeam', teamId, $teamMessage.value, (res) => {
+						console.log(res);
+					});
+				}
+			}
 		});
 	})
 	.catch((e) => {

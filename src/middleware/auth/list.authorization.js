@@ -23,9 +23,7 @@ async function listToLeaderAuth(req, res, next) {
 		req.list = list;
 		next();
 	} catch (e) {
-		res.status(401).send({
-			error: e.message,
-		});
+		next(e);
 	}
 }
 
@@ -42,9 +40,7 @@ async function listToMemberAuth(req, res, next) {
 		req.list = list;
 		next();
 	} catch (e) {
-		res.status(401).send({
-			error: e.message,
-		});
+		next(e);
 	}
 }
 

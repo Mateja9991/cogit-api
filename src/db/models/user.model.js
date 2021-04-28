@@ -13,12 +13,7 @@ const userSchema = new Schema(
 			type: String,
 			required: true,
 			trim: true,
-		},
-		tag: {
-			type: String,
-			required: true,
 			unique: true,
-			maxlength: [10, 'No space.'],
 		},
 		role: {
 			type: String,
@@ -61,7 +56,7 @@ const userSchema = new Schema(
 				},
 				receivedAt: {
 					type: Date,
-					default: Date.now(),
+					required: true,
 				},
 			},
 		],
@@ -93,19 +88,24 @@ const userSchema = new Schema(
 					},
 					reference: {
 						_id: {
-							type: ObjectId,
+							type: Schema.Types.ObjectId,
 							required: true,
 						},
 						eventType: {
 							type: String,
-							enum: ['invitation', 'assignment', 'message'],
+							enum: [
+								'invitation',
+								'assignment',
+								'message',
+								'invitation_accepted',
+							],
 							required: true,
 						},
 					},
 				},
 				receivedAt: {
 					type: Date,
-					default: Date.now(),
+					required: true,
 				},
 			},
 		],
@@ -116,34 +116,6 @@ const userSchema = new Schema(
 		toObject: { virtuals: true },
 	}
 );
-//
-//              Virtuals
-//
-// userSchema.virtual('messages', {
-// 	ref: MODEL_NAMES.MESSAGE,
-// 	localField: '_id',
-// 	foreignField: 'sentTo',
-// });
-
-// userSchema.virtual('newMessages', {
-// 	ref: MODEL_NAMES.MESSAGE,
-// 	localField: '_id',
-// 	foreignField: 'sentTo',
-// 	match: { seen: false },
-// });
-
-// userSchema.virtual('seenMessages', {
-// 	ref: MODEL_NAMES.MESSAGE,
-// 	localField: '_id',
-// 	foreignField: 'sentTo',
-// 	match: { seen: true },
-// });
-
-// userSchema.virtual('sentMessages', {
-// 	ref: MODEL_NAMES.MESSAGE,
-// 	localField: '_id',
-// 	foreignField: 'from',
-// });
 //
 //              Middleware
 //
@@ -157,8 +129,10 @@ userSchema.pre('save', async function (next) {
 //
 //              Model methods
 //
-userSchema.statics.findByCredentials = async (email, password) => {
-	const user = await User.findOne({ email });
+userSchema.statics.findByCredentials = async (tag, password) => {
+	let user;
+	if (validator.isEmail(tag)) user = await User.findOne({ email: tag });
+	else user = await User.findOne({ username: tag });
 	if (!user) {
 		throw new Error('Unable to login.');
 	}
@@ -170,7 +144,7 @@ userSchema.statics.findByCredentials = async (email, password) => {
 userSchema.statics.generateTag = async () => {
 	const lastTag = await User.countDocuments({});
 
-	let tag = lastTag + 1;
+	let tag = lastTag;
 	tag = tag.toString();
 	tag = '#' + tag.padStart(9, '0');
 
@@ -183,8 +157,11 @@ userSchema.methods.toJSON = function () {
 	const user = this;
 	const userObject = user.toObject();
 
+	delete userObject.avatar;
 	delete userObject.password;
-	delete userObject.tokens;
+	delete userObject.createdAt;
+	delete userObject.updatedAt;
+	delete userObject.__v;
 
 	return userObject;
 };

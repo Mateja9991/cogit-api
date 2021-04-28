@@ -6,7 +6,7 @@ const {
 	queryHandler,
 } = require('./utils/services.utils');
 
-const selectFieldsGlobal_View = 'text likes -_id';
+const selectFieldsGlobal_View = 'text taskId likes';
 
 async function createCommentHandler(req, res) {
 	try {
@@ -18,7 +18,7 @@ async function createCommentHandler(req, res) {
 		await comment.save();
 		res.send(comment);
 	} catch (e) {
-		res.status(400).send({ error: e.message });
+		next(e);
 	}
 }
 
@@ -26,7 +26,7 @@ async function getSpecificCommentHandler(req, res) {
 	try {
 		res.send(req.comment);
 	} catch (e) {
-		res.status(400).send({ error: e.message });
+		next(e);
 	}
 }
 
@@ -49,7 +49,7 @@ async function getTaskCommentsHandler(req, res) {
 		);
 		res.send(comments);
 	} catch (e) {
-		res.status(400).send({ error: e.message });
+		next(e);
 	}
 }
 
@@ -70,16 +70,36 @@ async function updateCommentHandler(req, res) {
 		await req.comment.save();
 		res.send(req.comment);
 	} catch (e) {
-		res.status(400).send({ error: e.message });
+		next(e);
+	}
+}
+
+async function likeCommentHandler(req, res) {
+	try {
+		const index = req.comment.likes.findIndex((userId) =>
+			userId.equals(req.user._id)
+		);
+		if (index !== -1) {
+			req.comment.likes = req.comment.likes
+				.slice(0, index)
+				.concat(req.comment.likes.slice(index + 1));
+		} else {
+			req.comment.likes.push(req.user._id);
+		}
+
+		await req.comment.save();
+		res.send(req.comment);
+	} catch (e) {
+		next(e);
 	}
 }
 
 async function deleteCommentHandler(req, res) {
 	try {
 		await deleteSingleCommentHandler(req.comment);
-		res.send(task);
+		res.send(req.comment);
 	} catch (e) {
-		res.status(400).send({ error: e.message });
+		next(e);
 	}
 }
 
@@ -94,4 +114,5 @@ module.exports = {
 	updateCommentHandler,
 	deleteCommentHandler,
 	deleteSingleCommentHandler,
+	likeCommentHandler,
 };

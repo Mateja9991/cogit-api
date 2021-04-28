@@ -8,10 +8,10 @@ function ownershipAuthMiddleware(
 	childIdProrpertyPath
 ) {
 	return async (req, res, next) => {
-		if (req[requestSaveInProperty]) {
-			next();
-		}
 		try {
+			if (req[requestSaveInProperty]) {
+				next();
+			}
 			const parentId = lodash.get(req, parentIdPropertyPath);
 			const childId = lodash.get(req, childIdProrpertyPath);
 			const findQuery = {
@@ -31,9 +31,7 @@ function ownershipAuthMiddleware(
 			req[requestSaveInProperty] = model;
 			next();
 		} catch (e) {
-			res.status(401).send({
-				error: e.message,
-			});
+			next(e);
 		}
 	};
 }

@@ -4,6 +4,7 @@ const {
 	taskToMemberAuth,
 	ownershipAuthMiddleware,
 	commentToLeaderAuth,
+	commentToMemberAuth,
 } = require('../middleware/auth');
 const {
 	createCommentHandler,
@@ -11,6 +12,7 @@ const {
 	getSpecificCommentHandler,
 	updateCommentHandler,
 	deleteCommentHandler,
+	likeCommentHandler,
 } = require('../services/comment.service');
 
 const Comment = require('../db/models/comment.model');
@@ -46,6 +48,13 @@ router.patch(
 		'user._id'
 	),
 	updateCommentHandler
+);
+
+router.patch(
+	'/comments/like/:commentId',
+	jwtAuthMiddleware,
+	commentToMemberAuth,
+	likeCommentHandler
 );
 
 router.delete(

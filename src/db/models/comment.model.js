@@ -10,10 +10,13 @@ const commentSchema = new Schema({
 		required: true,
 		maxlength: [250, 'Comment too long. (>250)'],
 	},
-	likes: {
-		type: Number,
-		default: 0,
-	},
+	likes: [
+		{
+			type: Schema.Types.ObjectId,
+			ref: MODEL_NAMES.USER,
+			required: true,
+		},
+	],
 	taskId: {
 		type: Schema.Types.ObjectId,
 		required: true,

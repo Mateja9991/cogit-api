@@ -11,44 +11,44 @@ const { SOCKET_EVENTS } = require('../constants/socket_events');
 const { jwtSocketAuth } = require('./socket.auth/');
 const Team = require('../db/models/team.model');
 
-var hashTable = [];
-
 class SocketService {
 	initializeSocketServer(server) {
 		this.io = socketio(server);
-		this.io.on('connection', this._socketOnConnect);
-	}
-
-	_socketOnConnect(socketClient) {
-		// socketClient.use(jwtSocketAuth);
-		console.log('New Connection');
-		socketClient.on('authenticate', async ({ token }, callback) => {
-			try {
-				const user = await jwtSocketAuth(token);
-				socketClient.join(user._id.toString(), function () {});
-				socketClient.emit(SOCKET_EVENTS.NEW_MESSAGE, {
-					text: 'Hello!  ',
-					username: user.username,
-				});
-				hashTable[socketClient.id] = user._id;
-				callback();
-			} catch (e) {
-				console.log(e);
-				socketClient.disconnect(true);
-			}
+		this.io.on('connection', () => {
+			console.log('Visitor connected');
 		});
+		this.io
+			.of('/users')
+			.use(this.middleware)
+			.on('connection', this._userOnConnect);
+	}
+	async middleware(socketClient, next) {
+		const user = await jwtSocketAuth(socketClient.handshake.query.token);
+		if (user) {
+			socketClient.user = user;
+			socketClient.join(socketClient.user._id.toString(), function () {});
+			socketClient.emit(SOCKET_EVENTS.NEW_MESSAGE, {
+				text: 'Hello!  ',
+				username: socketClient.user.username,
+			});
+			next();
+		} else {
+			next(new Error('not Authorized'));
+		}
+	}
+	_userOnConnect(socketClient) {
 		socketClient.on('disconnect', () => {
 			console.log('Tab closed');
 		});
 		socketClient.on('logout', () => {
-			// socketClient.disconnect(true);
+			socketClient.disconnect(true);
 		});
 		socketClient.on('checkNotifications', async () => {});
-		socketClient.on('messageToSession', async (sessionId, payload) => {
+		socketClient.on('newMessageToSession', async (sessionId, payload) => {
 			sessionId = mongoose.Types.ObjectId(sessionId);
 			await sendMessageToSessionHandler(
 				sessionId,
-				hashTable[socketClient.id],
+				socketClient.user._id,
 				payload
 			);
 		});
@@ -60,14 +60,11 @@ class SocketService {
 				if (!user) {
 					throw new Error('No user');
 				}
-				console.log(user);
-				const sessionParticipants = [hashTable[socketClient.id], user._id];
-				console.log(sessionParticipants);
+				const sessionParticipants = [socketClient.user._id, user._id];
 				const session = await getSessionHandler(sessionParticipants);
-				console.log(session);
 				await sendMessageToSessionHandler(
 					session._id,
-					hashTable[socketClient.id],
+					socketClient.user._id,
 					payload
 				);
 			} catch (e) {
@@ -77,7 +74,6 @@ class SocketService {
 		socketClient.on('newMessageToTeam', async (teamId, payload, callback) => {
 			try {
 				teamId = mongoose.Types.ObjectId(teamId);
-				console.log(teamId);
 				const team = await Team.findById(teamId);
 				if (!team) {
 					throw new Error('No such team');
@@ -85,7 +81,7 @@ class SocketService {
 				const session = await getSessionHandler(undefined, teamId);
 				await sendMessageToSessionHandler(
 					session._id,
-					hashTable[socketClient.id],
+					socketClient.user._id,
 					payload
 				);
 				callback('done');
@@ -99,14 +95,17 @@ class SocketService {
 		this.io.emit(eventName, payload);
 	}
 
-	sendEventToRoom(room, eventName, payload) {
-		this.io.to(room).emit(eventName, payload);
+	sendEventToRoom(room, eventName, payload, namespace) {
+		this.io
+			.of('/' + namespace)
+			.to(room)
+			.emit(eventName, payload);
 	}
 }
 const Socket = new SocketService();
 
 async function sendMessageEvent(room, payload) {
-	Socket.sendEventToRoom(room, SOCKET_EVENTS.NEW_MESSAGE, payload);
+	Socket.sendEventToRoom(room, SOCKET_EVENTS.NEW_MESSAGE, payload, 'users');
 }
 
 async function sendMessageToSessionHandler(sessionId, senderId, message) {

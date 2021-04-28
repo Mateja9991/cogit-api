@@ -15,7 +15,7 @@ async function createListHandler(req, res) {
 		await list.save();
 		res.send(list);
 	} catch (e) {
-		res.status(400).send({ error: e.message });
+		next(e);
 	}
 }
 
@@ -24,9 +24,7 @@ async function getProjectsListsHandler(req, res) {
 		await req.project.populate('lists').execPopulate();
 		res.send(req.project.lists);
 	} catch (e) {
-		res.status(400).send({
-			error: e.message,
-		});
+		next(e);
 	}
 }
 
@@ -53,7 +51,7 @@ async function updateListHandler(req, res) {
 		await req.list.save();
 		res.send(req.list);
 	} catch (e) {
-		res.status(400).send({ error: e.message });
+		next(e);
 	}
 }
 
@@ -64,7 +62,7 @@ async function deleteListHandler(req, res) {
 			success: true,
 		});
 	} catch (e) {
-		res.status(400).send({ error: e.message });
+		next(e);
 	}
 }
 async function deleteSingleListHandler(list) {

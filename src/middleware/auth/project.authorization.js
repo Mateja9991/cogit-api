@@ -13,9 +13,7 @@ async function projectToLeaderAuth(req, res, next) {
 		req.project = project;
 		next();
 	} catch (e) {
-		res.status(401).send({
-			error: e.message,
-		});
+		next(e);
 	}
 }
 
@@ -38,9 +36,7 @@ async function projectToMemberAuth(req, res, next) {
 		req.project = project;
 		next();
 	} catch (e) {
-		res.status(401).send({
-			error: e.message,
-		});
+		next(e);
 	}
 }
 
