@@ -3,6 +3,74 @@ const Message = require('../db/models/message.model');
 const User = require('../db/models/user.model');
 const { optionsBuilder } = require('./utils/services.utils');
 
+async function createPrivateSessionHandler(req, res, next) {
+	try {
+		const session = getSessionHandler([
+			req.user._id.toString(),
+			req.params.userId,
+		]);
+		res.send(session);
+	} catch (e) {
+		next(e);
+	}
+}
+
+async function getUsersPrivateSessions(req, res, next) {
+	try {
+		const sessions = await Session.find({
+			participants: { $elemMatch: { userId: req.user._id } },
+			teamId: { $exists: false },
+		});
+		res.send(sessions);
+	} catch (e) {
+		next(e);
+	}
+}
+
+async function getOnePrivateSession(req, res, next) {
+	try {
+		const session = await getPrivateSessionHandler([
+			req.user._id,
+			req.params.userId,
+		]);
+		res.send(session);
+	} catch (e) {
+		next(e);
+	}
+}
+
+async function teamSessionHandler(req, res, next) {
+	try {
+		const session = await Session.findOne({
+			teamId: req.params.teamId,
+		});
+		res.send(session);
+	} catch (e) {
+		next(e);
+	}
+}
+
+async function getMessagesHandler(req, res, next) {
+	try {
+		const options = optionsBuilder(
+			req.query.limit,
+			req.query.skip,
+			'createdAt',
+			1
+		);
+		const sessionMessages = await Message.find(
+			{
+				sessionId: req.params.sessionId,
+			},
+			'from text createdAt -_id',
+			options
+		);
+		res.send(sessionMessages);
+	} catch (e) {
+		next(e);
+	}
+}
+
 async function getSessionHandler(sessionParticipants, teamId) {
 	try {
 		let session;
@@ -114,80 +182,13 @@ async function addParticipantHandler(teamId, userId) {
 		next(e);
 	}
 }
-
-async function createPrivateSessionHandler(req, res, next) {
-	try {
-		const session = getSessionHandler([
-			req.user._id.toString(),
-			req.params.userId,
-		]);
-		res.send(session);
-	} catch (e) {
-		next(e);
-	}
-}
-
-async function getUsersPrivateSessions(req, res, next) {
-	try {
-		const sessions = await Session.find({
-			participants: { $elemMatch: { userId: req.user._id } },
-			teamId: { $exists: false },
-		});
-		res.send(sessions);
-	} catch (e) {
-		next(e);
-	}
-}
-
-async function getOnePrivateSession(req, res, next) {
-	try {
-		const session = await getPrivateSessionHandler([
-			req.user._id,
-			req.params.userId,
-		]);
-		res.send(session);
-	} catch (e) {
-		next(e);
-	}
-}
-
-async function teamSessionHandler(req, res, next) {
-	try {
-		const session = await Session.findOne({
-			teamId: req.params.teamId,
-		});
-		res.send(session);
-	} catch (e) {
-		next(e);
-	}
-}
-
-async function getMessagesHandler(req, res, next) {
-	try {
-		const options = optionsBuilder(
-			req.query.limit,
-			req.query.skip,
-			'createdAt',
-			1
-		);
-		const sessionMessages = await Message.find(
-			{
-				sessionId: req.params.sessionId,
-			},
-			'from text createdAt -_id',
-			options
-		);
-		res.send(sessionMessages);
-	} catch (e) {
-		next(e);
-	}
-}
-
 module.exports = {
-	getSessionHandler,
-	newSessionHandler,
-	getSessionMessagesHandler,
 	addParticipantHandler,
+	newSessionHandler,
+	getTeamSessionHandler,
+	getSessionMessagesHandler,
+	getSessionHandler,
+	getPrivateSessionHandler,
 	createPrivateSessionHandler,
 	getUsersPrivateSessions,
 	teamSessionHandler,

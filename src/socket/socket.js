@@ -23,17 +23,21 @@ class SocketService {
 			.on('connection', this._userOnConnect);
 	}
 	async middleware(socketClient, next) {
-		const user = await jwtSocketAuth(socketClient.handshake.query.token);
-		if (user) {
-			socketClient.user = user;
-			socketClient.join(socketClient.user._id.toString(), function () {});
-			socketClient.emit(SOCKET_EVENTS.NEW_MESSAGE, {
-				text: 'Hello!  ',
-				username: socketClient.user.username,
-			});
-			next();
-		} else {
-			next(new Error('not Authorized'));
+		try {
+			const user = await jwtSocketAuth(socketClient.handshake.query.token);
+			if (user) {
+				socketClient.user = user;
+				socketClient.join(socketClient.user._id.toString(), function () {});
+				socketClient.emit(SOCKET_EVENTS.NEW_MESSAGE, {
+					text: 'Hello!  ',
+					username: socketClient.user.username,
+				});
+				next();
+			} else {
+				next(new Error('not Authorized'));
+			}
+		} catch (e) {
+			console.log(e.message);
 		}
 	}
 	_userOnConnect(socketClient) {
@@ -62,6 +66,7 @@ class SocketService {
 				}
 				const sessionParticipants = [socketClient.user._id, user._id];
 				const session = await getSessionHandler(sessionParticipants);
+				console.log('sessionId', session._id);
 				await sendMessageToSessionHandler(
 					session._id,
 					socketClient.user._id,

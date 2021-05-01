@@ -1,9 +1,11 @@
-const sharp = require('sharp');
+const Socket = require('../socket/socket');
+const { SOCKET_EVENTS } = require('../constants/socket_events');
 const User = require('../db/models/user.model');
+const Avatar = require('../db/models/avatar.model');
 const Calendar = require('../db/models/calendar.model');
 const Team = require('../db/models/team.model');
 const { deleteSingleTeamHandler } = require('./team.service');
-const { addParticipantHandler } = require('./session.service');
+
 const {
 	optionsBuilder,
 	matchBuilder,
@@ -13,10 +15,8 @@ const {
 const {
 	getSessionMessagesHandler,
 	getSessionHandler,
-} = require('../services/session.service');
-
-const Socket = require('../socket/socket');
-const { SOCKET_EVENTS } = require('../constants/socket_events');
+	addParticipantHandler,
+} = require('./session.service');
 
 //'images',
 //        ROUTER HANDLERS
@@ -30,10 +30,8 @@ async function createUserHandler(req, res, next) {
 			if (req.body.tag) {
 				delete req.body.tag;
 			}
-			const tag = await User.generateTag();
 			const user = new User({
 				...req.body,
-				tag,
 			});
 			const userCalendar = new Calendar({
 				userId: user._id,
@@ -43,18 +41,14 @@ async function createUserHandler(req, res, next) {
 			const token = await user.generateAuthToken();
 			res.send({ user, token });
 		} catch (e) {
-			console.log(e);
-			res.status(400).send({ error: e.message });
+			next(e);
 		}
 	}
 }
 
 async function loginUserHandler(req, res, next) {
 	try {
-		const user = await User.findByCredentials(
-			req.body.email,
-			req.body.password
-		);
+		const user = await User.findByCredentials(req.body.id, req.body.password);
 		const notificationNumber = user.notifications.reduce(
 			(acc, notif) => acc + (notif.seen ? 0 : 1),
 			0
@@ -62,21 +56,20 @@ async function loginUserHandler(req, res, next) {
 		const token = await user.generateAuthToken();
 		res.send({ user, token, notificationNumber });
 	} catch (e) {
-		res.status(400).send({ error: e.message });
+		next(e);
 	}
 }
 
-async function uploadAvatarHandler(req, res, next) {
+async function setAvatarHandler(req, res, next) {
 	try {
-		const avatarBuffer = await sharp(req.file.buffer)
-			.resize({ width: 250, height: 250 })
-			.png()
-			.toBuffer();
-		req.user.avatar = avatarBuffer;
+		const avatar = await Avatar.findById(req.params.avatarId);
+		if (!avatar) throw new Error('No such avatar');
+		req.user.avatar = req.params.avatarId;
 		await req.user.save();
-		res.send();
+		res.set('Content-Type', 'image/png');
+		res.send(avatar.picture);
 	} catch (e) {
-		res.status(400).send({ error: e.message });
+		next(e);
 	}
 }
 
@@ -85,7 +78,7 @@ async function logoutUserHandler(req, res, next) {
 		await req.user.save();
 		res.send();
 	} catch (e) {
-		res.status(500).send();
+		next(e);
 	}
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -98,12 +91,9 @@ async function getProfileHandler(req, res, next) {
 
 async function getAvatarHandler(req, res, next) {
 	try {
+		await req.user.populate('avatar').execPopulate();
 		res.set('Content-Type', 'image/png');
-		res.send(
-			req.user.avatar
-				? req.user.avatar
-				: await require('../constants/default_avatar')()
-		);
+		res.send(req.user.avatar.picture);
 	} catch (e) {
 		next(e);
 	}
@@ -254,7 +244,7 @@ async function getSingleUserHandler(queryObject) {
 
 async function updateUserHandler(req, res, next) {
 	const updates = Object.keys(req.body);
-	const allowedToUpdate = ['username', 'email', 'password'];
+	const allowedToUpdate = ['username', 'email', 'password', 'settings'];
 	const isValidUpdate = updates.every((update) =>
 		allowedToUpdate.includes(update)
 	);
@@ -303,10 +293,8 @@ async function sendTeamInvitationHandler(req, res, next) {
 		const newEvent = {
 			event: {
 				text: 'You have been invited to new team.',
-				reference: {
-					_id: req.team._id,
-					eventType: 'invitation',
-				},
+				reference: req.team._id,
+				eventType: 'invitation',
 			},
 			receivedAt: Date.now(),
 		};
@@ -349,10 +337,8 @@ async function acceptTeamInvitationHandler(req, res, next) {
 		const newEvent = {
 			event: {
 				text: `User ${req.user.username} has accepted your invitation.`,
-				reference: {
-					_id: team._id,
-					eventType: 'invitation_accepted',
-				},
+				reference: team._id,
+				eventType: 'invitation_accepted',
 			},
 			receivedAt: Date.now(),
 		};
@@ -371,6 +357,14 @@ async function declineTeamInvitationHandler(req, res, next) {
 		);
 		await req.user.save();
 		res.send(req.user.invitations);
+	} catch (e) {
+		next(e);
+	}
+}
+
+async function updateSettingsHandler(req, res, next) {
+	try {
+		res.send(req.user.settings);
 	} catch (e) {
 		next(e);
 	}
@@ -427,17 +421,7 @@ async function deleteAnyUserHandler(req, res, next) {
 		next(e);
 	}
 }
-async function deleteAvatarHandler(req, res, next) {
-	try {
-		if (req.user.avatar) {
-			req.user.avatar = null;
-			await req.user.save();
-		}
-		res.send();
-	} catch (e) {
-		next(e);
-	}
-}
+
 module.exports = {
 	createUserHandler,
 	loginUserHandler,
@@ -457,7 +441,7 @@ module.exports = {
 	getUserMessagesHandler,
 	getTeamMessagesHandler,
 	getUserByUsernameHandler,
-	uploadAvatarHandler,
+	setAvatarHandler,
 	getAvatarHandler,
-	deleteAvatarHandler,
+	updateSettingsHandler,
 };

@@ -1,24 +1,10 @@
 const express = require('express');
-const upload = require('multer')({
-	liimits: {
-		fileSize: 1000000,
-	},
-	fileFilter(req, file, callback) {
-		if (file.originalname.match(/\.(jpeg|jpg|png)$/)) {
-			callback(undefined, true);
-		} else {
-			callback(new Error('Please upload image (png, jpg,)'));
-		}
-	},
-});
 
 const Team = require('../db/models/team.model');
-const User = require('../db/models/user.model');
 const {
 	jwtAuthMiddleware,
 	ownershipAuthMiddleware,
 } = require('../middleware/auth/index');
-const { errorHandler } = require('./utils/router.utils');
 const {
 	createUserHandler,
 	loginUserHandler,
@@ -38,9 +24,9 @@ const {
 	getTeamMessagesHandler,
 	getAllNotificationsHandler,
 	getUserByUsernameHandler,
-	uploadAvatarHandler,
+	setAvatarHandler,
 	getAvatarHandler,
-	deleteAvatarHandler,
+	updateSettingsHandler,
 } = require('../services/user.service');
 
 const router = new express.Router();
@@ -52,13 +38,6 @@ router.post('/users', createUserHandler);
 router.post('/users/login', loginUserHandler);
 
 router.post('/users/logout', jwtAuthMiddleware, logoutUserHandler);
-
-router.post(
-	'/users/me/avatar',
-	jwtAuthMiddleware,
-	upload.single('avatar'),
-	uploadAvatarHandler
-);
 
 router.get('/users/all', jwtAuthMiddleware, getAllUsersHandler);
 
@@ -127,9 +106,11 @@ router.patch(
 	declineTeamInvitationHandler
 );
 
-router.delete('/users/me', jwtAuthMiddleware, deleteUserHandler);
+router.patch('/users/me/settings', jwtAuthMiddleware, updateSettingsHandler);
 
-router.delete('/users/me/avatar', jwtAuthMiddleware, deleteAvatarHandler);
+router.patch('/users/me/avatar/:avatarId', jwtAuthMiddleware, setAvatarHandler);
+
+router.delete('/users/me', jwtAuthMiddleware, deleteUserHandler);
 
 router.delete('/users/:userId', jwtAuthMiddleware, deleteAnyUserHandler);
 //

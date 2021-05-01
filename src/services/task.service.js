@@ -1,7 +1,4 @@
 const Task = require('../db/models/task.model');
-const User = require('../db/models/user.model');
-const Comment = require('../db/models/comment.model');
-const { deleteSingleCommentHandler } = require('./comment.service');
 
 const Socket = require('../socket/socket');
 const { SOCKET_EVENTS } = require('../constants/socket_events');
@@ -11,21 +8,33 @@ const {
 	queryHandler,
 	optionsBuilder,
 	matchBuilder,
+	scheduleJobHandler,
 } = require('./utils/services.utils');
 
-const selectFieldsGlobal_View =
+const selectFieldsGlobal =
 	'name description isCompleted parentTaskId isArchived isTeamPriority';
 
 async function createTaskHandler(req, res, next) {
-	await createTask(res, req, {
-		...req.body,
-		listId: req.list._id,
-	});
+	if (!req.body.deadline) {
+		await req.list.populate('projectId').execPopulate();
+		req.body.deadline = req.list.projectId.deadline;
+	}
+	await createTask(
+		res,
+		req,
+		{
+			...req.body,
+			listId: req.list._id,
+		},
+		next
+	);
 }
 
 async function createSubTaskHandler(req, res, next) {
 	try {
 		const parentTask = await Task.findOne({ _id: req.params.taskId });
+		if (req.body.deadline > parentTask.deadline)
+			req.body.deadline = parentTask.deadline;
 		await createTask(res, req, {
 			...req.body,
 			listId: parentTask.listId,
@@ -40,7 +49,7 @@ async function createSubTaskHandler(req, res, next) {
 	}
 }
 
-async function createTask(res, req, task) {
+async function createTask(res, req, task, next) {
 	try {
 		const newTask = new Task({ ...task });
 		newTask.creatorId = req.user._id;
@@ -52,8 +61,12 @@ async function createTask(res, req, task) {
 			newTask.editors.push(req.user._id);
 		}
 		await newTask.save();
+		newTask.editors.forEach((editorId) => {
+			scheduleJobHandler(newTask.deadline, newTask.name, editorId, Socket);
+		});
 		res.send(newTask);
 	} catch (e) {
+		console.log(e);
 		next(e);
 	}
 }
@@ -63,7 +76,7 @@ async function getUserTasksHandler(req, res, next) {
 		const usersTasks = await getTasksHandler(
 			req,
 			{ editors: req.user._id },
-			selectFieldsGlobal_View
+			selectFieldsGlobal
 		);
 		res.send(usersTasks);
 	} catch (e) {
@@ -84,7 +97,7 @@ async function getTeamPriorityTasksHandler(req, res, next) {
 		const priorityTasks = await getTasksHandler(
 			req,
 			{ editors: req.user._id, isTeamPriority: true },
-			selectFieldsGlobal_View
+			selectFieldsGlobal
 		);
 		res.send(priorityTasks);
 	} catch (e) {
@@ -97,7 +110,7 @@ async function getUserPriorityTasksHandler(req, res, next) {
 		const priorityTasks = await getTasksHandler(
 			req,
 			{ editors: req.user._id, usersPriority: req.user._id },
-			selectFieldsGlobal_View
+			selectFieldsGlobal
 		);
 		res.send(priorityTasks);
 	} catch (e) {
@@ -110,7 +123,7 @@ async function getTasksFromListHandler(req, res, next) {
 		const tasks = await getTasksHandler(
 			req,
 			{ listId: req.list._id },
-			selectFieldsGlobal_View
+			selectFieldsGlobal
 		);
 		res.send(tasks);
 	} catch (e) {
@@ -132,7 +145,7 @@ async function getTasksHandler(req, queryFields) {
 			...queryFields,
 			...match,
 		},
-		selectFieldsGlobal_View,
+		selectFieldsGlobal,
 		options
 	);
 
@@ -206,10 +219,8 @@ async function assignUserHandler(req, res, next) {
 		const newEvent = {
 			event: {
 				text: 'You have been assigned to new task.',
-				reference: {
-					_id: req.task._id,
-					eventType: 'assignment',
-				},
+				reference: req.task._id,
+				eventType: 'assignment',
 			},
 			receivedAt: Date.now(),
 		};

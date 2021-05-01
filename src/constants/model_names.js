@@ -9,6 +9,7 @@ const MODEL_NAMES = {
 	SESSION: 'Session',
 	CALENDAR: 'Calendar',
 	EVENT: 'Event',
+	AVATAR: 'Avatar',
 };
 
 module.exports = {

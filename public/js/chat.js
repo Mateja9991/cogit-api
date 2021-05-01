@@ -15,7 +15,7 @@ fetch('http://localhost:3000/users/login', {
 		'Content-Type': 'application/json',
 	},
 	body: JSON.stringify({
-		email: queryParams.email,
+		id: queryParams.email,
 		password: queryParams.password,
 	}),
 })
@@ -58,10 +58,13 @@ fetch('http://localhost:3000/users/login', {
 		const $user = document.querySelector('.user-input');
 		const $team = document.querySelector('.team-input');
 		const $teamMessage = document.querySelector('.team-msg-input');
+		const $session = document.querySelector('.session-input');
+		const $sessionMessage = document.querySelector('.session-msg-input');
 
 		$button.addEventListener('click', () => {
 			const receiverEmail = $user.value;
 			const teamId = $team.value;
+			const sessionId = $session.value;
 			if (receiverEmail) {
 				fetch(`http://localhost:3000/users/email/${receiverEmail}`, {
 					method: 'GET',
@@ -99,7 +102,7 @@ fetch('http://localhost:3000/users/login', {
 				socket.emit('newMessageToUser', receiverEmail, $input.value, (id) => {
 					console.log(id);
 				});
-			} else {
+			} else if (teamId) {
 				console.log('pre-if(teamId)');
 				if (teamId) {
 					console.log('pre-emit');
@@ -107,6 +110,17 @@ fetch('http://localhost:3000/users/login', {
 						console.log(res);
 					});
 				}
+			} else if (sessionId) {
+				console.log('pre-if(sessionId)');
+				console.log('pre-emit');
+				socket.emit(
+					'newMessageToSession',
+					sessionId,
+					$sessionMessage.value,
+					(res) => {
+						console.log(res);
+					}
+				);
 			}
 		});
 	})

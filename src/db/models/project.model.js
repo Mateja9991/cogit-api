@@ -28,7 +28,10 @@ const projectSchema = new Schema(
 			type: Boolean,
 			default: false,
 		},
-		deadline: Date,
+		deadline: {
+			type: Date,
+			required: true,
+		},
 		description: {
 			type: String,
 			required: true,

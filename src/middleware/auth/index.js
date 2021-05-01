@@ -18,7 +18,7 @@ const {
 	commentToLeaderAuth,
 	commentToMemberAuth,
 } = require('./comment.authorization.js');
-
+const { adminAuth } = require('./admin.authorization.js');
 module.exports = {
 	jwtAuthMiddleware,
 	ownershipAuthMiddleware,
@@ -33,4 +33,5 @@ module.exports = {
 	assignAuth,
 	commentToLeaderAuth,
 	commentToMemberAuth,
+	adminAuth,
 };

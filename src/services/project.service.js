@@ -1,10 +1,14 @@
 const Project = require('../db/models/project.model');
+const User = require('../db/models/user.model');
 const { deleteSingleListHandler } = require('./list.service');
 const {
 	optionsBuilder,
 	queryHandler,
 	matchBuilder,
 } = require('./utils/services.utils');
+
+const { scheduleJobHandler } = require('./utils/services.utils');
+const Socket = require('../socket/socket');
 //
 //				ROUTER HANDLERS
 //
@@ -12,11 +16,17 @@ selectFieldsGlobal_View = 'name tags isArchived isTemplate teamId ';
 
 async function createProjectHandler(req, res, next) {
 	try {
+		if (new Date(req.body.deadline).getTime() < Date.now())
+			throw new Error('Invalid date.');
 		const project = new Project({
 			...req.body,
 			teamId: req.team._id,
 		});
 		await project.save();
+		const teamMembers = await User.find({ teams: req.team._id });
+		teamMembers.forEach((member) => {
+			scheduleJobHandler(project.deadline, project.name, member._id, Socket);
+		});
 		res.send(project);
 	} catch (e) {
 		next(e);

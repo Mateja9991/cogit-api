@@ -16,6 +16,10 @@ const taskSchema = new Schema(
 			required: true,
 			trim: true,
 		},
+		deadline: {
+			type: Date,
+			required: true,
+		},
 		listId: {
 			type: Schema.Types.ObjectId,
 			requred: true,

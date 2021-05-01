@@ -1,4 +1,8 @@
+const { Timestamp } = require('bson');
 const lodash = require('lodash');
+const schedule = require('node-schedule');
+const timeValues = require('../../constants/time_values');
+const { SOCKET_EVENTS } = require('../../constants/socket_events');
 async function duplicateHandler(model, parentPropertyPath, parentId, child) {
 	const isDuplicate = await model.findOne({
 		[parentPropertyPath]: parentId,
@@ -19,7 +23,7 @@ function optionsBuilder(limit, skip, sortBy, sortValue) {
 	}
 	if (sortBy) {
 		options.sort = {
-			[sortBy]: sortValue ? Number(sortValue) : -1,
+			[sortBy]: sortValue ? Number(sortValue) : 1,
 		};
 	}
 	console.log(limit, options);
@@ -77,11 +81,62 @@ function queryHandler(allItems, query) {
 
 	return requestedItems;
 }
+function getNextTimeStamp(date) {
+	console.log(date);
+	const keys = Object.keys(timeValues);
+	const key = keys.find((key) => timeValues[key] < date);
+	let time = timeValues[key];
+	while (date - time > 0) time += timeValues[key];
+	time -= timeValues[key];
+	return { time, key };
+}
 
+function scheduleJobHandler(deadline, event, room, Socket) {
+	const workingTime = deadline.getTime() - Date.now();
+	const timeObject = getNextTimeStamp(workingTime);
+	schedule.scheduleJob(
+		new Date(Date.now() + workingTime - timeObject.time),
+		notify.bind(null, timeObject, event, room, Socket)
+	);
+}
+function notify({ time: timeLeft, key }, event, room, Socket) {
+	const message = `${timeLeft / timeValues[key]} ${
+		key + (Math.floor(timeLeft / timeValues[key]) > 1 ? 's' : '')
+	} until ${event}s deadline.`;
+	console.log(message);
+	Socket.sendEventToRoom(
+		room,
+		SOCKET_EVENTS.NEW_NOTIFICATION,
+		message,
+		'users'
+	);
+	const timeObject = getNextTimeStamp(timeLeft);
+	if (!timeObject.time) return;
+	schedule.scheduleJob(
+		new Date(Date.now() + timeLeft - timeObject.time),
+		notify.bind(null, timeObject, event, room, Socket)
+	);
+}
+// async function scheduleJobHandler(date) {
+// 	schedule.scheduleJob(date, notify.bind(null, 5000));
+// 	function notify(x) {
+// 		console.log('running a task once!');
+// 		if (x - 1000 >= 0) {
+// 			schedule.scheduleJob(
+// 				new Date(Date.now() + x),
+// 				notify.bind(null, x - 1000)
+// 			);
+// 		} else {
+// 			console.log('done');
+// 		}
+// 	}
+// }
+async function createJob() {}
 //		await duplicateHandler(Project, 'teamId', req.team._id, req.body);
 module.exports = {
 	duplicateHandler,
 	optionsBuilder,
 	queryHandler,
 	matchBuilder,
+	scheduleJobHandler,
 };

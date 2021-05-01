@@ -14,7 +14,7 @@ const jwtSocketAuth = async (token) => {
 		}
 		return user;
 	} catch (e) {
-		return e;
+		console.log(e);
 	}
 };
 

@@ -3,6 +3,7 @@ const validator = require('validator');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { MODEL_NAMES } = require('../../constants/model_names');
+const { DEFAULT_AVATAR } = require('../../constants/default_avatar');
 const { ObjectId } = require('bson');
 //
 //              Schema
@@ -61,16 +62,20 @@ const userSchema = new Schema(
 			},
 		],
 		avatar: {
-			type: Buffer,
+			type: Schema.Types.ObjectId,
+			ref: MODEL_NAMES.AVATAR,
+			default: DEFAULT_AVATAR,
 		},
 		settings: [
 			{
 				theme: {
 					type: String,
+					enum: ['dark', 'light'],
 					required: true,
 				},
 				taskView: {
 					type: String,
+					enum: ['list', 'board'],
 					required: true,
 				},
 			},
@@ -87,20 +92,18 @@ const userSchema = new Schema(
 						required: true,
 					},
 					reference: {
-						_id: {
-							type: Schema.Types.ObjectId,
-							required: true,
-						},
-						eventType: {
-							type: String,
-							enum: [
-								'invitation',
-								'assignment',
-								'message',
-								'invitation_accepted',
-							],
-							required: true,
-						},
+						type: Schema.Types.ObjectId,
+						required: true,
+					},
+					eventType: {
+						type: String,
+						enum: [
+							'invitation',
+							'assignment',
+							'message',
+							'invitation_accepted',
+						],
+						required: true,
 					},
 				},
 				receivedAt: {
@@ -157,13 +160,15 @@ userSchema.statics.generateTag = async () => {
 userSchema.methods.toJSON = function () {
 	const user = this;
 	const userObject = user.toObject();
-
 	delete userObject.avatar;
 	delete userObject.password;
 	delete userObject.createdAt;
 	delete userObject.updatedAt;
 	delete userObject.__v;
-
+	delete userObject.notifications;
+	delete userObject.invitations;
+	delete userObject.role;
+	delete userObject.teams;
 	return userObject;
 };
 
