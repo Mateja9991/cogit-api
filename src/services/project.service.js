@@ -23,16 +23,18 @@ async function createProjectHandler(req, res, next) {
 			teamId: req.team._id,
 		});
 		await project.save();
-		const teamMembers = await User.find({ teams: req.team._id });
-		teamMembers.forEach((member) => {
-			scheduleJobHandler(project.deadline, project.name, member._id, Socket);
-		});
+		await scheduleTeamMemberNotifications(project);
 		res.send(project);
 	} catch (e) {
 		next(e);
 	}
 }
-
+async function scheduleTeamMemberNotifications(project) {
+	const teamMembers = await User.find({ teams: project.teamId });
+	teamMembers.forEach((member) => {
+		scheduleJobHandler(project.deadline, project.name, member._id, Socket);
+	});
+}
 async function getTeamsProjectsHandler(req, res, next) {
 	try {
 		const options = optionsBuilder(
@@ -154,4 +156,5 @@ module.exports = {
 	addLinkToProjectHandler,
 	deleteProjectHandler,
 	deleteSingleProjectHandler,
+	scheduleTeamMemberNotifications,
 };

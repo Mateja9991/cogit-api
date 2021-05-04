@@ -82,16 +82,20 @@ function queryHandler(allItems, query) {
 	return requestedItems;
 }
 function getNextTimeStamp(date) {
-	console.log(date);
+	let time;
 	const keys = Object.keys(timeValues);
 	const key = keys.find((key) => timeValues[key] < date);
-	let time = timeValues[key];
-	while (date - time > 0) time += timeValues[key];
-	time -= timeValues[key];
+
+	if (key) {
+		time = timeValues[key];
+		while (date - time - timeValues[key] > 0) time += timeValues[key];
+	}
+
 	return { time, key };
 }
 
 function scheduleJobHandler(deadline, event, room, Socket) {
+	if (deadline.getTime() <= Date.now()) return;
 	const workingTime = deadline.getTime() - Date.now();
 	const timeObject = getNextTimeStamp(workingTime);
 	schedule.scheduleJob(
@@ -117,22 +121,7 @@ function notify({ time: timeLeft, key }, event, room, Socket) {
 		notify.bind(null, timeObject, event, room, Socket)
 	);
 }
-// async function scheduleJobHandler(date) {
-// 	schedule.scheduleJob(date, notify.bind(null, 5000));
-// 	function notify(x) {
-// 		console.log('running a task once!');
-// 		if (x - 1000 >= 0) {
-// 			schedule.scheduleJob(
-// 				new Date(Date.now() + x),
-// 				notify.bind(null, x - 1000)
-// 			);
-// 		} else {
-// 			console.log('done');
-// 		}
-// 	}
-// }
-async function createJob() {}
-//		await duplicateHandler(Project, 'teamId', req.team._id, req.body);
+
 module.exports = {
 	duplicateHandler,
 	optionsBuilder,

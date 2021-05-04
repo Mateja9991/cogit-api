@@ -1,5 +1,6 @@
 const Calendar = require('../db/models/calendar.model');
 const Event = require('../db/models/event.model');
+const { scheduleJobHandler } = require('./utils/services.utils');
 
 async function getCalendarHandler(req, res, next) {
 	try {
@@ -9,6 +10,7 @@ async function getCalendarHandler(req, res, next) {
 		if (!calendar) {
 			throw new Error('No Calendar');
 		}
+		await calendar.populate('events').execPopulate();
 		res.send(calendar);
 	} catch (e) {
 		next(e);
@@ -22,6 +24,7 @@ async function addEventHandler(req, res, next) {
 			calendarId: req.calendar._id,
 		});
 		await newEvent.save();
+		scheduleJobHandler(newEvent.endDate, newEvent.name, req.user._id, Socket);
 		res.send(newEvent);
 	} catch (e) {
 		next(e);

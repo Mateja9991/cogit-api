@@ -35,15 +35,20 @@ async function createSubTaskHandler(req, res, next) {
 		const parentTask = await Task.findOne({ _id: req.params.taskId });
 		if (req.body.deadline > parentTask.deadline)
 			req.body.deadline = parentTask.deadline;
-		await createTask(res, req, {
-			...req.body,
-			listId: parentTask.listId,
-			parentTaskId: parentTask._id,
-			editors: parentTask.editors,
-			isArchived: parentTask.isArchived,
-			isTeamPriority: parentTask.isTeamPriority,
-			usersPriority: parentTask.usersPriority,
-		});
+		await createTask(
+			res,
+			req,
+			{
+				...req.body,
+				listId: parentTask.listId,
+				parentTaskId: parentTask._id,
+				editors: parentTask.editors,
+				isArchived: parentTask.isArchived,
+				isTeamPriority: parentTask.isTeamPriority,
+				usersPriority: parentTask.usersPriority,
+			},
+			next
+		);
 	} catch (e) {
 		next(e);
 	}
@@ -61,16 +66,18 @@ async function createTask(res, req, task, next) {
 			newTask.editors.push(req.user._id);
 		}
 		await newTask.save();
-		newTask.editors.forEach((editorId) => {
-			scheduleJobHandler(newTask.deadline, newTask.name, editorId, Socket);
-		});
+		scheduleTaskEditorsNotifications(newTask);
 		res.send(newTask);
 	} catch (e) {
 		console.log(e);
 		next(e);
 	}
 }
-
+function scheduleTaskEditorsNotifications(task) {
+	task.editors.forEach((editorId) => {
+		scheduleJobHandler(task.deadline, task.name, editorId, Socket);
+	});
+}
 async function getUserTasksHandler(req, res, next) {
 	try {
 		const usersTasks = await getTasksHandler(
@@ -78,6 +85,9 @@ async function getUserTasksHandler(req, res, next) {
 			{ editors: req.user._id },
 			selectFieldsGlobal
 		);
+		for (const task of usersTasks) {
+			await task.populate('subTasks').execPopulate();
+		}
 		res.send(usersTasks);
 	} catch (e) {
 		next(e);
@@ -86,6 +96,7 @@ async function getUserTasksHandler(req, res, next) {
 
 async function getSpecificTaskHandler(req, res, next) {
 	try {
+		await req.task.populate('subTasks').execPopulate();
 		res.send(req.task);
 	} catch (e) {
 		next(e);
@@ -99,6 +110,9 @@ async function getTeamPriorityTasksHandler(req, res, next) {
 			{ editors: req.user._id, isTeamPriority: true },
 			selectFieldsGlobal
 		);
+		for (const task of priorityTasks) {
+			await task.populate('subTasks').execPopulate();
+		}
 		res.send(priorityTasks);
 	} catch (e) {
 		next(e);
@@ -112,6 +126,9 @@ async function getUserPriorityTasksHandler(req, res, next) {
 			{ editors: req.user._id, usersPriority: req.user._id },
 			selectFieldsGlobal
 		);
+		for (const task of priorityTasks) {
+			await task.populate('subTasks').execPopulate();
+		}
 		res.send(priorityTasks);
 	} catch (e) {
 		next(e);
@@ -125,6 +142,9 @@ async function getTasksFromListHandler(req, res, next) {
 			{ listId: req.list._id },
 			selectFieldsGlobal
 		);
+		for (const task of tasks) {
+			await task.populate('subTasks').execPopulate();
+		}
 		res.send(tasks);
 	} catch (e) {
 		next(e);
@@ -273,4 +293,5 @@ module.exports = {
 	setUsersPriorityHandler,
 	setTeamsPriorityHandler,
 	changeListHandler,
+	scheduleTaskEditorsNotifications,
 };

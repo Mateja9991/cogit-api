@@ -4,6 +4,10 @@ const { MODEL_NAMES } = require('../../constants/model_names');
 //              Schema
 //
 const eventSchema = new Schema({
+	name: {
+		type: String,
+		required: true,
+	},
 	startDate: {
 		type: Date,
 		required: true,

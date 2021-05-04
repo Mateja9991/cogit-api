@@ -3,12 +3,19 @@ const { MODEL_NAMES } = require('../../constants/model_names');
 //
 //              Schema
 //
-const calendarSchema = new Schema({
-	userId: {
-		type: Schema.Types.ObjectId,
-		ref: MODEL_NAMES.TEAM,
+const calendarSchema = new Schema(
+	{
+		userId: {
+			type: Schema.Types.ObjectId,
+			ref: MODEL_NAMES.TEAM,
+		},
 	},
-});
+	{
+		toJSON: { virtuals: true },
+		toObject: { virtuals: true },
+	}
+);
+
 //
 //
 //
