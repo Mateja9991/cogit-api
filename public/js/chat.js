@@ -30,6 +30,34 @@ fetch('http://localhost:3000/users/login', {
 			},
 		});
 		var fetchedToken = token;
+
+		const $requestButton = document.querySelector('#request-button ');
+		const $requestInput = document.querySelector('#request');
+		const $methodInput = document.querySelector('#method');
+		const $bodyInput = document.querySelector('#body');
+		$requestButton.addEventListener('click', async () => {
+			const route = $requestInput.value;
+			const method = $methodInput.value;
+			const body = JSON.parse($bodyInput.value);
+			fetch('http://localhost:3000/' + route, {
+				method: method,
+				headers: {
+					'Content-Type': 'application/json',
+					Authorization: 'Bearer ' + fetchedToken,
+				},
+				body,
+			})
+				.then((response) => {
+					return response.json();
+				})
+				.then((jsonResponse) => {
+					console.log(jsonResponse);
+				})
+				.catch((error) => {
+					console.log(error);
+				});
+		});
+
 		console.log(socket);
 		socket.on('connect_error', (err) => {
 			console.log(err.message); // prints the message associated with the error
