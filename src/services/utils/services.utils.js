@@ -94,32 +94,41 @@ function getNextTimeStamp(date) {
 	return { time, key };
 }
 
-function scheduleJobHandler(deadline, event, room, Socket) {
+function scheduleJobHandler(deadline, room, Socket, model, documentId) {
 	if (deadline.getTime() <= Date.now()) return;
 	const workingTime = deadline.getTime() - Date.now();
 	const timeObject = getNextTimeStamp(workingTime);
 	schedule.scheduleJob(
 		new Date(Date.now() + workingTime - timeObject.time),
-		notify.bind(null, timeObject, event, room, Socket)
+		notify.bind(null, timeObject, room, Socket, model, documentId)
 	);
 }
-function notify({ time: timeLeft, key }, event, room, Socket) {
-	const message = `${timeLeft / timeValues[key]} ${
-		key + (Math.floor(timeLeft / timeValues[key]) > 1 ? 's' : '')
-	} until ${event}s deadline.`;
-	console.log(message);
-	Socket.sendEventToRoom(
-		room,
-		SOCKET_EVENTS.NEW_NOTIFICATION,
-		message,
-		'users'
-	);
-	const timeObject = getNextTimeStamp(timeLeft);
-	if (!timeObject.time) return;
-	schedule.scheduleJob(
-		new Date(Date.now() + timeLeft - timeObject.time),
-		notify.bind(null, timeObject, event, room, Socket)
-	);
+function notify({ time: timeLeft, key }, room, Socket, model, documentId) {
+	model
+		.findById(documentId)
+		.then((document) => {
+			if (!document) return;
+			const message = document.notificationMessage(
+				timeLeft / timeValues[key],
+				key
+			);
+			console.log(message);
+			Socket.sendEventToRoom(
+				room,
+				SOCKET_EVENTS.NEW_NOTIFICATION,
+				message,
+				'users'
+			);
+			const timeObject = getNextTimeStamp(timeLeft);
+			if (!timeObject.time) return;
+			schedule.scheduleJob(
+				new Date(Date.now() + timeLeft - timeObject.time),
+				notify.bind(null, timeObject, room, Socket, model, documentId)
+			);
+		})
+		.catch((error) => {
+			console.log(error);
+		});
 }
 
 module.exports = {

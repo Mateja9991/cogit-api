@@ -24,7 +24,13 @@ async function addEventHandler(req, res, next) {
 			calendarId: req.calendar._id,
 		});
 		await newEvent.save();
-		scheduleJobHandler(newEvent.endDate, newEvent.name, req.user._id, Socket);
+		scheduleJobHandler(
+			newEvent.endDate,
+			req.user._id,
+			Socket,
+			Event,
+			newEvent._id
+		);
 		res.send(newEvent);
 	} catch (e) {
 		next(e);

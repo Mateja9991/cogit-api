@@ -2,9 +2,8 @@ const { Schema, model } = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const Avatar = require('./avatar.model');
 const { MODEL_NAMES } = require('../../constants/model_names');
-const { DEFAULT_AVATAR } = require('../../constants/default_avatar');
-const { ObjectId } = require('bson');
 //
 //              Schema
 //
@@ -64,7 +63,6 @@ const userSchema = new Schema(
 		avatar: {
 			type: Schema.Types.ObjectId,
 			ref: MODEL_NAMES.AVATAR,
-			default: DEFAULT_AVATAR,
 		},
 		settings: [
 			{
@@ -127,6 +125,17 @@ const userSchema = new Schema(
 userSchema.pre('save', async function (next) {
 	if (this.isModified('password')) {
 		this.password = await bcrypt.hash(this.password, 8);
+	}
+	if (!this.avatar) {
+		const defaultAvatar = await Avatar.getDefaultAvatar();
+		if (!defaultAvatar) {
+			const count = await Avatar.countDocuments();
+			const skip = Math.floor(Math.random() * count);
+			this.avatar = await Avatar.findOne({}).skip(skip);
+			console.log('NO DEFAULT');
+			return;
+		}
+		this.avatar = defaultAvatar;
 	}
 	next();
 });

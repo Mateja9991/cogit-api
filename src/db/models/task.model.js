@@ -60,6 +60,13 @@ const taskSchema = new Schema(
 				ref: MODEL_NAMES.USER,
 			},
 		],
+		jobs: [
+			{
+				type: Schema.Types.ObjectId,
+				required: true,
+				ref: MODEL_NAMES.USER,
+			},
+		],
 	},
 	{
 		timestamps: true,
@@ -82,6 +89,12 @@ taskSchema.methods.toJSON = function () {
 	const task = this;
 	taskObject = task.toObject();
 	return taskObject;
+};
+
+taskSchema.methods.notificationMessage = function (timeLeft, timeKey) {
+	return `${timeLeft} ${timeKey + (timeLeft > 1 ? 's' : '')} until ${
+		this.name
+	} tasks deadline.`;
 };
 
 taskSchema.pre('remove', async function () {

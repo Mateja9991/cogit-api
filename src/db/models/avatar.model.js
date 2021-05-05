@@ -3,7 +3,7 @@ const { MODEL_NAMES } = require('../../constants/model_names');
 //
 //              Schema
 //
-const avatarModel = new Schema({
+const avatarSchema = new Schema({
 	name: {
 		type: String,
 		unique: true,
@@ -14,10 +14,19 @@ const avatarModel = new Schema({
 		type: Buffer,
 		required: true,
 	},
+	isDefault: {
+		type: Boolean,
+		default: false,
+	},
 });
 //
 //
 //
-const Avatar = model(MODEL_NAMES.AVATAR, avatarModel);
+avatarSchema.statics.getDefaultAvatar = async function () {
+	const defaultAvatar = await Avatar.findOne({ isDefault: true });
+	return defaultAvatar;
+};
+
+const Avatar = model(MODEL_NAMES.AVATAR, avatarSchema);
 
 module.exports = Avatar;

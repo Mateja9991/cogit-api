@@ -75,7 +75,7 @@ async function createTask(res, req, task, next) {
 }
 function scheduleTaskEditorsNotifications(task) {
 	task.editors.forEach((editorId) => {
-		scheduleJobHandler(task.deadline, task.name, editorId, Socket);
+		scheduleJobHandler(task.deadline, editorId, Socket, Task, task._id);
 	});
 }
 async function getUserTasksHandler(req, res, next) {
@@ -192,7 +192,7 @@ async function updateTaskHandler(req, res, next) {
 		next(e);
 	}
 }
-//	user priority set
+
 async function setUsersPriorityHandler(req, res, next) {
 	try {
 		req.task.usersPriority.push(req.user._id);
@@ -202,7 +202,7 @@ async function setUsersPriorityHandler(req, res, next) {
 		next(e);
 	}
 }
-//	team priority set
+
 async function setTeamsPriorityHandler(req, res, next) {
 	try {
 		if (!req.task) throw new Error('You are not authorized.');
@@ -213,7 +213,7 @@ async function setTeamsPriorityHandler(req, res, next) {
 		next(e);
 	}
 }
-//	change listId (promena liste)
+
 async function changeListHandler(req, res, next) {
 	try {
 		req.task.listId = req.params.listId;
@@ -223,7 +223,7 @@ async function changeListHandler(req, res, next) {
 		next(e);
 	}
 }
-//
+
 async function assignUserHandler(req, res, next) {
 	try {
 		req.task.editors.push(req.assignee._id);

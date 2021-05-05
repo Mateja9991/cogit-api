@@ -12,7 +12,7 @@ const Socket = require('../socket/socket');
 //
 //				ROUTER HANDLERS
 //
-selectFieldsGlobal_View = 'name tags isArchived isTemplate teamId ';
+selectFieldsGlobal = 'name tags isArchived isTemplate teamId ';
 
 async function createProjectHandler(req, res, next) {
 	try {
@@ -32,7 +32,13 @@ async function createProjectHandler(req, res, next) {
 async function scheduleTeamMemberNotifications(project) {
 	const teamMembers = await User.find({ teams: project.teamId });
 	teamMembers.forEach((member) => {
-		scheduleJobHandler(project.deadline, project.name, member._id, Socket);
+		scheduleJobHandler(
+			project.deadline,
+			member._id,
+			Socket,
+			Project,
+			project._id
+		);
 	});
 }
 async function getTeamsProjectsHandler(req, res, next) {
@@ -75,7 +81,7 @@ async function getProjectsFromOneTeam(team, options) {
 		{
 			teamId: team._id,
 		},
-		selectFieldsGlobal_View,
+		selectFieldsGlobal,
 		options
 	);
 
@@ -132,6 +138,7 @@ async function addLinkToProjectHandler(req, res, next) {
 async function deleteProjectHandler(req, res, next) {
 	try {
 		await deleteSingleProjectHandler(req.project);
+
 		res.send({
 			success: true,
 		});

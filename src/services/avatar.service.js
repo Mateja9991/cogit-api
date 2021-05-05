@@ -1,6 +1,5 @@
 const sharp = require('sharp');
 const Avatar = require('../db/models/avatar.model');
-
 async function uploadAvatarHandler(req, res, next) {
 	try {
 		const avatarBuffer = await sharp(req.file.buffer)
@@ -38,6 +37,26 @@ async function getOneAvatarHandler(req, res, next) {
 	}
 }
 
+async function setDefaultAvatarHandler(req, res, next) {
+	try {
+		const newDefault = await Avatar.findById(req.params.avatarId);
+		if (!newDefault) throw new Error('Avatar doesnt exist.');
+		const allAvatars = await Avatar.find({});
+		for (const avatar of allAvatars) {
+			if (avatar.isDefault) {
+				avatar.isDefault = false;
+				await avatar.save();
+			}
+		}
+		newDefault.isDefault = true;
+		await newDefault.save();
+		res.set('Content-Type', 'image/png');
+		res.send(newDefault.picture);
+	} catch (e) {
+		next(e);
+	}
+}
+
 async function deleteAvatarHandler(req, res, next) {
 	try {
 		await Avatar.findOneAndDelete({ _id: req.params.avatarId });
@@ -51,5 +70,6 @@ module.exports = {
 	uploadAvatarHandler,
 	getAllAvatarsHandler,
 	getOneAvatarHandler,
+	setDefaultAvatarHandler,
 	deleteAvatarHandler,
 };

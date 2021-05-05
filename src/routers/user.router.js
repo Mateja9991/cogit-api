@@ -45,7 +45,7 @@ router.get('/users/me', jwtAuthMiddleware, getProfileHandler);
 
 router.get('/users/me/avatar', jwtAuthMiddleware, getAvatarHandler);
 
-router.get('/users/:id', jwtAuthMiddleware, getUserHandler);
+router.get('/users/:userId', jwtAuthMiddleware, getUserHandler);
 
 router.get(
 	'/users/me/invitations',
@@ -95,20 +95,24 @@ router.patch(
 );
 
 router.patch(
-	'/users/me/invitations/accept/:teamId',
+	'/users/accept/teams/:teamId',
 	jwtAuthMiddleware,
 	acceptTeamInvitationHandler
 );
 
 router.patch(
-	'/users/me/invitations/decline/:teamId',
+	'/users/decline/teams/:teamId',
 	jwtAuthMiddleware,
 	declineTeamInvitationHandler
 );
 
 router.patch('/users/me/settings', jwtAuthMiddleware, updateSettingsHandler);
 
-router.patch('/users/me/avatar/:avatarId', jwtAuthMiddleware, setAvatarHandler);
+router.patch(
+	'/users/me/avatars/:avatarId',
+	jwtAuthMiddleware,
+	setAvatarHandler
+);
 
 router.delete('/users/me', jwtAuthMiddleware, deleteUserHandler);
 

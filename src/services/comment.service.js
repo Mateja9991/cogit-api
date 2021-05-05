@@ -6,7 +6,7 @@ const {
 	queryHandler,
 } = require('./utils/services.utils');
 
-const selectFieldsGlobal_View = 'text taskId likes';
+const selectFieldsGlobal = 'text taskId likes';
 
 async function createCommentHandler(req, res, next) {
 	try {
@@ -44,7 +44,7 @@ async function getTaskCommentsHandler(req, res, next) {
 				taskId: req.task._id,
 				...match,
 			},
-			selectFieldsGlobal_View,
+			selectFieldsGlobal,
 			options
 		);
 		res.send(comments);

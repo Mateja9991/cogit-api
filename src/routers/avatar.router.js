@@ -18,6 +18,7 @@ const {
 	getAllAvatarsHandler,
 	getOneAvatarHandler,
 	deleteAvatarHandler,
+	setDefaultAvatarHandler,
 } = require('../services/avatar.service');
 
 const router = new express.Router();
@@ -34,6 +35,8 @@ router.post(
 router.get('/avatars', jwtAuthMiddleware, getAllAvatarsHandler);
 
 router.get('/avatars/:avatarId', jwtAuthMiddleware, getOneAvatarHandler);
+
+router.patch('/avatars/:avatarId', jwtAuthMiddleware, setDefaultAvatarHandler);
 
 router.delete('/avatars/:avatarId', jwtAuthMiddleware, deleteAvatarHandler);
 

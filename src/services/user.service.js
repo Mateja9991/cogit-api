@@ -92,6 +92,7 @@ async function getProfileHandler(req, res, next) {
 async function getAvatarHandler(req, res, next) {
 	try {
 		await req.user.populate('avatar').execPopulate();
+		if (!req.user.avatar) throw new Error('User has no avatar.');
 		res.set('Content-Type', 'image/png');
 		res.send(req.user.avatar.picture);
 	} catch (e) {
@@ -101,9 +102,8 @@ async function getAvatarHandler(req, res, next) {
 
 async function getUserHandler(req, res, next) {
 	try {
-		const user = await User.findById(req.params.id);
+		const user = await User.findById(req.params.userId);
 		if (!user) {
-			updateTeamHandler;
 			return res.status(404).send();
 		}
 		res.send(user);
@@ -138,19 +138,19 @@ async function getAllNotificationsHandler(req, res, next) {
 		}
 		res.send(result);
 
-		///// MARK AS READ KAO POSEBNA FUNKCIJA KOJA HANDLUJE ERROR BEZ RESPONSE-A (HEADERS CANT BE SET MOZE DA SE DESI)
-
-		// req.user.notifications.forEach((notif) => {
-		// 	if (requestedNotifications.includes(notif) && !notif.seen)
-		// 		notif.seen = true;
-		// });
-		// await req.user.save();
+		await markAsRead(req.user, requestedNotifications);
 	} catch (e) {
 		console.log(e);
 		next(e);
 	}
 }
-
+async function markAsRead(user, requestedNotifications) {
+	user.notifications.forEach((notif) => {
+		if (requestedNotifications.includes(notif) && !notif.seen)
+			notif.seen = true;
+	});
+	await user.save();
+}
 async function getTeamInvitationsHandler(req, res, next) {
 	try {
 		const options = optionsBuilder(
@@ -249,11 +249,10 @@ async function updateUserHandler(req, res, next) {
 		allowedToUpdate.includes(update)
 	);
 
-	if (!isValidUpdate) {
-		return res.status(404).send();
-	}
-
 	try {
+		if (!isValidUpdate) {
+			return res.status(404).send();
+		}
 		updates.forEach((update) => {
 			req.user[update] = req.body[update];
 		});
@@ -301,7 +300,7 @@ async function sendTeamInvitationHandler(req, res, next) {
 		user.notifications.push(newEvent);
 
 		await user.save();
-		res.send({ num: user.invitations.length });
+		res.send({ success: true });
 	} catch (e) {
 		next(e);
 	}
@@ -380,6 +379,7 @@ async function deleteUserHandler(req, res, next) {
 				}
 			}
 		}
+
 		await req.user.remove();
 		res.send(req.user);
 	} catch (e) {
@@ -395,7 +395,14 @@ async function getAllUsersHandler(req, res, next) {
 		// if (!req.admin) {
 		// 	throw new Error('You are not admin');
 		// }
-		const users = await User.find({});
+		const options = optionsBuilder(
+			req.query.limit,
+			req.query.skip,
+			req.query.sortBy,
+			req.query.sortValue
+		);
+		const match = matchBuilder(req.query);
+		const users = await User.find({ ...match }, '', options);
 		res.send(users);
 	} catch (e) {
 		next(e);

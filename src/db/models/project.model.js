@@ -62,6 +62,12 @@ projectSchema.virtual('lists', {
 //
 //
 //
+projectSchema.methods.notificationMessage = function (timeLeft, timeKey) {
+	return `${timeLeft} ${timeKey + (timeLeft > 1 ? 's' : '')} until ${
+		this.name
+	} projects deadline.`;
+};
+
 const Project = model(MODEL_NAMES.PROJECT, projectSchema);
 
 module.exports = Project;
