@@ -47,7 +47,7 @@ fetch('http://localhost:3000/users/login', {
 					'Content-Type': 'application/json',
 					Authorization: 'Bearer ' + fetchedToken,
 				},
-				body,
+				body: body ? body : undefined,
 			})
 				.then((response) => {
 					return response.json();
