@@ -55,6 +55,7 @@ fetch('http://localhost:3000/users/login', {
 				.then((jsonResponse) => {
 					console.log(jsonResponse);
 					const keys = Object.keys(jsonResponse);
+					if (jsonResponse['token']) fetchedToken = jsonResponse['token'];
 					$response.innerHTML = '';
 					keys.forEach((key) => {
 						$response.innerHTML += key + ': ' + jsonResponse[key] + '<br/>';
