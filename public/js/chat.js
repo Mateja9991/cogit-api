@@ -20,6 +20,7 @@ fetch('http://localhost:3000/users/login', {
 	}),
 })
 	.then((response) => {
+		console.log('res', response);
 		return response.json();
 	})
 	.then(({ token }) => {
@@ -31,14 +32,15 @@ fetch('http://localhost:3000/users/login', {
 		});
 		var fetchedToken = token;
 
-		const $requestButton = document.querySelector('#request-button ');
-		const $requestInput = document.querySelector('#request');
-		const $methodInput = document.querySelector('#method');
-		const $bodyInput = document.querySelector('#body');
+		const $requestButton = document.querySelector('.request-button');
+		const $requestInput = document.querySelector('.request');
+		const $methodInput = document.querySelector('.method');
+		const $bodyInput = document.querySelector('.body');
+		const $response = document.querySelector('.response');
 		$requestButton.addEventListener('click', async () => {
 			const route = $requestInput.value;
 			const method = $methodInput.value;
-			const body = JSON.parse($bodyInput.value);
+			let body = $bodyInput.value;
 			fetch('http://localhost:3000/' + route, {
 				method: method,
 				headers: {
@@ -52,6 +54,11 @@ fetch('http://localhost:3000/users/login', {
 				})
 				.then((jsonResponse) => {
 					console.log(jsonResponse);
+					const keys = Object.keys(jsonResponse);
+					$response.innerHTML = '';
+					keys.forEach((key) => {
+						$response.innerHTML += key + ': ' + jsonResponse[key] + '<br/>';
+					});
 				})
 				.catch((error) => {
 					console.log(error);
