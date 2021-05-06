@@ -1,5 +1,5 @@
-const List = require('../../db/models/list.model');
 const { MODEL_NAMES } = require('../../constants/model_names');
+const { List } = require('../../db/models');
 
 async function listToLeaderAuth(req, res, next) {
 	try {

@@ -1,6 +1,5 @@
-const Task = require('../../db/models/task.model');
-const User = require('../../db/models/user.model');
 const { MODEL_NAMES } = require('../../constants/model_names');
+const { Task } = require('../../db/models');
 
 async function taskToLeaderAuth(req, res, next) {
 	try {

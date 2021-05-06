@@ -1,6 +1,4 @@
-const Session = require('../db/models/session.model');
-const Message = require('../db/models/message.model');
-const User = require('../db/models/user.model');
+const { User, Session, Message } = require('../db/models');
 const { optionsBuilder } = require('./utils/services.utils');
 
 async function createPrivateSessionHandler(req, res, next) {

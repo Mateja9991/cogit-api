@@ -1,4 +1,4 @@
-const Task = require('../db/models/task.model');
+const { Task } = require('../db/models');
 
 const Socket = require('../socket/socket');
 const { SOCKET_EVENTS } = require('../constants/socket_events');

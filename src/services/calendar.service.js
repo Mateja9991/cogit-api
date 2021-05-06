@@ -1,5 +1,4 @@
-const Calendar = require('../db/models/calendar.model');
-const Event = require('../db/models/event.model');
+const { Calendar } = require('../db/models');
 const { scheduleJobHandler } = require('./utils/services.utils');
 
 async function getCalendarHandler(req, res, next) {

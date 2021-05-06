@@ -1,12 +1,12 @@
 const express = require('express');
+
+const { Team } = require('../db/models');
+
 const {
 	jwtAuthMiddleware,
 	ownershipAuthMiddleware,
 	teamMemberAuth,
 } = require('../middleware/auth');
-
-const Team = require('../db/models/team.model');
-const User = require('../db/models/user.model');
 
 const {
 	createTeamHandler,

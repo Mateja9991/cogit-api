@@ -1,6 +1,7 @@
 const express = require('express');
 
-const Team = require('../db/models/team.model');
+const { Team } = require('../db/models');
+
 const {
 	jwtAuthMiddleware,
 	ownershipAuthMiddleware,

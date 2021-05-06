@@ -1,5 +1,5 @@
 const sharp = require('sharp');
-const Avatar = require('../db/models/avatar.model');
+const { Avatar } = require('../db/models');
 async function uploadAvatarHandler(req, res, next) {
 	try {
 		const avatarBuffer = await sharp(req.file.buffer)

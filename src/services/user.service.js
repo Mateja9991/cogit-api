@@ -1,9 +1,7 @@
 const Socket = require('../socket/socket');
 const { SOCKET_EVENTS } = require('../constants/socket_events');
-const User = require('../db/models/user.model');
-const Avatar = require('../db/models/avatar.model');
-const Calendar = require('../db/models/calendar.model');
-const Team = require('../db/models/team.model');
+const { User, Avatar, Calendar, Team } = require('../db/models');
+
 const { deleteSingleTeamHandler } = require('./team.service');
 
 const {
@@ -18,7 +16,7 @@ const {
 	addParticipantHandler,
 } = require('./session.service');
 
-//'images',
+//
 //        ROUTER HANDLERS
 //
 async function createUserHandler(req, res, next) {

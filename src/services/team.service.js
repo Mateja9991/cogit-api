@@ -1,5 +1,4 @@
-const Team = require('../db/models/team.model');
-const User = require('../db/models/user.model');
+const { User, Team } = require('../db/models');
 const { deleteSingleProjectHandler } = require('./project.service');
 const { newSessionHandler } = require('./session.service');
 const {

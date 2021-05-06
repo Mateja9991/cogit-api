@@ -1,7 +1,6 @@
-const Comment = require('../../db/models/comment.model');
 const { MODEL_NAMES } = require('../../constants/model_names');
-const Team = require('../../db/models/team.model');
-const User = require('../../db/models/user.model');
+const { Comment } = require('../../db/models');
+
 async function commentToLeaderAuth(req, res, next) {
 	try {
 		const comment = await Comment.findById(req.params.commentId);

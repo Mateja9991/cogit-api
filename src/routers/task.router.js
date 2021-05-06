@@ -1,5 +1,7 @@
 const express = require('express');
 
+const { Task } = require('../db/models');
+
 const {
 	jwtAuthMiddleware,
 	ownershipAuthMiddleware,
@@ -10,7 +12,7 @@ const {
 	teamMemberAuth,
 	assignAuth,
 } = require('../middleware/auth');
-const Task = require('../db/models/task.model');
+
 const router = new express.Router();
 const {
 	createTaskHandler,

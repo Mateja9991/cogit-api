@@ -1,4 +1,4 @@
-const Project = require('../../db/models/project.model');
+const { Project } = require('../../db/models');
 
 async function projectToLeaderAuth(req, res, next) {
 	try {

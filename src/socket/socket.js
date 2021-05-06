@@ -2,14 +2,11 @@
 var mongoose = require('mongoose');
 const socketio = require('socket.io');
 
-const User = require('../db/models/user.model');
-const Session = require('../db/models/session.model');
-const Message = require('../db/models/message.model');
+const { User, Team, Session, Message } = require('../db/models');
 
 const { getSessionHandler } = require('../services/session.service');
 const { SOCKET_EVENTS } = require('../constants/socket_events');
 const { jwtSocketAuth } = require('./socket.auth/');
-const Team = require('../db/models/team.model');
 
 class SocketService {
 	initializeSocketServer(server) {

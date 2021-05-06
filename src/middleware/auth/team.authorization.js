@@ -1,4 +1,4 @@
-const Team = require('../../db/models/team.model');
+const { Team } = require('../../db/models');
 
 async function teamMemberAuth(req, res, next) {
 	try {

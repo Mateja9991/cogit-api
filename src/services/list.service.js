@@ -1,5 +1,4 @@
-const List = require('../db/models/list.model');
-const Task = require('../db/models/task.model');
+const { List, Task } = require('../db/models');
 const { duplicateHandler } = require('./utils/services.utils');
 const { deleteSingleTaskHandler } = require('./task.service');
 //

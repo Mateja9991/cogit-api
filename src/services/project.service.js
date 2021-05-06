@@ -1,5 +1,4 @@
-const Project = require('../db/models/project.model');
-const User = require('../db/models/user.model');
+const { User, Project } = require('../db/models');
 const { deleteSingleListHandler } = require('./list.service');
 const {
 	optionsBuilder,

@@ -1,4 +1,7 @@
 const express = require('express');
+
+const { Calendar } = require('../db/models');
+
 const {
 	jwtAuthMiddleware,
 	ownershipAuthMiddleware,
@@ -9,9 +12,6 @@ const {
 	deleteCalendarHandler,
 	deleteEventHandler,
 } = require('../services/calendar.service');
-
-const Calendar = require('../db/models/calendar.model');
-const Event = require('../db/models/event.model');
 
 const router = new express.Router();
 //

@@ -6,10 +6,6 @@ const {
 	listToLeaderAuth,
 	listToMemberAuth,
 } = require('../middleware/auth');
-const Team = require('../db/models/team.model');
-const User = require('../db/models/user.model');
-const Project = require('../db/models/project.model');
-const List = require('../db/models/list.model');
 
 const {
 	createListHandler,

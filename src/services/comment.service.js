@@ -1,4 +1,4 @@
-const Comment = require('../db/models/comment.model');
+const { Comment } = require('../db/models');
 
 const {
 	optionsBuilder,

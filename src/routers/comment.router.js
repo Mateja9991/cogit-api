@@ -1,4 +1,7 @@
 const express = require('express');
+
+const { Comment } = require('../db/models');
+
 const {
 	jwtAuthMiddleware,
 	taskToMemberAuth,
@@ -14,8 +17,6 @@ const {
 	deleteCommentHandler,
 	likeCommentHandler,
 } = require('../services/comment.service');
-
-const Comment = require('../db/models/comment.model');
 
 const router = new express.Router();
 //

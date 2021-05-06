@@ -1,8 +1,6 @@
 const { scheduleJobHandler } = require('../src/services/utils/services.utils');
-const Task = require('../src/db/models/task.model');
-const Project = require('../src/db/models/project.model');
-const User = require('../src/db/models/user.model');
-const Socket = require('../src/socket/socket');
+const { Project, Task } = require('../src/db/models');
+
 const {
 	scheduleTeamMemberNotifications,
 } = require('../src/services/project.service');
