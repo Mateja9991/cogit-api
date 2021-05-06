@@ -51,6 +51,8 @@ const projectSchema = new Schema(
 );
 
 projectSchema.index({ name: 1, teamId: 1 }, { unique: true });
+projectSchema.index({ teamId: 1 });
+
 //
 //              Virtuals
 //

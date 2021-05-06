@@ -35,7 +35,7 @@ const teamSchema = new Schema(
 		toObject: { virtuals: true },
 	}
 );
-
+teamSchema.index({ leaderId: 1 });
 teamSchema.index({ name: 1, leaderId: 1 }, { unique: true });
 //
 //              Virtuals

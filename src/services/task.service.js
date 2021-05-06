@@ -167,7 +167,7 @@ async function getTasksHandler(req, queryFields) {
 		},
 		selectFieldsGlobal,
 		options
-	).maxTime(1);
+	);
 
 	return tasks;
 }

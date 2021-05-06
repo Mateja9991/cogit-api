@@ -35,7 +35,6 @@ const userSchema = new Schema(
 		password: {
 			type: String,
 			required: true,
-			unique: true,
 			trim: true,
 			minlength: [7, 'Password too short (<7).'],
 		},
@@ -117,7 +116,8 @@ const userSchema = new Schema(
 		toObject: { virtuals: true },
 	}
 );
-
+userSchema.index({ username: 1 });
+userSchema.index({ email: 1 });
 //
 //              Middleware
 //

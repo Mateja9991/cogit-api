@@ -23,6 +23,7 @@ const messageSchema = new Schema(
 	},
 	{ timestamps: true }
 );
+messageSchema.index({ sessionId: 1 });
 //
 //
 //

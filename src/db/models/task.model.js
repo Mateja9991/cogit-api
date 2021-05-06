@@ -60,13 +60,6 @@ const taskSchema = new Schema(
 				ref: MODEL_NAMES.USER,
 			},
 		],
-		jobs: [
-			{
-				type: Schema.Types.ObjectId,
-				required: true,
-				ref: MODEL_NAMES.USER,
-			},
-		],
 	},
 	{
 		timestamps: true,
@@ -74,6 +67,8 @@ const taskSchema = new Schema(
 		toObject: { virtuals: true },
 	}
 );
+taskSchema.index({ creatorId: 1 });
+taskSchema.index({ listId: 1 });
 //
 //              Virtuals
 //
