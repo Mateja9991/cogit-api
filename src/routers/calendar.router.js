@@ -1,6 +1,6 @@
 const express = require('express');
 
-const { Calendar } = require('../db/models');
+const { Calendar, Event } = require('../db/models');
 
 const {
 	jwtAuthMiddleware,
