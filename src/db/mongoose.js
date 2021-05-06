@@ -16,11 +16,13 @@ mongoose
 		useCreateIndex: true,
 		useUnifiedTopology: true,
 		useFindAndModify: false,
+		poolSize: 15,
 		// user: MONGO_USERNAME,
 		// pass: MONGO_PASSWORD,
 		// authSource: MONGO_SOURCE,
 	})
 	.then(() => {
+		mongoose.set('debug', true);
 		console.log('Connected');
 	});
 

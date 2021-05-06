@@ -28,6 +28,8 @@ const commentSchema = new Schema({
 		ref: MODEL_NAMES.USER,
 	},
 });
+commentSchema.index({ creatorId: 1 });
+commentSchema.index({ taskId: 1 });
 //
 //
 //

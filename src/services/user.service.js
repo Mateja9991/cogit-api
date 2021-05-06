@@ -402,7 +402,7 @@ async function getAllUsersHandler(req, res, next) {
 			req.query.sortValue
 		);
 		const match = matchBuilder(req.query);
-		const users = await User.find({ ...match }, '', options);
+		const users = await User.find({ ...match }, '', options).maxTime(1);
 		res.send(users);
 	} catch (e) {
 		next(e);

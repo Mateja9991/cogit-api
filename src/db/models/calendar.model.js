@@ -15,7 +15,7 @@ const calendarSchema = new Schema(
 		toObject: { virtuals: true },
 	}
 );
-
+calendarSchema.index({ userId: 1 }, { unique: true });
 //
 //
 //

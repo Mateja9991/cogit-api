@@ -26,6 +26,7 @@ const eventSchema = new Schema({
 		required: true,
 	},
 });
+eventSchema.index({ calendarId: 1 });
 //
 //
 //

@@ -21,6 +21,7 @@ const listSchema = new Schema(
 		toObject: { virtuals: true },
 	}
 );
+listSchema.index({ projectId: 1 });
 //
 //              Virtuals
 //
