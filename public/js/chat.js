@@ -9,8 +9,8 @@ const queryParams = queryParamsString
 console.log(queryParams.email);
 console.log(queryParams.password);
 
-// const URL = 'https://cogit-api.herokuapp.com/';
-const URL = 'http://localhost:3000/';
+const URL = 'https://cogit-api.herokuapp.com/';
+// const URL = 'http://localhost:3000/';
 
 fetch(URL + 'users/login', {
 	method: 'POST',
