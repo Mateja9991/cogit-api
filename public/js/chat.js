@@ -43,6 +43,14 @@ fetch(URL + 'users/login', {
 			const route = $requestInput.value;
 			const method = $methodInput.value;
 			let body = $bodyInput.value;
+			let headers = {
+				Authorization: 'Bearer ' + fetchedToken,
+			};
+			if (route.includes('users/me/avatar') || route.includes('avatars/')) {
+				headers['Content-Type'] = 'image/png';
+			} else {
+				headers['Content-Type'] = 'application/json';
+			}
 			fetch(URL + route, {
 				method: method,
 				headers: {

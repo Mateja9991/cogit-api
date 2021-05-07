@@ -11,8 +11,7 @@ async function uploadAvatarHandler(req, res, next) {
 			picture: avatarBuffer,
 		});
 		await newAvatar.save();
-		res.set('Content-Type', 'image/png');
-		res.send(newAvatar.picture);
+		res.send({ success: true });
 	} catch (e) {
 		next(e);
 	}
@@ -50,8 +49,7 @@ async function setDefaultAvatarHandler(req, res, next) {
 		}
 		newDefault.isDefault = true;
 		await newDefault.save();
-		res.set('Content-Type', 'image/png');
-		res.send(newDefault.picture);
+		res.send({ success: true });
 	} catch (e) {
 		next(e);
 	}
