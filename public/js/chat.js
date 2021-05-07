@@ -60,12 +60,12 @@ fetch(URL + 'users/login', {
 				},
 				body: body ? body : undefined,
 			})
-				.then((response) => {
+				.then(async (response) => {
 					if (response.headers.get('Content-Type') === 'image/png')
-						return response;
-					return response.json();
+						return { jsonResponse: response, picture: true };
+					return { jsonResponse: await response.json(), picture: false };
 				})
-				.then((jsonResponse) => {
+				.then(({ jsonResponse, picture }) => {
 					console.log(jsonResponse);
 					const keys = Object.keys(jsonResponse);
 					if (jsonResponse['token']) fetchedToken = jsonResponse['token'];
@@ -73,8 +73,7 @@ fetch(URL + 'users/login', {
 						console.log(jsonResponse);
 						return;
 					}
-					console.log(123);
-					if (jsonResponse.headers.get('Content-Type') === 'image/png') {
+					if (picture) {
 						$response.innerHTML = '';
 						var imageElem = document.createElement('img');
 						jsonResponse.arrayBuffer().then(function (buffer) {
