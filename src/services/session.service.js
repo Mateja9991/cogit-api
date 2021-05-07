@@ -169,7 +169,10 @@ async function addParticipantHandler(teamId, userId) {
 	try {
 		const session = await Session.findOne({ teamId });
 		session.participants.forEach((par) => {
-			if (par.userId.equals(userId)) throw new Error('already member');
+			if (par.userId.equals(userId)) {
+				res.status(500);
+				throw new Error('already member');
+			}
 		});
 		session.participants.push({
 			userId,

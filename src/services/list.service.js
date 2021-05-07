@@ -40,6 +40,7 @@ async function updateListHandler(req, res, next) {
 
 	try {
 		if (!isValidUpdate) {
+			res.status(422);
 			throw new Error('Invalid update fields.');
 		}
 		await duplicateHandler(List, 'projectId', req.list.projectId, req.body);

@@ -23,10 +23,12 @@ function ownershipAuthMiddleware(
 			}
 			const model = await parentModel.findOne(findQuery);
 			if (!searchedModel) {
-				throw new Error('Dcoument doesent exist.');
+				res.status(404);
+				throw new Error('Dcoument not found.');
 			}
 			if (!model) {
-				throw new Error('You dont have permission to access this document');
+				res.status(403);
+				throw new Error('You dont have permission to access this document.');
 			}
 			req[requestSaveInProperty] = model;
 			next();

@@ -62,6 +62,7 @@ async function updateCommentHandler(req, res, next) {
 
 	try {
 		if (!isValidUpdate) {
+			res.status(400);
 			throw new Error('Invalid update fields');
 		}
 		updates.forEach((update) => {

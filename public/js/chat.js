@@ -9,7 +9,8 @@ const queryParams = queryParamsString
 console.log(queryParams.email);
 console.log(queryParams.password);
 
-const URL = 'https://cogit-api.herokuapp.com/';
+// const URL = 'https://cogit-api.herokuapp.com/';
+const URL = 'http://localhost:3000/';
 
 fetch(URL + 'users/login', {
 	method: 'POST',
@@ -43,14 +44,14 @@ fetch(URL + 'users/login', {
 			const route = $requestInput.value;
 			const method = $methodInput.value;
 			let body = $bodyInput.value;
-			let headers = {
-				Authorization: 'Bearer ' + fetchedToken,
-			};
-			if (route.includes('users/me/avatar') || route.includes('avatars/')) {
-				headers['Content-Type'] = 'image/png';
-			} else {
-				headers['Content-Type'] = 'application/json';
-			}
+			// let headers = {
+			// 	Authorization: 'Bearer ' + fetchedToken,
+			// };
+			// if (route.includes('users/me/avatar') || route.includes('avatars/')) {
+			// 	headers['Content-Type'] = 'image/png';
+			// } else {
+			// 	headers['Content-Type'] = 'application/json';
+			// }
 			fetch(URL + route, {
 				method: method,
 				headers: {
@@ -60,16 +61,39 @@ fetch(URL + 'users/login', {
 				body: body ? body : undefined,
 			})
 				.then((response) => {
+					if (response.headers.get('Content-Type') === 'image/png')
+						return response;
 					return response.json();
 				})
 				.then((jsonResponse) => {
 					console.log(jsonResponse);
 					const keys = Object.keys(jsonResponse);
 					if (jsonResponse['token']) fetchedToken = jsonResponse['token'];
-					$response.innerHTML = '';
-					keys.forEach((key) => {
-						$response.innerHTML += key + ': ' + jsonResponse[key] + '<br/>';
-					});
+					if (jsonResponse['error']) {
+						console.log(jsonResponse);
+						return;
+					}
+					console.log(123);
+					if (jsonResponse.headers.get('Content-Type') === 'image/png') {
+						$response.innerHTML = '';
+						var imageElem = document.createElement('img');
+						jsonResponse.arrayBuffer().then(function (buffer) {
+							var binary = '';
+							var bytes = new Uint8Array(buffer);
+							var len = bytes.byteLength;
+							for (var i = 0; i < len; i++) {
+								binary += String.fromCharCode(bytes[i]);
+							}
+							var pic = window.btoa(binary);
+							imageElem.src = 'data:image/png;base64,' + pic;
+							$response.appendChild(imageElem);
+						});
+					} else {
+						$response.innerHTML = '';
+						keys.forEach((key) => {
+							$response.innerHTML += key + ': ' + jsonResponse[key] + '<br/>';
+						});
+					}
 				})
 				.catch((error) => {
 					console.log(error);

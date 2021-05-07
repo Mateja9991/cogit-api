@@ -2,11 +2,18 @@ const { Team } = require('../../db/models');
 
 async function teamMemberAuth(req, res, next) {
 	try {
+		const team = await Team.findById(req.params.teamId);
+		if (!team) {
+			res.status(404);
+			throw new Error('Team not found.');
+		}
 		const isMember = req.user.teams.includes(req.params.teamId);
 		if (!req.admin && !isMember) {
-			throw new Error('You are not team Member');
+			res.status(403);
+			throw new Error(
+				'Not authorized.  To access this document you need to be team member.'
+			);
 		}
-		const team = await Team.findById(req.params.teamId);
 		req.team = team;
 		next();
 	} catch (e) {
@@ -16,19 +23,16 @@ async function teamMemberAuth(req, res, next) {
 
 async function teamLeaderAuth(req, res, next) {
 	try {
-		let team;
-		if (!req.admin) {
-			team = await Team.findOne({
-				_id: req.params.teamId,
-				leaderId: req.user._id,
-			});
-		} else {
-			team = await Team.findOne({
-				_id: req.params.teamId,
-			});
-		}
+		let team = await Team.findById(req.params.teamId);
 		if (!team) {
-			throw new Error('You are not team Leader');
+			res.status(404);
+			throw new Error('Team not found.');
+		}
+		if (!req.admin && !team.leaderId.equals(req.user._id)) {
+			res.status(403);
+			throw new Error(
+				'Not authorized.  To access this document you need to be team leader.'
+			);
 		}
 		req.team = team;
 		next();

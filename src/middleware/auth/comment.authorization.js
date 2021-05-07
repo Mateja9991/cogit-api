@@ -5,6 +5,7 @@ async function commentToLeaderAuth(req, res, next) {
 	try {
 		const comment = await Comment.findById(req.params.commentId);
 		if (!comment) {
+			res.status(404);
 			throw new Error('Comment not found');
 		}
 		await comment
@@ -40,6 +41,7 @@ async function commentToMemberAuth(req, res, next) {
 	try {
 		const comment = await Comment.findById(req.params.commentId);
 		if (!comment) {
+			res.status(404);
 			throw new Error('Comment not found');
 		}
 		await comment
@@ -57,7 +59,10 @@ async function commentToMemberAuth(req, res, next) {
 			})
 			.execPopulate();
 		if (!req.user.teams.includes(comment.taskId.listId.projectId.teamId)) {
-			throw new Error('Not a team member.');
+			res.status(403);
+			throw new Error(
+				'Not authorized.  To access this document you need to be team member'
+			);
 		}
 		req.comment = comment;
 		next();

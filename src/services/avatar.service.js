@@ -39,7 +39,10 @@ async function getOneAvatarHandler(req, res, next) {
 async function setDefaultAvatarHandler(req, res, next) {
 	try {
 		const newDefault = await Avatar.findById(req.params.avatarId);
-		if (!newDefault) throw new Error('Avatar doesnt exist.');
+		if (!newDefault) {
+			res.status(404);
+			throw new Error('Avatar not found.');
+		}
 		const allAvatars = await Avatar.find({});
 		for (const avatar of allAvatars) {
 			if (avatar.isDefault) {

@@ -181,6 +181,7 @@ async function updateTaskHandler(req, res, next) {
 
 	try {
 		if (!isValidUpdate) {
+			res.status(422);
 			throw new Error('Invalid update fields');
 		}
 		updates.forEach((update) => {
@@ -205,7 +206,12 @@ async function setUsersPriorityHandler(req, res, next) {
 
 async function setTeamsPriorityHandler(req, res, next) {
 	try {
-		if (!req.task) throw new Error('You are not authorized.');
+		if (!req.task) {
+			res.status(403);
+			throw new Error(
+				'Not authorized.  To access this document you need to be team leader.'
+			);
+		}
 		req.task.isTeamPriority = req.body.isTeamPriority === true;
 		await req.task.save();
 		res.send(req.task);

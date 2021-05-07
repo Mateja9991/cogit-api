@@ -3,21 +3,25 @@ const { Task } = require('../../db/models');
 
 async function taskToLeaderAuth(req, res, next) {
 	try {
-		const task = await Task.findById(req.params.taskId).populate({
-			path: 'listId',
-			model: MODEL_NAMES.LIST,
-			populate: {
-				path: 'projectId',
-				model: MODEL_NAMES.PROJECT,
-				populate: {
-					path: 'teamId',
-					model: MODEL_NAMES.TEAM,
-				},
-			},
-		});
+		const task = await Task.findById(req.params.taskId);
 		if (!task) {
+			res.status(404);
 			throw new Error('Task not found');
 		}
+		task
+			.populate({
+				path: 'listId',
+				model: MODEL_NAMES.LIST,
+				populate: {
+					path: 'projectId',
+					model: MODEL_NAMES.PROJECT,
+					populate: {
+						path: 'teamId',
+						model: MODEL_NAMES.TEAM,
+					},
+				},
+			})
+			.execPopulate();
 		if (task.listId.projectId.teamId.leaderId.equals(req.user._id))
 			req.task = task;
 		next();
@@ -30,6 +34,7 @@ async function taskToMemberAuth(req, res, next) {
 	try {
 		const task = await Task.findById(req.params.taskId);
 		if (!task) {
+			res.status(404);
 			throw new Error('Task not found');
 		}
 		await task
@@ -46,7 +51,10 @@ async function taskToMemberAuth(req, res, next) {
 			teams: task.listId.projectId.teamId,
 		});
 		if (!req.admin && !users.find((user) => user._id.equals(req.user._id))) {
-			throw new Error('You are not team Member');
+			res.status(403);
+			throw new Error(
+				'Not authorized.  To access this document you need to be team member.'
+			);
 		}
 		req.task = task;
 		next();
@@ -69,8 +77,13 @@ async function assignAuth(req, res, next) {
 			})
 			.execPopulate();
 		const user = await User.findById(req.params.userId);
+		if (!user) {
+			res.status(404);
+			throw new Error('User not found');
+		}
 		if (!user.teams.includes(req.task.listId.projectId.teamId)) {
-			throw new Error('User is not team Member');
+			res.status(400);
+			throw new Error('Assignee must be a team member.');
 		}
 		req.assignee = user;
 		next();

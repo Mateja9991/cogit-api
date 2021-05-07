@@ -61,7 +61,10 @@ async function loginUserHandler(req, res, next) {
 async function setAvatarHandler(req, res, next) {
 	try {
 		const avatar = await Avatar.findById(req.params.avatarId);
-		if (!avatar) throw new Error('No such avatar');
+		if (!avatar) {
+			res.status(404);
+			throw new Error('Avatar not found.');
+		}
 		req.user.avatar = req.params.avatarId;
 		await req.user.save();
 		res.set('Content-Type', 'image/png');
@@ -90,7 +93,10 @@ async function getProfileHandler(req, res, next) {
 async function getAvatarHandler(req, res, next) {
 	try {
 		await req.user.populate('avatar').execPopulate();
-		if (!req.user.avatar) throw new Error('User has no avatar.');
+		if (!req.user.avatar) {
+			res.status(404);
+			throw new Error('User has no avatar.');
+		}
 		res.set('Content-Type', 'image/png');
 		res.send(req.user.avatar.picture);
 	} catch (e) {
@@ -231,7 +237,8 @@ async function getUserByUsernameHandler(req, res, next) {
 async function getSingleUserHandler(queryObject) {
 	const user = await User.findOne(queryObject);
 	if (!user) {
-		throw new Error('No user found.');
+		res.status(404);
+		throw new Error('User not found.');
 	}
 	return user;
 }
@@ -265,6 +272,7 @@ async function sendTeamInvitationHandler(req, res, next) {
 	try {
 		const user = await User.findOne({ _id: req.params.userId });
 		if (!user) {
+			res.status(404);
 			throw new Error('User not found.');
 		}
 		if (
@@ -273,6 +281,7 @@ async function sendTeamInvitationHandler(req, res, next) {
 				.includes(req.team._id) ||
 			user.teams.includes(req.team._id)
 		) {
+			res.status(400);
 			throw new Error('Already invited or joined.');
 		}
 
@@ -310,8 +319,10 @@ async function acceptTeamInvitationHandler(req, res, next) {
 			!req.user.invitations.filter((inv) =>
 				inv.teamId.equals(req.params.teamId)
 			).length
-		)
+		) {
+			res.status(400);
 			throw new Error('You have not been invited.');
+		}
 		req.user.invitations = req.user.invitations.filter((invitation) => {
 			if (invitation.teamId.equals(req.params.teamId)) {
 				req.user.teams.push(req.params.teamId);
@@ -410,6 +421,7 @@ async function getAllUsersHandler(req, res, next) {
 async function deleteAnyUserHandler(req, res, next) {
 	try {
 		if (!req.admin) {
+			res.status(403);
 			throw new Error('You are not admin');
 		}
 		const user = User.findById(req.params.userId);

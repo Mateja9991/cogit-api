@@ -7,7 +7,8 @@ const jwtAuthMiddleware = async (req, res, next) => {
 		const { _id } = jwt.verify(token, process.env.TOKEN_KEY);
 		const user = await User.findById(_id);
 		if (!user) {
-			throw new Error();
+			res.status(404);
+			throw new Error('User not found');
 		}
 		if (user.role === 'admin') {
 			req.admin = user;

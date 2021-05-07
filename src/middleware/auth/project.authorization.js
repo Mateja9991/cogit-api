@@ -4,11 +4,15 @@ async function projectToLeaderAuth(req, res, next) {
 	try {
 		const project = await Project.findById(req.params.projectId);
 		if (!project) {
+			res.status(404);
 			throw new Error('There is no project');
 		}
 		await project.populate('teamId').execPopulate();
 		if (!req.admin && !req.user._id.equals(project.teamId.leaderId)) {
-			throw new Error('You are not team Leader');
+			res.status(403);
+			throw new Error(
+				'Not authorized.  To access this document you need to be team leader.'
+			);
 		}
 		req.project = project;
 		next();
@@ -19,19 +23,16 @@ async function projectToLeaderAuth(req, res, next) {
 
 async function projectToMemberAuth(req, res, next) {
 	try {
-		let project;
-		if (!req.admin) {
-			project = await Project.findOne({
-				_id: req.params.projectId,
-				teamId: { $in: req.user.teams },
-			});
-		} else {
-			project = await Project.findOne({
-				_id: req.params.projectId,
-			});
-		}
+		let project = await Project.findById(req.params.projectId);
 		if (!project) {
-			throw new Error('There is no project');
+			res.status(404);
+			throw new Error('Project not found');
+		}
+		if (!req.admin && !req.user.teams.includes(project.teamId)) {
+			res.status(403);
+			throw new Error(
+				'Not authorized.  To access this document you need to be team member.'
+			);
 		}
 		req.project = project;
 		next();

@@ -15,8 +15,10 @@ selectFieldsGlobal = 'name tags isArchived isTemplate teamId ';
 
 async function createProjectHandler(req, res, next) {
 	try {
-		if (new Date(req.body.deadline).getTime() < Date.now())
+		if (new Date(req.body.deadline).getTime() < Date.now()) {
+			res.status(422);
 			throw new Error('Invalid date.');
+		}
 		const project = new Project({
 			...req.body,
 			teamId: req.team._id,
@@ -59,7 +61,8 @@ async function getMyProjectsHandler(req, res, next) {
 	try {
 		await req.user.populate('teams').execPopulate();
 		if (!req.user.teams.length) {
-			throw new Error('User Has No Teams');
+			res.status(404);
+			throw new Error('Users team not found.');
 		}
 		let allProjects = [];
 		for (const team of req.user.teams) {
@@ -107,6 +110,7 @@ async function updateProjectHandler(req, res, next) {
 
 	try {
 		if (!isValidUpdate) {
+			res.status(422);
 			throw new Error('Invalid update fields.');
 		}
 		updates.forEach((update) => {
@@ -122,10 +126,15 @@ async function addLinkToProjectHandler(req, res, next) {
 	const updates = Object.keys(req.body);
 
 	try {
-		if (!updates.includes('link')) throw new Error('Invalid update fields.');
+		if (!updates.includes('link')) {
+			res.status(400);
+			throw new Error('Invalid update fields.');
+		}
 		const url = new URL(updates.link);
-		if (url.protocol !== 'http:' && url.protocol !== 'https:')
+		if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+			res.status(422);
 			throw new Error('Invalid protocol');
+		}
 		req.project.links.push(updates.link);
 		await req.project.save();
 		res.send(req.project);

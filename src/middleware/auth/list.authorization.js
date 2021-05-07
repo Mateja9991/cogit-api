@@ -5,7 +5,8 @@ async function listToLeaderAuth(req, res, next) {
 	try {
 		const list = await List.findById(req.params.listId);
 		if (!list) {
-			throw new Error('Didnt find list');
+			res.status(404);
+			throw new Error('List not found');
 		}
 		await list
 			.populate({
@@ -18,7 +19,9 @@ async function listToLeaderAuth(req, res, next) {
 			})
 			.execPopulate();
 		if (!req.admin && !list.projectId.teamId.leaderId.equals(req.user._id)) {
-			throw new Error('You are not team leader');
+			throw new Error(
+				'Not authorized.  To access this document you need to be team leader.'
+			);
 		}
 		req.list = list;
 		next();
@@ -31,11 +34,15 @@ async function listToMemberAuth(req, res, next) {
 	try {
 		const list = await List.findById(req.params.listId);
 		if (!list) {
-			throw new Error('Didnt find list');
+			res.status(404);
+			throw new Error('List not found');
 		}
 		await list.populate('projectId').execPopulate();
 		if (!req.admin && !req.user.teams.includes(list.projectId.teamId)) {
-			throw new Error('You are not team leader');
+			res.status(403);
+			throw new Error(
+				'Not authorized. To access this document you need to be team member.'
+			);
 		}
 		req.list = list;
 		next();

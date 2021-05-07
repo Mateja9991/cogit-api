@@ -145,6 +145,7 @@ async function updateTeamHandler(req, res, next) {
 
 	try {
 		if (!isValidUpdate) {
+			res.status(422);
 			throw new Error('Invalid update fields');
 		}
 		// await duplicateHandler(Team, 'leaderId', req.user._id, req.body);

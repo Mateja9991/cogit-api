@@ -7,7 +7,8 @@ async function getCalendarHandler(req, res, next) {
 			userId: req.user._id,
 		});
 		if (!calendar) {
-			throw new Error('No Calendar');
+			res.status(404);
+			throw new Error('Calendar not found');
 		}
 		await calendar.populate('events').execPopulate();
 		res.send(calendar);
