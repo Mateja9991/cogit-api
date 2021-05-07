@@ -11,7 +11,7 @@ console.log(queryParams.password);
 
 const URL = 'https://cogit-api.herokuapp.com/';
 
-fetch('${URL}users/login', {
+fetch(URL + 'users/login', {
 	method: 'POST',
 	headers: {
 		'Content-Type': 'application/json',
