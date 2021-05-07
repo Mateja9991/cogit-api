@@ -9,7 +9,9 @@ const queryParams = queryParamsString
 console.log(queryParams.email);
 console.log(queryParams.password);
 
-fetch('http://localhost:3000/users/login', {
+const URL = 'https://cogit-api.herokuapp.com/';
+
+fetch('${URL}users/login', {
 	method: 'POST',
 	headers: {
 		'Content-Type': 'application/json',
@@ -41,7 +43,7 @@ fetch('http://localhost:3000/users/login', {
 			const route = $requestInput.value;
 			const method = $methodInput.value;
 			let body = $bodyInput.value;
-			fetch('http://localhost:3000/' + route, {
+			fetch(URL + route, {
 				method: method,
 				headers: {
 					'Content-Type': 'application/json',
@@ -102,7 +104,7 @@ fetch('http://localhost:3000/users/login', {
 			const teamId = $team.value;
 			const sessionId = $session.value;
 			if (receiverEmail) {
-				fetch(`http://localhost:3000/users/email/${receiverEmail}`, {
+				fetch(`${URL}users/email/${receiverEmail}`, {
 					method: 'GET',
 					headers: {
 						'Content-Type': 'application/json',
@@ -114,16 +116,13 @@ fetch('http://localhost:3000/users/login', {
 					})
 					.then((receiver) => {
 						console.log(receiver.user._id);
-						fetch(
-							`http://localhost:3000/users/${receiver.user._id}/me/messages`,
-							{
-								method: 'GET',
-								headers: {
-									'Content-Type': 'application/json',
-									Authorization: `Bearer ${fetchedToken}`,
-								},
-							}
-						)
+						fetch(`${URL}users/${receiver.user._id}/me/messages`, {
+							method: 'GET',
+							headers: {
+								'Content-Type': 'application/json',
+								Authorization: `Bearer ${fetchedToken}`,
+							},
+						})
 							.then((response) => {
 								return response.json();
 							})
