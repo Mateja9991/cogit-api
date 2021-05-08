@@ -10,7 +10,7 @@ function ownershipAuthMiddleware(
 	return async (req, res, next) => {
 		try {
 			if (req[requestSaveInProperty]) {
-				next();
+				return next();
 			}
 			const parentId = lodash.get(req, parentIdPropertyPath);
 			const childId = lodash.get(req, childIdProrpertyPath);

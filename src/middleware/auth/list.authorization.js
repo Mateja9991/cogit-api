@@ -1,5 +1,5 @@
 const { MODEL_NAMES } = require('../../constants/model_names');
-const { List } = require('../../db/models');
+const { List, Project, Team } = require('../../db/models');
 
 async function listToLeaderAuth(req, res, next) {
 	try {
@@ -8,17 +8,19 @@ async function listToLeaderAuth(req, res, next) {
 			res.status(404);
 			throw new Error('List not found');
 		}
-		await list
-			.populate({
-				path: 'projectId',
-				model: MODEL_NAMES.PROJECT,
-				populate: {
-					path: 'teamId',
-					model: MODEL_NAMES.TEAM,
-				},
-			})
-			.execPopulate();
-		if (!req.admin && !list.projectId.teamId.leaderId.equals(req.user._id)) {
+		// await list
+		// 	.populate({
+		// 		path: 'projectId',
+		// 		model: MODEL_NAMES.PROJECT,
+		// 		populate: {
+		// 			path: 'teamId',
+		// 			model: MODEL_NAMES.TEAM,
+		// 		},
+		// 	})
+		// 	.execPopulate();
+		const project = await Project.findById(list.projectId).lean();
+		const team = await Team.findById(project.teamId).lean();
+		if (!req.admin && !team.leaderId.equals(req.user._id)) {
 			throw new Error(
 				'Not authorized.  To access this document you need to be team leader.'
 			);
@@ -37,8 +39,8 @@ async function listToMemberAuth(req, res, next) {
 			res.status(404);
 			throw new Error('List not found');
 		}
-		await list.populate('projectId').execPopulate();
-		if (!req.admin && !req.user.teams.includes(list.projectId.teamId)) {
+		const project = await Project.findById(list.projectId).lean();
+		if (!req.admin && !req.user.teams.includes(project.teamId)) {
 			res.status(403);
 			throw new Error(
 				'Not authorized. To access this document you need to be team member.'

@@ -15,6 +15,10 @@ const selectFieldsGlobal =
 	'name description isCompleted parentTaskId isArchived isTeamPriority';
 
 async function createTaskHandler(req, res, next) {
+	if (new Date(req.body.deadline).getTime < Date.now()) {
+		res.status(422);
+		throw new Error('Invalid date.');
+	}
 	if (!req.body.deadline) {
 		await req.list.populate('projectId').execPopulate();
 		req.body.deadline = req.list.projectId.deadline;
@@ -32,9 +36,14 @@ async function createTaskHandler(req, res, next) {
 
 async function createSubTaskHandler(req, res, next) {
 	try {
-		const parentTask = await Task.findOne({ _id: req.params.taskId });
-		if (req.body.deadline > parentTask.deadline)
+		const parentTask = await Task.findOne({ _id: req.params.taskId }).lean();
+		if (new Date(req.body.deadline).getTime < Date.now()) {
+			res.status(422);
+			throw new Error('Invalid date.');
+		}
+		if (new Date(req.body.deadline) > parentTask.deadline) {
 			req.body.deadline = parentTask.deadline;
+		}
 		await createTask(
 			res,
 			req,
@@ -97,6 +106,7 @@ async function getUserTasksHandler(req, res, next) {
 async function getSpecificTaskHandler(req, res, next) {
 	try {
 		await req.task.populate('subTasks').execPopulate();
+		await req.task.populate('comments').execPopulate();
 		res.send(req.task);
 	} catch (e) {
 		next(e);
@@ -174,7 +184,13 @@ async function getTasksHandler(req, queryFields) {
 
 async function updateTaskHandler(req, res, next) {
 	const updates = Object.keys(req.body);
-	const allowedToUpdate = ['name', 'description', 'isCompleted', 'isArchived'];
+	const allowedToUpdate = [
+		'name',
+		'deadline',
+		'description',
+		'isCompleted',
+		'isArchived',
+	];
 	const isValidUpdate = updates.every((update) =>
 		allowedToUpdate.includes(update)
 	);
@@ -232,6 +248,10 @@ async function changeListHandler(req, res, next) {
 
 async function assignUserHandler(req, res, next) {
 	try {
+		if (req.task.editors.includes(req.assignee._id)) {
+			res.status(422);
+			throw new Error('Already assigned');
+		}
 		req.task.editors.push(req.assignee._id);
 
 		Socket.sendEventToRoom(
@@ -251,8 +271,17 @@ async function assignUserHandler(req, res, next) {
 			receivedAt: Date.now(),
 		};
 		req.assignee.notifications.push(newEvent);
+
 		await req.assignee.save();
 		await req.task.save();
+
+		scheduleJobHandler(
+			req.task.deadline,
+			req.assignee._id,
+			Socket,
+			Task,
+			req.task._id
+		);
 
 		res.send(req.task);
 	} catch (e) {

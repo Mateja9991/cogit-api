@@ -33,6 +33,12 @@ commentSchema.index({ taskId: 1 });
 //
 //
 //
+commentSchema.methods.toJSON = function () {
+	const commentObject = this.toObject();
+	commentObject.likes = commentObject.likes.length;
+	return commentObject;
+};
+
 const Comment = model(MODEL_NAMES.COMMENT, commentSchema);
 
 module.exports = Comment;

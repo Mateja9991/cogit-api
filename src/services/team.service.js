@@ -106,6 +106,7 @@ async function getTeamHandler(req, res, next) {
 			dates: [Date.now()],
 		});
 		await req.team.save();
+		await req.team.populate('projects').execPopulate();
 		return res.send(req.team);
 	} catch (e) {
 		next(e);
@@ -128,7 +129,7 @@ async function getMembersHandler(req, res, next) {
 			},
 			'username email',
 			options
-		);
+		).lean();
 
 		res.send(requestedMembers);
 	} catch (e) {

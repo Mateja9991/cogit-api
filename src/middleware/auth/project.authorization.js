@@ -1,4 +1,4 @@
-const { Project } = require('../../db/models');
+const { Project, Team } = require('../../db/models');
 
 async function projectToLeaderAuth(req, res, next) {
 	try {
@@ -7,8 +7,9 @@ async function projectToLeaderAuth(req, res, next) {
 			res.status(404);
 			throw new Error('There is no project');
 		}
-		await project.populate('teamId').execPopulate();
-		if (!req.admin && !req.user._id.equals(project.teamId.leaderId)) {
+		// await project.populate('teamId').execPopulate();
+		const team = await Team.findById(project.teamId).lean();
+		if (!req.admin && !req.user._id.equals(team.leaderId)) {
 			res.status(403);
 			throw new Error(
 				'Not authorized.  To access this document you need to be team leader.'

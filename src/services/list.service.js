@@ -28,7 +28,15 @@ async function getProjectsListsHandler(req, res, next) {
 }
 
 async function getSpecificListHandler(req, res, next) {
-	res.send(req.list);
+	try {
+		req.list.tasks = await Task.find({
+			listId: req.list._id,
+			parentTaskId: null,
+		}).lean();
+		res.send(req.list);
+	} catch (e) {
+		next(e);
+	}
 }
 
 async function updateListHandler(req, res, next) {

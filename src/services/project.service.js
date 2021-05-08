@@ -1,4 +1,4 @@
-const { User, Project } = require('../db/models');
+const { User, Project, Task } = require('../db/models');
 const { deleteSingleListHandler } = require('./list.service');
 const {
 	optionsBuilder,
@@ -11,7 +11,8 @@ const Socket = require('../socket/socket');
 //
 //				ROUTER HANDLERS
 //
-selectFieldsGlobal = 'name tags isArchived isTemplate teamId ';
+selectFieldsGlobal =
+	'name description deadline tags isArchived isTemplate teamId ';
 
 async function createProjectHandler(req, res, next) {
 	try {
@@ -91,7 +92,18 @@ async function getProjectsFromOneTeam(team, options) {
 }
 
 async function getSpecificProjectHandler(req, res, next) {
-	res.send(req.project);
+	try {
+		await req.project.populate('lists').execPopulate();
+		for (const list of req.project.lists) {
+			list.tasks = await Task.find({
+				listId: list._id,
+				parentTaskId: null,
+			}).lean();
+		}
+		res.send(req.project);
+	} catch (e) {
+		next(e);
+	}
 }
 
 async function updateProjectHandler(req, res, next) {

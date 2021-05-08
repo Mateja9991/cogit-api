@@ -24,7 +24,7 @@ const projectSchema = new Schema(
 			type: Boolean,
 			default: false,
 		},
-		isTeamplate: {
+		isTemplate: {
 			type: Boolean,
 			default: false,
 		},

@@ -18,7 +18,7 @@ async function getUsersPrivateSessions(req, res, next) {
 		const sessions = await Session.find({
 			participants: { $elemMatch: { userId: req.user._id } },
 			teamId: { $exists: false },
-		});
+		}).lean();
 		res.send(sessions);
 	} catch (e) {
 		next(e);
@@ -41,7 +41,7 @@ async function teamSessionHandler(req, res, next) {
 	try {
 		const session = await Session.findOne({
 			teamId: req.params.teamId,
-		});
+		}).lean();
 		res.send(session);
 	} catch (e) {
 		next(e);
@@ -96,7 +96,7 @@ async function newSessionHandler(sessionParticipants, teamId) {
 		if (teamId) {
 			users = await User.find({
 				teams: teamId,
-			});
+			}).lean();
 			users.forEach((user) => {
 				newSession.participants.push({
 					newMessages: 0,
@@ -132,7 +132,7 @@ async function getSessionMessagesHandler(options, sessionParticipants, teamId) {
 			},
 			'from text createdAt -_id',
 			options
-		);
+		).lean();
 		return sessionMessages;
 	} catch (e) {
 		next(e);

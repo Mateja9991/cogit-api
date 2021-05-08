@@ -19,7 +19,7 @@ async function uploadAvatarHandler(req, res, next) {
 
 async function getAllAvatarsHandler(req, res, next) {
 	try {
-		const availableAvatars = await Avatar.find({}, '_id');
+		const availableAvatars = await Avatar.find({}, '_id').lean();
 		res.send(availableAvatars);
 	} catch (e) {
 		next(e);

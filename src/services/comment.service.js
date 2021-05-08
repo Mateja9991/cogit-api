@@ -46,7 +46,7 @@ async function getTaskCommentsHandler(req, res, next) {
 			},
 			selectFieldsGlobal,
 			options
-		);
+		).lean();
 		res.send(comments);
 	} catch (e) {
 		next(e);

@@ -23,7 +23,9 @@ app.use(router);
 app.use(express.static(publicPath));
 
 app.use(function (err, req, res, next) {
-	console.error(err);
+	console.log('error: ', err, '	status code: ', res.statusCode);
+	if (res.statusCode < 400) res.status(400);
+
 	return res.json({ error: err.message });
 });
 

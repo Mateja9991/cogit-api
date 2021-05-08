@@ -1,6 +1,6 @@
 const Socket = require('../socket/socket');
 const { SOCKET_EVENTS } = require('../constants/socket_events');
-const { User, Avatar, Calendar, Team } = require('../db/models');
+const { User, Project, Task, Avatar, Calendar, Team } = require('../db/models');
 
 const { deleteSingleTeamHandler } = require('./team.service');
 
@@ -8,6 +8,7 @@ const {
 	optionsBuilder,
 	matchBuilder,
 	queryHandler,
+	scheduleJobHandler,
 } = require('./utils/services.utils');
 
 const {
@@ -106,7 +107,7 @@ async function getAvatarHandler(req, res, next) {
 
 async function getUserHandler(req, res, next) {
 	try {
-		const user = await User.findById(req.params.userId);
+		const user = await User.findById(req.params.userId).lean();
 		if (!user) {
 			return res.status(404).send();
 		}
@@ -179,7 +180,7 @@ async function getTeamInvitationsHandler(req, res, next) {
 
 async function getUserMessagesHandler(req, res, next) {
 	try {
-		const receiver = await User.findById(req.params.userId);
+		const receiver = await User.findById(req.params.userId).lean();
 		const options = optionsBuilder(
 			req.query.limit,
 			req.query.skip,
@@ -353,6 +354,18 @@ async function acceptTeamInvitationHandler(req, res, next) {
 		};
 		team.leaderId.notifications.push(newEvent);
 		await team.leaderId.save();
+
+		const projects = await Project.find({ teamId: team._id });
+		for (const project of projects) {
+			await scheduleJobHandler(
+				project.deadline,
+				req.user._id,
+				Socket,
+				Project,
+				project._id
+			);
+		}
+
 		res.send(req.user.invitations);
 	} catch (e) {
 		next(e);
@@ -412,7 +425,7 @@ async function getAllUsersHandler(req, res, next) {
 			req.query.sortValue
 		);
 		const match = matchBuilder(req.query);
-		const users = await User.find({ ...match }, '', options);
+		const users = await User.find({ ...match }, '', options).lean();
 		res.send(users);
 	} catch (e) {
 		next(e);

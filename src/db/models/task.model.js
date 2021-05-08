@@ -77,6 +77,11 @@ taskSchema.virtual('subTasks', {
 	localField: '_id',
 	foreignField: 'parentTaskId',
 });
+taskSchema.virtual('comments', {
+	ref: 'Comment',
+	localField: '_id',
+	foreignField: 'taskId',
+});
 //
 //
 //				DOCUMENT METHODS

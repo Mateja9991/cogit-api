@@ -96,13 +96,13 @@ router.patch(
 );
 
 router.patch(
-	'/users/me/invitations/accept/teams/:teamId',
+	'/users/me/accept/teams/:teamId',
 	jwtAuthMiddleware,
 	acceptTeamInvitationHandler
 );
 
 router.patch(
-	'/users/me/invitations/decline/teams/:teamId',
+	'/users/me/decline/teams/:teamId',
 	jwtAuthMiddleware,
 	declineTeamInvitationHandler
 );
