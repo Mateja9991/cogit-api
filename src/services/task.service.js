@@ -281,7 +281,6 @@ module.exports = {
 	getUserPriorityTasksHandler,
 	getTasksFromListHandler,
 	updateTaskHandler,
-	archiveTaskHandler,
 	deleteTaskHandler,
 	deleteSingleTaskHandler,
 	assignUserHandler,
