@@ -256,7 +256,8 @@ async function updateUserHandler(req, res, next) {
 
 	try {
 		if (!isValidUpdate) {
-			return res.status(404).send();
+			res.status(422);
+			throw new Error('Invalid update fields.');
 		}
 		updates.forEach((update) => {
 			req.user[update] = req.body[update];

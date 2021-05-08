@@ -44,7 +44,7 @@ router.get(
 	getTeamsProjectsHandler
 );
 
-router.get('/projects/me/', jwtAuthMiddleware, getMyProjectsHandler);
+router.get('/projects/me', jwtAuthMiddleware, getMyProjectsHandler);
 
 router.get(
 	'/projects/:projectId',

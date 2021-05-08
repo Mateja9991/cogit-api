@@ -122,6 +122,7 @@ async function updateProjectHandler(req, res, next) {
 		next(e);
 	}
 }
+
 async function addLinkToProjectHandler(req, res, next) {
 	const updates = Object.keys(req.body);
 

@@ -8,7 +8,6 @@ const jwtSocketAuth = async (token) => {
 		}
 		const { _id } = jwt.verify(token, process.env.TOKEN_KEY);
 		const user = await User.findById(_id);
-
 		if (!user) {
 			throw new Error('Not Authorized');
 		}

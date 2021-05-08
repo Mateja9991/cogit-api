@@ -83,12 +83,12 @@ router.patch(
 );
 
 router.patch(
-	'/tasks/:taskId/me/priority',
+	'/tasks/:taskId/lists/:listId',
 	jwtAuthMiddleware,
+	taskToLeaderAuth,
 	ownershipAuthMiddleware(Task, 'params.taskId', 'task', 'editors', 'user._id'),
-	setUsersPriorityHandler
+	changeListHandler
 );
-
 router.patch(
 	'/tasks/:taskId/team-priority',
 	jwtAuthMiddleware,
@@ -97,11 +97,10 @@ router.patch(
 );
 
 router.patch(
-	'/tasks/:taskId/lists/:listId',
+	'/tasks/:taskId/me/priority',
 	jwtAuthMiddleware,
-	taskToLeaderAuth,
 	ownershipAuthMiddleware(Task, 'params.taskId', 'task', 'editors', 'user._id'),
-	changeListHandler
+	setUsersPriorityHandler
 );
 
 router.patch(
@@ -110,20 +109,6 @@ router.patch(
 	taskToLeaderAuth,
 	assignAuth,
 	assignUserHandler
-);
-
-router.patch(
-	'/tasks/:taskId/archive',
-	jwtAuthMiddleware,
-	taskToLeaderAuth,
-	ownershipAuthMiddleware(
-		Task,
-		'params.taskId',
-		'task',
-		'creatorId',
-		'user._id'
-	),
-	archiveTaskHandler
 );
 
 router.delete(

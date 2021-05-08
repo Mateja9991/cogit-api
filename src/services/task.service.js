@@ -174,7 +174,7 @@ async function getTasksHandler(req, queryFields) {
 
 async function updateTaskHandler(req, res, next) {
 	const updates = Object.keys(req.body);
-	const allowedToUpdate = ['name', 'description', 'isCompleted'];
+	const allowedToUpdate = ['name', 'description', 'isCompleted', 'isArchived'];
 	const isValidUpdate = updates.every((update) =>
 		allowedToUpdate.includes(update)
 	);
@@ -255,17 +255,6 @@ async function assignUserHandler(req, res, next) {
 		await req.task.save();
 
 		res.send(req.task);
-	} catch (e) {
-		next(e);
-	}
-}
-
-async function archiveTaskHandler(req, res, next) {
-	try {
-		req.task.isArchived = req.body.isArchived === true;
-		await req.task.save();
-
-		return res.json(req.task);
 	} catch (e) {
 		next(e);
 	}
