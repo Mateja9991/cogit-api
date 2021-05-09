@@ -6,16 +6,23 @@ const {
 	optionsBuilder,
 	queryHandler,
 	matchBuilder,
+	destructureObject,
 } = require('./utils/services.utils');
 //
 //				ROUTER HANDLERS
 //
+
+const { MODEL_PROPERTIES } = require('../constants');
+const selectFields = MODEL_PROPERTIES.TASK.SELECT_FIELDS;
+const allowedKeys = MODEL_PROPERTIES.TASK.ALLOWED_KEYS;
+
 async function createTeamHandler(req, res, next) {
 	try {
 		await req.user.populate('teams').execPopulate();
 		// await duplicateHandler(Team, 'leaderId', req.user._id, req.body);
+		const teamObject = destructureObject(req.body, allowedKeys.CREATE);
 		const team = new Team({
-			...req.body,
+			...teamObject,
 			leaderId: req.user._id,
 		});
 		await team.save();
@@ -64,7 +71,11 @@ async function getLeaderTeamsHandler(req, res, next) {
 				item.leaderId.equals(req.user._id)
 			);
 		}
-		const requestedTeams = queryHandler(allLeaderTeams, req.query);
+		const requestedTeams = queryHandler(
+			allLeaderTeams,
+			req.query,
+			selectFields
+		);
 		res.send(requestedTeams);
 	} catch (e) {
 		next(e);
@@ -127,7 +138,7 @@ async function getMembersHandler(req, res, next) {
 				teams: req.team._id,
 				...match,
 			},
-			'username email',
+			selectFields,
 			options
 		).lean();
 

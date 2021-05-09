@@ -1,7 +1,9 @@
 const lodash = require('lodash');
 const schedule = require('node-schedule');
 const timeValues = require('../../constants/time_values');
-const { SOCKET_EVENTS } = require('../../constants/socket_events');
+const { SOCKET_EVENTS, MODEL_PROPERTIES } = require('../../constants');
+const { property } = require('lodash');
+
 async function duplicateHandler(model, parentPropertyPath, parentId, child) {
 	const isDuplicate = await model.findOne({
 		[parentPropertyPath]: parentId,
@@ -10,6 +12,21 @@ async function duplicateHandler(model, parentPropertyPath, parentId, child) {
 	if (isDuplicate) {
 		throw new Error('There is already the same instance');
 	}
+}
+function destructureArray(arrayToDestructure, arrayofProperties) {
+	const arr = [];
+	arrayToDestructure.forEach((obj) => {
+		arr.push(destructureObject(obj, arrayofProperties));
+	});
+	return arr;
+}
+function destructureObject(objectToDestructure, arrayofProperties) {
+	const object = {};
+
+	arrayofProperties.forEach((field) => {
+		object[field] = objectToDestructure[field];
+	});
+	return object;
 }
 
 function optionsBuilder(limit, skip, sortBy, sortValue) {
@@ -40,7 +57,7 @@ function matchBuilder(query) {
 	};
 }
 
-function queryHandler(allItems, query) {
+function queryHandler(allItems, query, selectFields) {
 	const sortBy = query.sortBy;
 	const sortValue = query.sortValue ? query.sortValue : 1;
 	const skip = query.skip ? query.skip : 0;
@@ -77,7 +94,12 @@ function queryHandler(allItems, query) {
 		Number(skip),
 		Number(skip) + Number(offset)
 	);
-
+	if (selectFields) {
+		const requestedItems = destructureArray(
+			requestedItems,
+			selectFields.split(' ')
+		);
+	}
 	return requestedItems;
 }
 function getNextTimeStamp(date) {
@@ -136,4 +158,5 @@ module.exports = {
 	queryHandler,
 	matchBuilder,
 	scheduleJobHandler,
+	destructureObject,
 };

@@ -1,14 +1,18 @@
 const { List, Task } = require('../db/models');
-const { duplicateHandler } = require('./utils/services.utils');
+const { queryHandler, destructureObject } = require('./utils/services.utils');
 const { deleteSingleTaskHandler } = require('./task.service');
 //
 //				ROUTER HANDLERS
 //
+const { MODEL_PROPERTIES } = require('../constants');
+const selectFields = MODEL_PROPERTIES.LIST.SELECT_FIELDS;
+const allowedKeys = MODEL_PROPERTIES.LIST.ALLOWED_KEYS;
+
 async function createListHandler(req, res, next) {
 	try {
-		await duplicateHandler(List, 'projectId', req.project._id, req.body);
+		const listObject = destructureObject(req.body, allowedKeys.CREATE);
 		const list = new List({
-			...req.body,
+			...listObject,
 			projectId: req.project._id,
 		});
 		await list.save();
@@ -21,7 +25,21 @@ async function createListHandler(req, res, next) {
 async function getProjectsListsHandler(req, res, next) {
 	try {
 		await req.project.populate('lists').execPopulate();
-		res.send(req.project.lists);
+		for (const list of req.project.lists) {
+			list.tasks = await Task.find(
+				{
+					listId: list._id,
+					parentTaskId: null,
+				},
+				selectFields
+			).lean();
+		}
+		const requestedLists = queryHandler(
+			req.project.lists,
+			req.query,
+			selectFields
+		);
+		res.send(requestedLists);
 	} catch (e) {
 		next(e);
 	}
@@ -40,23 +58,25 @@ async function getSpecificListHandler(req, res, next) {
 }
 
 async function updateListHandler(req, res, next) {
-	const updates = Object.keys(req.body);
-	const allowedToUpdate = ['name'];
-	const isValidUpdate = updates.every((update) =>
-		allowedToUpdate.includes(update)
-	);
-
 	try {
+		const updates = Object.keys(req.body);
+		const isValidUpdate = updates.every((update) =>
+			allowedKeys.UPDATE.includes(update)
+		);
+
 		if (!isValidUpdate) {
 			res.status(422);
 			throw new Error('Invalid update fields.');
 		}
-		await duplicateHandler(List, 'projectId', req.list.projectId, req.body);
 
 		updates.forEach((update) => {
 			req.list[update] = req.body[update];
 		});
 		await req.list.save();
+		if (updates.includes('order')) {
+			console.log('order changed.');
+			await req.list.changeOrder();
+		}
 		res.send(req.list);
 	} catch (e) {
 		next(e);

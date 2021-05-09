@@ -1,6 +1,5 @@
 const { Schema, model } = require('mongoose');
-const { MODEL_NAMES } = require('../../constants/model_names');
-
+const { MODEL_PROPERTIES } = require('../../constants');
 //
 //              Schema
 //
@@ -13,19 +12,19 @@ const commentSchema = new Schema({
 	likes: [
 		{
 			type: Schema.Types.ObjectId,
-			ref: MODEL_NAMES.USER,
+			ref: MODEL_PROPERTIES.USER.NAME,
 			required: true,
 		},
 	],
 	taskId: {
 		type: Schema.Types.ObjectId,
 		required: true,
-		ref: MODEL_NAMES.TASK,
+		ref: MODEL_PROPERTIES.TASK.NAME,
 	},
 	creatorId: {
 		type: Schema.Types.ObjectId,
 		required: true,
-		ref: MODEL_NAMES.USER,
+		ref: MODEL_PROPERTIES.USER.NAME,
 	},
 });
 commentSchema.index({ creatorId: 1 });
@@ -39,6 +38,6 @@ commentSchema.methods.toJSON = function () {
 	return commentObject;
 };
 
-const Comment = model(MODEL_NAMES.COMMENT, commentSchema);
+const Comment = model(MODEL_PROPERTIES.COMMENT.NAME, commentSchema);
 
 module.exports = Comment;

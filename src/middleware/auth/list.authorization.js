@@ -1,4 +1,4 @@
-const { MODEL_NAMES } = require('../../constants/model_names');
+const { MODEL_PROPERTIES } = require('../../constants');
 const { List, Project, Team } = require('../../db/models');
 
 async function listToLeaderAuth(req, res, next) {

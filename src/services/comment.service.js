@@ -4,14 +4,18 @@ const {
 	optionsBuilder,
 	matchBuilder,
 	queryHandler,
+	destructureObject,
 } = require('./utils/services.utils');
 
-const selectFieldsGlobal = 'text taskId likes';
+const { MODEL_PROPERTIES } = require('../constants');
+const selectFields = MODEL_PROPERTIES.COMMENT.SELECT_FIELDS;
+const allowedKeys = MODEL_PROPERTIES.COMMENT.ALLOWED_KEYS;
 
 async function createCommentHandler(req, res, next) {
 	try {
+		const commentObject = destructureObject(req.body, allowedKeys.CREATE);
 		const comment = new Comment({
-			...req.body,
+			...commentObject,
 			creatorId: req.user._id,
 			taskId: req.task._id,
 		});
@@ -44,7 +48,7 @@ async function getTaskCommentsHandler(req, res, next) {
 				taskId: req.task._id,
 				...match,
 			},
-			selectFieldsGlobal,
+			selectFields,
 			options
 		).lean();
 		res.send(comments);
@@ -54,15 +58,13 @@ async function getTaskCommentsHandler(req, res, next) {
 }
 
 async function updateCommentHandler(req, res, next) {
-	const updates = Object.keys(req.body);
-	const allowedToUpdate = ['text'];
-	const isValidUpdate = updates.every((update) =>
-		allowedToUpdate.includes(update)
-	);
-
 	try {
+		const updates = Object.keys(req.body);
+		const isValidUpdate = updates.every((update) =>
+			allowedKeys.UPDATE.includes(update)
+		);
 		if (!isValidUpdate) {
-			res.status(400);
+			res.status(422);
 			throw new Error('Invalid update fields');
 		}
 		updates.forEach((update) => {
@@ -98,7 +100,7 @@ async function likeCommentHandler(req, res, next) {
 async function deleteCommentHandler(req, res, next) {
 	try {
 		await deleteSingleCommentHandler(req.comment);
-		res.send(req.comment);
+		res.send({ success: true });
 	} catch (e) {
 		next(e);
 	}

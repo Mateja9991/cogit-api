@@ -1,4 +1,4 @@
-const { MODEL_NAMES } = require('../../constants/model_names');
+const { MODEL_PROPERTIES } = require('../../constants');
 const { Team, Project, List, Comment, Task } = require('../../db/models');
 
 async function commentToLeaderAuth(req, res, next) {
@@ -11,16 +11,16 @@ async function commentToLeaderAuth(req, res, next) {
 		// await comment
 		// 	.populate({
 		// 		path: 'taskId',
-		// 		model: MODEL_NAMES.TASK,
+		// 		model: MODEL_PROPERTIES.TASK.NAME,
 		// 		populate: {
 		// 			path: 'listId',
-		// 			model: MODEL_NAMES.LIST,
+		// 			model: MODEL_PROPERTIES.LIST.NAME,
 		// 			populate: {
 		// 				path: 'projectId',
-		// 				model: MODEL_NAMES.PROJECT,
+		// 				model: MODEL_PROPERTIES.PROJECT.NAME,
 		// 				populate: {
 		// 					path: 'teamId',
-		// 					model: MODEL_NAMES.TEAM,
+		// 					model: MODEL_PROPERTIES.TEAM.NAME,
 		// 				},
 		// 			},
 		// 		},
@@ -48,13 +48,13 @@ async function commentToMemberAuth(req, res, next) {
 		// await comment
 		// 	.populate({
 		// 		path: 'taskId',
-		// 		model: MODEL_NAMES.TASK,
+		// 		model: MODEL_PROPERTIES.TASK.NAME,
 		// 		populate: {
 		// 			path: 'listId',
-		// 			model: MODEL_NAMES.LIST,
+		// 			model: MODEL_PROPERTIES.LIST.NAME,
 		// 			populate: {
 		// 				path: 'projectId',
-		// 				model: MODEL_NAMES.PROJECT,
+		// 				model: MODEL_PROPERTIES.PROJECT.NAME,
 		// 			},
 		// 		},
 		// 	})

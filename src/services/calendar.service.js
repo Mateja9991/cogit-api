@@ -1,5 +1,12 @@
 const { Calendar } = require('../db/models');
-const { scheduleJobHandler } = require('./utils/services.utils');
+const {
+	scheduleJobHandler,
+	destructureObject,
+} = require('./utils/services.utils');
+
+const { MODEL_PROPERTIES } = require('../constants');
+const selectFields = MODEL_PROPERTIES.CALENDAR.SELECT_FIELDS;
+const allowedKeys = MODEL_PROPERTIES.CALENDAR.ALLOWED_KEYS;
 
 async function getCalendarHandler(req, res, next) {
 	try {

@@ -9,10 +9,13 @@ const {
 	optionsBuilder,
 	matchBuilder,
 	scheduleJobHandler,
+	destructureObject,
 } = require('./utils/services.utils');
 
-const selectFieldsGlobal =
-	'name description isCompleted parentTaskId isArchived isTeamPriority';
+const { MODEL_PROPERTIES } = require('../constants');
+const { reset } = require('nodemon');
+const selectFields = MODEL_PROPERTIES.TASK.SELECT_FIELDS;
+const allowedKeys = MODEL_PROPERTIES.TASK.ALLOWED_KEYS;
 
 async function createTaskHandler(req, res, next) {
 	if (new Date(req.body.deadline).getTime < Date.now()) {
@@ -23,11 +26,12 @@ async function createTaskHandler(req, res, next) {
 		await req.list.populate('projectId').execPopulate();
 		req.body.deadline = req.list.projectId.deadline;
 	}
+	const taskObject = destructureObject(req.body, allowedKeys.CREATE);
 	await createTask(
-		res,
 		req,
+		res,
 		{
-			...req.body,
+			...taskObject,
 			listId: req.list._id,
 		},
 		next
@@ -37,6 +41,15 @@ async function createTaskHandler(req, res, next) {
 async function createSubTaskHandler(req, res, next) {
 	try {
 		const parentTask = await Task.findOne({ _id: req.params.taskId }).lean();
+		const inheritObject = {
+			listId: parentTask.listId,
+			parentTaskId: parentTask._id,
+			editors: parentTask.editors,
+			isArchived: parentTask.isArchived,
+			isTeamPriority: parentTask.isTeamPriority,
+			usersPriority: parentTask.usersPriority,
+		};
+		const taskObject = destructureObject(req.body, allowedKeys.CREATE);
 		if (new Date(req.body.deadline).getTime < Date.now()) {
 			res.status(422);
 			throw new Error('Invalid date.');
@@ -45,16 +58,11 @@ async function createSubTaskHandler(req, res, next) {
 			req.body.deadline = parentTask.deadline;
 		}
 		await createTask(
-			res,
 			req,
+			res,
 			{
-				...req.body,
-				listId: parentTask.listId,
-				parentTaskId: parentTask._id,
-				editors: parentTask.editors,
-				isArchived: parentTask.isArchived,
-				isTeamPriority: parentTask.isTeamPriority,
-				usersPriority: parentTask.usersPriority,
+				...taskObject,
+				...inheritObject,
 			},
 			next
 		);
@@ -63,7 +71,7 @@ async function createSubTaskHandler(req, res, next) {
 	}
 }
 
-async function createTask(res, req, task, next) {
+async function createTask(req, res, task, next) {
 	try {
 		const newTask = new Task({ ...task });
 		newTask.creatorId = req.user._id;
@@ -92,7 +100,7 @@ async function getUserTasksHandler(req, res, next) {
 		const usersTasks = await getTasksHandler(
 			req,
 			{ editors: req.user._id },
-			selectFieldsGlobal
+			selectFields
 		);
 		for (const task of usersTasks) {
 			await task.populate('subTasks').execPopulate();
@@ -118,7 +126,7 @@ async function getTeamPriorityTasksHandler(req, res, next) {
 		const priorityTasks = await getTasksHandler(
 			req,
 			{ editors: req.user._id, isTeamPriority: true },
-			selectFieldsGlobal
+			selectFields
 		);
 		for (const task of priorityTasks) {
 			await task.populate('subTasks').execPopulate();
@@ -134,7 +142,7 @@ async function getUserPriorityTasksHandler(req, res, next) {
 		const priorityTasks = await getTasksHandler(
 			req,
 			{ editors: req.user._id, usersPriority: req.user._id },
-			selectFieldsGlobal
+			selectFields
 		);
 		for (const task of priorityTasks) {
 			await task.populate('subTasks').execPopulate();
@@ -150,7 +158,7 @@ async function getTasksFromListHandler(req, res, next) {
 		const tasks = await getTasksHandler(
 			req,
 			{ listId: req.list._id },
-			selectFieldsGlobal
+			selectFields
 		);
 		for (const task of tasks) {
 			await task.populate('subTasks').execPopulate();
@@ -175,7 +183,7 @@ async function getTasksHandler(req, queryFields) {
 			...queryFields,
 			...match,
 		},
-		selectFieldsGlobal,
+		selectFields,
 		options
 	);
 
@@ -184,15 +192,8 @@ async function getTasksHandler(req, queryFields) {
 
 async function updateTaskHandler(req, res, next) {
 	const updates = Object.keys(req.body);
-	const allowedToUpdate = [
-		'name',
-		'deadline',
-		'description',
-		'isCompleted',
-		'isArchived',
-	];
 	const isValidUpdate = updates.every((update) =>
-		allowedToUpdate.includes(update)
+		allowedKeys.UPDATE.includes(update)
 	);
 
 	try {
@@ -214,7 +215,7 @@ async function setUsersPriorityHandler(req, res, next) {
 	try {
 		req.task.usersPriority.push(req.user._id);
 		await req.task.save();
-		res.send(req.task);
+		res.send({ success: true });
 	} catch (e) {
 		next(e);
 	}
@@ -230,7 +231,7 @@ async function setTeamsPriorityHandler(req, res, next) {
 		}
 		req.task.isTeamPriority = req.body.isTeamPriority === true;
 		await req.task.save();
-		res.send(req.task);
+		res.send({ success: true });
 	} catch (e) {
 		next(e);
 	}
@@ -240,7 +241,7 @@ async function changeListHandler(req, res, next) {
 	try {
 		req.task.listId = req.params.listId;
 		await req.task.save();
-		res.send(req.task);
+		res.send({ success: true });
 	} catch (e) {
 		next(e);
 	}

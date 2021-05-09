@@ -1,6 +1,6 @@
 const express = require('express');
 const upload = require('multer')({
-	liimits: {
+	limits: {
 		fileSize: 1000000,
 	},
 	fileFilter(req, file, callback) {

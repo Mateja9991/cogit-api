@@ -3,7 +3,7 @@ const validator = require('validator');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const Avatar = require('./avatar.model');
-const { MODEL_NAMES } = require('../../constants/model_names');
+const { MODEL_PROPERTIES } = require('../../constants');
 //
 //              Schema
 //
@@ -43,7 +43,7 @@ const userSchema = new Schema(
 			{
 				type: Schema.Types.ObjectId,
 				required: true,
-				ref: MODEL_NAMES.TEAM,
+				ref: MODEL_PROPERTIES.TEAM.NAME,
 			},
 		],
 		invitations: [
@@ -51,7 +51,7 @@ const userSchema = new Schema(
 				teamId: {
 					type: Schema.Types.ObjectId,
 					required: true,
-					ref: MODEL_NAMES.TEAM,
+					ref: MODEL_PROPERTIES.TEAM.NAME,
 				},
 				receivedAt: {
 					type: Date,
@@ -61,7 +61,7 @@ const userSchema = new Schema(
 		],
 		avatar: {
 			type: Schema.Types.ObjectId,
-			ref: MODEL_NAMES.AVATAR,
+			ref: MODEL_PROPERTIES.AVATAR.NAME,
 		},
 		settings: [
 			{
@@ -191,6 +191,6 @@ userSchema.methods.generateAuthToken = async function () {
 //
 //
 //
-const User = model(MODEL_NAMES.USER, userSchema);
+const User = model(MODEL_PROPERTIES.USER.NAME, userSchema);
 
 module.exports = User;

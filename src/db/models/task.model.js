@@ -1,5 +1,5 @@
 const { Schema, model } = require('mongoose');
-const { MODEL_NAMES } = require('../../constants/model_names');
+const { MODEL_PROPERTIES } = require('../../constants');
 const Comment = require('../models/comment.model');
 //
 //              Schema
@@ -23,11 +23,11 @@ const taskSchema = new Schema(
 		listId: {
 			type: Schema.Types.ObjectId,
 			requred: true,
-			ref: MODEL_NAMES.LIST,
+			ref: MODEL_PROPERTIES.LIST.NAME,
 		},
 		parentTaskId: {
 			type: Schema.Types.ObjectId,
-			ref: MODEL_NAMES.TASK,
+			ref: MODEL_PROPERTIES.TASK.NAME,
 		},
 		isCompleted: {
 			type: Boolean,
@@ -40,7 +40,7 @@ const taskSchema = new Schema(
 		creatorId: {
 			type: Schema.Types.ObjectId,
 			required: true,
-			ref: MODEL_NAMES.USER,
+			ref: MODEL_PROPERTIES.USER.NAME,
 		},
 		isTeamPriority: {
 			type: Boolean,
@@ -50,14 +50,14 @@ const taskSchema = new Schema(
 			{
 				type: Schema.Types.ObjectId,
 				required: true,
-				ref: MODEL_NAMES.USER,
+				ref: MODEL_PROPERTIES.USER.NAME,
 			},
 		],
 		editors: [
 			{
 				type: Schema.Types.ObjectId,
 				required: true,
-				ref: MODEL_NAMES.USER,
+				ref: MODEL_PROPERTIES.USER.NAME,
 			},
 		],
 	},
@@ -109,6 +109,6 @@ taskSchema.pre('remove', async function () {
 	console.log('Done');
 });
 
-const Task = model(MODEL_NAMES.TASK, taskSchema);
+const Task = model(MODEL_PROPERTIES.TASK.NAME, taskSchema);
 
 module.exports = Task;

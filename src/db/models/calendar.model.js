@@ -1,5 +1,5 @@
 const { Schema, model } = require('mongoose');
-const { MODEL_NAMES } = require('../../constants/model_names');
+const { MODEL_PROPERTIES } = require('../../constants');
 //
 //              Schema
 //
@@ -7,7 +7,7 @@ const calendarSchema = new Schema(
 	{
 		userId: {
 			type: Schema.Types.ObjectId,
-			ref: MODEL_NAMES.TEAM,
+			ref: MODEL_PROPERTIES.TEAM.NAME,
 		},
 	},
 	{
@@ -20,13 +20,13 @@ calendarSchema.index({ userId: 1 }, { unique: true });
 //
 //
 calendarSchema.virtual('events', {
-	ref: MODEL_NAMES.EVENT,
+	ref: MODEL_PROPERTIES.EVENT.NAME,
 	foreignField: 'calendarId',
 	localField: '_id',
 });
 //
 //
 //
-const Calendar = model(MODEL_NAMES.CALENDAR, calendarSchema);
+const Calendar = model(MODEL_PROPERTIES.CALENDAR.NAME, calendarSchema);
 
 module.exports = Calendar;

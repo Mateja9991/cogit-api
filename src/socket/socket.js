@@ -31,7 +31,7 @@ class SocketService {
 				});
 				next();
 			} else {
-				next(new Error('not Authorized'));
+				next(new Error('Not Authorized'));
 			}
 		} catch (e) {
 			console.log(e.message);
@@ -59,7 +59,7 @@ class SocketService {
 					email,
 				});
 				if (!user) {
-					throw new Error('No user');
+					throw new Error('User not found.');
 				}
 				const sessionParticipants = [socketClient.user._id, user._id];
 				const session = await getSessionHandler(sessionParticipants);
@@ -78,7 +78,7 @@ class SocketService {
 				teamId = mongoose.Types.ObjectId(teamId);
 				const team = await Team.findById(teamId);
 				if (!team) {
-					throw new Error('No such team');
+					throw new Error('Team not found.');
 				}
 				const session = await getSessionHandler(undefined, teamId);
 				await sendMessageToSessionHandler(
@@ -115,7 +115,7 @@ async function sendMessageToSessionHandler(sessionId, senderId, message) {
 		let session = await Session.findById(sessionId);
 		const sender = await User.findById(senderId);
 		if (!session) {
-			throw new Error('No session');
+			throw new Error('Session not found.');
 		}
 		const msg = new Message({
 			text: message,

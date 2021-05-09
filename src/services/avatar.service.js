@@ -1,13 +1,19 @@
 const sharp = require('sharp');
 const { Avatar } = require('../db/models');
+const { destructureObject } = require('./utils/services.utils');
+const { MODEL_PROPERTIES } = require('../constants');
+const selectFields = MODEL_PROPERTIES.AVATAR.SELECT_FIELDS;
+const allowedKeys = MODEL_PROPERTIES.AVATAR.ALLOWED_KEYS;
+
 async function uploadAvatarHandler(req, res, next) {
 	try {
+		const avatarObject = destructureObject(req.body, allowedKeys.CREATE);
 		const avatarBuffer = await sharp(req.file.buffer)
 			.resize({ width: 250, height: 250 })
 			.png()
 			.toBuffer();
 		const newAvatar = new Avatar({
-			name: req.body.name,
+			...avatarObject,
 			picture: avatarBuffer,
 		});
 		await newAvatar.save();
@@ -19,7 +25,7 @@ async function uploadAvatarHandler(req, res, next) {
 
 async function getAllAvatarsHandler(req, res, next) {
 	try {
-		const availableAvatars = await Avatar.find({}, '_id').lean();
+		const availableAvatars = await Avatar.find({}, selectFields).lean();
 		res.send(availableAvatars);
 	} catch (e) {
 		next(e);

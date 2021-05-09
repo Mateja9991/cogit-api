@@ -1,5 +1,5 @@
 const { Schema, model } = require('mongoose');
-const { MODEL_NAMES } = require('../../constants/model_names');
+const { MODEL_PROPERTIES } = require('../../constants');
 //
 //              Schema
 //
@@ -21,7 +21,7 @@ const eventSchema = new Schema({
 		required: true,
 	},
 	calendarId: {
-		ref: MODEL_NAMES.CALENDAR,
+		ref: MODEL_PROPERTIES.CALENDAR.NAME,
 		type: Schema.Types.ObjectId,
 		required: true,
 	},
@@ -30,6 +30,6 @@ eventSchema.index({ calendarId: 1 });
 //
 //
 //
-const Event = model(MODEL_NAMES.EVENT, eventSchema);
+const Event = model(MODEL_PROPERTIES.EVENT.NAME, eventSchema);
 
 module.exports = Event;

@@ -1,5 +1,5 @@
 const { Schema, model } = require('mongoose');
-const { MODEL_NAMES } = require('../../constants/model_names');
+const { MODEL_PROPERTIES } = require('../../constants');
 //
 //              Schema
 //
@@ -12,7 +12,7 @@ const teamSchema = new Schema(
 		leaderId: {
 			type: Schema.Types.ObjectId,
 			required: true,
-			ref: MODEL_NAMES.USER,
+			ref: MODEL_PROPERTIES.USER.NAME,
 		},
 		visit: [
 			{
@@ -41,13 +41,13 @@ teamSchema.index({ name: 1, leaderId: 1 }, { unique: true });
 //              Virtuals
 //
 teamSchema.virtual('projects', {
-	ref: MODEL_NAMES.PROJECT,
+	ref: MODEL_PROPERTIES.PROJECT.NAME,
 	localField: '_id',
 	foreignField: 'teamId',
 });
 //
 //
 //
-const Team = model(MODEL_NAMES.TEAM, teamSchema);
+const Team = model(MODEL_PROPERTIES.TEAM.NAME, teamSchema);
 
 module.exports = Team;

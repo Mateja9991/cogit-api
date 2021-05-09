@@ -1,5 +1,5 @@
 const { Schema, model } = require('mongoose');
-const { MODEL_NAMES } = require('../../constants/model_names');
+const { MODEL_PROPERTIES } = require('../../constants');
 //
 //              Schema
 //
@@ -12,9 +12,9 @@ const projectSchema = new Schema(
 		teamId: {
 			type: Schema.Types.ObjectId,
 			required: true,
-			ref: MODEL_NAMES.TEAM,
+			ref: MODEL_PROPERTIES.TEAM.NAME,
 		},
-		taggs: [
+		tags: [
 			{
 				type: String,
 				required: true,
@@ -57,7 +57,7 @@ projectSchema.index({ teamId: 1 });
 //              Virtuals
 //
 projectSchema.virtual('lists', {
-	ref: MODEL_NAMES.LIST,
+	ref: MODEL_PROPERTIES.LIST.NAME,
 	localField: '_id',
 	foreignField: 'projectId',
 });
@@ -70,6 +70,6 @@ projectSchema.methods.notificationMessage = function (timeLeft, timeKey) {
 	} projects deadline.`;
 };
 
-const Project = model(MODEL_NAMES.PROJECT, projectSchema);
+const Project = model(MODEL_PROPERTIES.PROJECT.NAME, projectSchema);
 
 module.exports = Project;

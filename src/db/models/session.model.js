@@ -1,5 +1,5 @@
 const { Schema, model } = require('mongoose');
-const { MODEL_NAMES } = require('../../constants/model_names');
+const { MODEL_PROPERTIES } = require('../../constants');
 const User = require('./user.model');
 //
 //              Schema
@@ -7,7 +7,7 @@ const User = require('./user.model');
 const sessionSchema = new Schema({
 	teamId: {
 		type: Schema.Types.ObjectId,
-		ref: MODEL_NAMES.TEAM,
+		ref: MODEL_PROPERTIES.TEAM.NAME,
 		sparse: true,
 	},
 	participants: [
@@ -19,7 +19,7 @@ const sessionSchema = new Schema({
 			userId: {
 				type: Schema.Types.ObjectId,
 				required: true,
-				ref: MODEL_NAMES.USER,
+				ref: MODEL_PROPERTIES.USER.NAME,
 			},
 		},
 	],
@@ -29,6 +29,6 @@ const sessionSchema = new Schema({
 //
 sessionSchema.methods.updateParticipants = async function () {};
 //
-const Session = model(MODEL_NAMES.SESSION, sessionSchema);
+const Session = model(MODEL_PROPERTIES.SESSION.NAME, sessionSchema);
 
 module.exports = Session;

@@ -1,5 +1,5 @@
 const { Schema, model } = require('mongoose');
-const { MODEL_NAMES } = require('../../constants/model_names');
+const { MODEL_PROPERTIES } = require('../../constants');
 //
 //              Schema
 //
@@ -27,6 +27,6 @@ avatarSchema.statics.getDefaultAvatar = async function () {
 	return defaultAvatar;
 };
 
-const Avatar = model(MODEL_NAMES.AVATAR, avatarSchema);
+const Avatar = model(MODEL_PROPERTIES.AVATAR.NAME, avatarSchema);
 
 module.exports = Avatar;

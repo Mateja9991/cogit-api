@@ -1,5 +1,5 @@
 const { Schema, model } = require('mongoose');
-const { MODEL_NAMES } = require('../../constants/model_names');
+const { MODEL_PROPERTIES } = require('../../constants');
 //
 //              Schema
 //
@@ -13,7 +13,7 @@ const messageSchema = new Schema(
 		sessionId: {
 			type: Schema.Types.ObjectId,
 			required: true,
-			ref: MODEL_NAMES.SESSION,
+			ref: MODEL_PROPERTIES.SESSION.NAME,
 		},
 		from: {
 			type: String,
@@ -27,6 +27,6 @@ messageSchema.index({ sessionId: 1 });
 //
 //
 //
-const Message = model(MODEL_NAMES.MESSAGE, messageSchema);
+const Message = model(MODEL_PROPERTIES.MESSAGE.NAME, messageSchema);
 
 module.exports = Message;

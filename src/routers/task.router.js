@@ -46,7 +46,7 @@ router.post(
 	createSubTaskHandler
 );
 
-router.get('/tasks/me', jwtAuthMiddleware, getUserTasksHandler);
+router.get('/tasks/me/all', jwtAuthMiddleware, getUserTasksHandler);
 
 router.get(
 	'/tasks/me/priority',

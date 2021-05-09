@@ -9,6 +9,7 @@ const {
 	matchBuilder,
 	queryHandler,
 	scheduleJobHandler,
+	destructureObject,
 } = require('./utils/services.utils');
 
 const {
@@ -17,20 +18,19 @@ const {
 	addParticipantHandler,
 } = require('./session.service');
 
+const { MODEL_PROPERTIES } = require('../constants');
+const selectFields = MODEL_PROPERTIES.USER.SELECT_FIELDS;
+const allowedKeys = MODEL_PROPERTIES.USER.ALLOWED_KEYS;
+
 //
 //        ROUTER HANDLERS
 //
 async function createUserHandler(req, res, next) {
 	{
 		try {
-			if (req.body.role) {
-				delete req.body.role;
-			}
-			if (req.body.tag) {
-				delete req.body.tag;
-			}
+			const userObject = destructureObject(req.body, allowedKeys.CREATE);
 			const user = new User({
-				...req.body,
+				...userObject,
 			});
 			const userCalendar = new Calendar({
 				userId: user._id,
@@ -122,7 +122,8 @@ async function getAllNotificationsHandler(req, res, next) {
 		const sortBy = req.query.sortBy;
 		const requestedNotifications = queryHandler(
 			req.user.notifications,
-			req.query
+			req.query,
+			selectFields
 		);
 
 		//// ZASTO?!
@@ -250,9 +251,8 @@ async function getSingleUserHandler(queryObject) {
 
 async function updateUserHandler(req, res, next) {
 	const updates = Object.keys(req.body);
-	const allowedToUpdate = ['username', 'email', 'password', 'settings'];
 	const isValidUpdate = updates.every((update) =>
-		allowedToUpdate.includes(update)
+		allowedKeys.UPDATE.includes(update)
 	);
 
 	try {

@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { MODEL_NAMES } = require('../../constants/model_names');
+const { MODEL_PROPERTIES } = require('../../constants');
 const { Team, Project, List, Task, User } = require('../../db/models');
 require('../utils');
 async function taskToLeaderAuth(req, res, next) {
@@ -70,7 +70,12 @@ async function taskToMemberAuth(req, res, next) {
 
 async function assignAuth(req, res, next) {
 	try {
-		if (!req.task) throw new Error('You are not team leader.');
+		if (!req.task) {
+			res.status(403);
+			throw new Error(
+				'Not authorized.  To access this document you need to be team leader.'
+			);
+		}
 		// await req.task
 		// 	.populate({
 		// 		path: 'listId',

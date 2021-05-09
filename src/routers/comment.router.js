@@ -29,13 +29,6 @@ router.post(
 	createCommentHandler
 );
 
-router.get(
-	'/comments/tasks/:taskId',
-	jwtAuthMiddleware,
-	taskToMemberAuth,
-	getTaskCommentsHandler
-);
-
 // router.get('/comment/:commentId', jwtAuthMiddleware, taskToMemberAuth, getSpecificCommentHandler);
 
 router.patch(

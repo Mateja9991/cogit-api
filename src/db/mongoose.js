@@ -22,7 +22,6 @@ mongoose
 		// authSource: MONGO_SOURCE,
 	})
 	.then(() => {
-		mongoose.set('debug', true);
 		console.log('Connected');
 	});
 

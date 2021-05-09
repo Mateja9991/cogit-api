@@ -4,6 +4,7 @@ const {
 	optionsBuilder,
 	queryHandler,
 	matchBuilder,
+	destructureObject,
 } = require('./utils/services.utils');
 
 const { scheduleJobHandler } = require('./utils/services.utils');
@@ -11,8 +12,10 @@ const Socket = require('../socket/socket');
 //
 //				ROUTER HANDLERS
 //
-selectFieldsGlobal =
-	'name description deadline tags isArchived isTemplate teamId ';
+
+const { MODEL_PROPERTIES } = require('../constants');
+const selectFields = MODEL_PROPERTIES.PROJECT.SELECT_FIELDS;
+const allowedKeys = MODEL_PROPERTIES.PROJECT.ALLOWED_KEYS;
 
 async function createProjectHandler(req, res, next) {
 	try {
@@ -20,8 +23,9 @@ async function createProjectHandler(req, res, next) {
 			res.status(422);
 			throw new Error('Invalid date.');
 		}
+		const projectObject = destructureObject(req.body, allowedKeys.CREATE);
 		const project = new Project({
-			...req.body,
+			...projectObject,
 			teamId: req.team._id,
 		});
 		await project.save();
@@ -51,7 +55,12 @@ async function getTeamsProjectsHandler(req, res, next) {
 			req.query.sortBy,
 			req.query.sortValue
 		);
-		const requestedProjects = await getProjectsFromOneTeam(req.team, options);
+		const match = matchBuilder(req.query);
+		const requestedProjects = await getProjectsFromOneTeam(
+			req.team,
+			options,
+			match
+		);
 		res.send(requestedProjects);
 	} catch (e) {
 		next(e);
@@ -72,19 +81,24 @@ async function getMyProjectsHandler(req, res, next) {
 				allProjects.push(project);
 			});
 		}
-		const requestedProjects = queryHandler(allProjects, req.query);
+		const requestedProjects = queryHandler(
+			allProjects,
+			req.query,
+			selectFields
+		);
 		res.send(requestedProjects);
 	} catch (e) {
 		next(e);
 	}
 }
 
-async function getProjectsFromOneTeam(team, options) {
+async function getProjectsFromOneTeam(team, options, match) {
 	const teamProjects = await Project.find(
 		{
 			teamId: team._id,
+			...match,
 		},
-		selectFieldsGlobal,
+		selectFields,
 		options
 	);
 
@@ -107,20 +121,11 @@ async function getSpecificProjectHandler(req, res, next) {
 }
 
 async function updateProjectHandler(req, res, next) {
-	const updates = Object.keys(req.body);
-	const allowedToUpdate = [
-		'name',
-		'description',
-		'deadline',
-		'isArchived',
-		'isTemplate',
-		'taggs',
-	];
-	const isValidUpdate = updates.every((update) =>
-		allowedToUpdate.includes(update)
-	);
-
 	try {
+		const updates = Object.keys(req.body);
+		const isValidUpdate = updates.every((update) =>
+			allowedKeys.UPDATE.includes(update)
+		);
 		if (!isValidUpdate) {
 			res.status(422);
 			throw new Error('Invalid update fields.');
