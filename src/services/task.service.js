@@ -1,7 +1,7 @@
 const { Task } = require('../db/models');
 
 const Socket = require('../socket/socket');
-const { SOCKET_EVENTS } = require('../constants/socket_events');
+const { SOCKET_EVENTS } = require('../constants');
 
 const {
 	duplicateHandler,
@@ -13,7 +13,6 @@ const {
 } = require('./utils/services.utils');
 
 const { MODEL_PROPERTIES } = require('../constants');
-const { reset } = require('nodemon');
 const selectFields = MODEL_PROPERTIES.TASK.SELECT_FIELDS;
 const allowedKeys = MODEL_PROPERTIES.TASK.ALLOWED_KEYS;
 
