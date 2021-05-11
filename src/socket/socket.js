@@ -3,9 +3,14 @@ var mongoose = require('mongoose');
 const socketio = require('socket.io');
 
 const { User, Team, Session, Message } = require('../db/models');
+const OnlineUsersServices = require('./utils/socket.utils');
 
 const { getSessionHandler } = require('../services/session.service');
-const { SOCKET_EVENTS } = require('../constants/socket_events');
+const {
+	SOCKET_EVENTS,
+	PING_INTERVAL,
+	RESPONSE_TIMER,
+} = require('../constants');
 const { jwtSocketAuth } = require('./socket.auth/');
 
 class SocketService {
@@ -17,7 +22,25 @@ class SocketService {
 		this.io
 			.of('/users')
 			.use(this.middleware)
-			.on('connection', this._userOnConnect);
+			.on('connection', this._userOnConnect.bind(this));
+		setInterval(() => this.pingActiveUsers(), PING_INTERVAL);
+	}
+	async pingActiveUsers() {
+		const activeUsers = await User.find({ active: true });
+		activeUsers.forEach((user) => {
+			OnlineUsersServices.pingUser(user._id);
+			this.sendEventToRoom(
+				user._id,
+				SOCKET_EVENTS.CHECK_CONNECTION,
+				{},
+				'users'
+			);
+		});
+		setTimeout(() => {
+			OnlineUsersServices.clearNotResponsiveUsers(
+				this.sendEventToRoom.bind(this)
+			);
+		}, RESPONSE_TIMER);
 	}
 	async middleware(socketClient, next) {
 		try {
@@ -37,12 +60,15 @@ class SocketService {
 			console.log(e.message);
 		}
 	}
-	_userOnConnect(socketClient) {
-		socketClient.on('disconnect', () => {
+	async _userOnConnect(socketClient) {
+		socketClient.on('disconnect', async () => {
 			console.log('Tab closed');
 		});
 		socketClient.on('logout', () => {
 			socketClient.disconnect(true);
+		});
+		socketClient.on('keep-alive', () => {
+			OnlineUsersServices.connectionAlive(socketClient.user._id);
 		});
 		socketClient.on('checkNotifications', async () => {});
 		socketClient.on('newMessageToSession', async (sessionId, payload) => {
@@ -62,6 +88,7 @@ class SocketService {
 					throw new Error('User not found.');
 				}
 				const sessionParticipants = [socketClient.user._id, user._id];
+				console.log(sessionParticipants);
 				const session = await getSessionHandler(sessionParticipants);
 				console.log('sessionId', session._id);
 				await sendMessageToSessionHandler(
@@ -91,10 +118,6 @@ class SocketService {
 				console.log(e);
 			}
 		});
-	}
-
-	broadcastEvent(eventName, payload) {
-		this.io.emit(eventName, payload);
 	}
 
 	sendEventToRoom(room, eventName, payload, namespace) {

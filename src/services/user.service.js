@@ -1,6 +1,7 @@
 const Socket = require('../socket/socket');
 const { SOCKET_EVENTS } = require('../constants/socket_events');
 const { User, Project, Task, Avatar, Calendar, Team } = require('../db/models');
+const mongoose = require('mongoose');
 
 const { deleteSingleTeamHandler } = require('./team.service');
 
@@ -52,6 +53,10 @@ async function loginUserHandler(req, res, next) {
 			(acc, notif) => acc + (notif.seen ? 0 : 1),
 			0
 		);
+		if (!user.active) {
+			user.active = true;
+			await user.save();
+		}
 		const token = await user.generateAuthToken();
 		res.send({ user, token, notificationNumber });
 	} catch (e) {
@@ -119,7 +124,6 @@ async function getUserHandler(req, res, next) {
 
 async function getAllNotificationsHandler(req, res, next) {
 	try {
-		const sortBy = req.query.sortBy;
 		const requestedNotifications = queryHandler(
 			req.user.notifications,
 			req.query,
@@ -128,21 +132,21 @@ async function getAllNotificationsHandler(req, res, next) {
 
 		//// ZASTO?!
 
-		let i = 0;
-		let subArray;
-		let result = [];
-		console.log(requestedNotifications[i]);
-		while (i < requestedNotifications.length) {
-			subArray = requestedNotifications.filter((notif) =>
-				sortBy ? notif[sortBy] === requestedNotifications[i][sortBy] : true
-			);
-			subArray.sort((a, b) => {
-				return a.receivedAt.getTime() < b.receivedAt.getTime() ? 1 : -1;
-			});
-			i += subArray.length;
-			result = result.concat(subArray);
-		}
-		res.send(result);
+		// let i = 0;
+		// let subArray;
+		// let result = [];
+		// console.log(requestedNotifications[i]);
+		// while (i < requestedNotifications.length) {
+		// 	subArray = requestedNotifications.filter((notif) =>
+		// 		sortBy ? notif[sortBy] === requestedNotifications[i][sortBy] : true
+		// 	);
+		// 	subArray.sort((a, b) => {
+		// 		return a.receivedAt.getTime() < b.receivedAt.getTime() ? 1 : -1;
+		// 	});
+		// 	i += subArray.length;
+		// 	result = result.concat(subArray);
+		// }
+		res.send(requestedNotifications);
 
 		await markAsRead(req.user, requestedNotifications);
 	} catch (e) {
@@ -386,6 +390,31 @@ async function declineTeamInvitationHandler(req, res, next) {
 
 async function updateSettingsHandler(req, res, next) {
 	try {
+		const updates = Object.keys(req.body);
+		const settings = ['defaultView', 'projectView', 'theme'];
+		const isValidUpdate = updates.every((update) => settings.includes(update));
+
+		if (!isValidUpdate) {
+			res.status(422);
+			throw new Error('Invalid update fields.');
+		}
+		updates.forEach((update) => {
+			console.log(update.toString(), update.toString() === 'projectView');
+			if (update.toString() === 'projectView') {
+				console.log(req.user.settings.projectView);
+				const index = req.user.settings.projectView.findIndex((prView) =>
+					prView.reference.equals(req.body[update].reference)
+				);
+				if (index !== -1) {
+					req.user.settings.projectView[index] = req.body[update];
+				} else {
+					req.user.settings.projectView.push(req.body[update]);
+				}
+			} else {
+				req.user.settings[update] = req.body[update];
+			}
+		});
+		await req.user.save();
 		res.send(req.user.settings);
 	} catch (e) {
 		next(e);

@@ -114,7 +114,13 @@ async function getSpecificProjectHandler(req, res, next) {
 				parentTaskId: null,
 			}).lean();
 		}
-		res.send(req.project);
+		const projectView = req.user.settings.projectView.find((projectView) =>
+			projectView.reference.equals(req.project._id)
+		);
+		res.send({
+			project: req.project,
+			view: projectView ? projectView : req.user.settings.defaultView,
+		});
 	} catch (e) {
 		next(e);
 	}

@@ -3,6 +3,8 @@ const validator = require('validator');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const Avatar = require('./avatar.model');
+const Session = require('./session.model');
+const Message = require('./message.model');
 const { MODEL_PROPERTIES } = require('../../constants');
 //
 //              Schema
@@ -38,12 +40,20 @@ const userSchema = new Schema(
 			trim: true,
 			minlength: [7, 'Password too short (<7).'],
 		},
+		active: { type: Boolean, default: false },
 		lastActiveAt: Date,
 		teams: [
 			{
 				type: Schema.Types.ObjectId,
 				required: true,
 				ref: MODEL_PROPERTIES.TEAM.NAME,
+			},
+		],
+		contacts: [
+			{
+				type: Schema.Types.ObjectId,
+				required: true,
+				ref: MODEL_PROPERTIES.USER.NAME,
 			},
 		],
 		invitations: [
@@ -63,20 +73,33 @@ const userSchema = new Schema(
 			type: Schema.Types.ObjectId,
 			ref: MODEL_PROPERTIES.AVATAR.NAME,
 		},
-		settings: [
-			{
-				theme: {
-					type: String,
-					enum: ['dark', 'light'],
-					required: true,
-				},
-				taskView: {
-					type: String,
-					enum: ['list', 'board'],
-					required: true,
-				},
+		settings: {
+			theme: {
+				type: String,
+				enum: ['dark', 'light'],
+				default: 'dark',
 			},
-		],
+			projectView: [
+				{
+					reference: {
+						type: Schema.Types.ObjectId,
+						ref: MODEL_PROPERTIES.PROJECT.NAME,
+						required: true,
+					},
+					view: {
+						type: String,
+						enum: ['list', 'board'],
+						required: true,
+					},
+				},
+			],
+			defaultView: {
+				type: String,
+				enum: ['list', 'board'],
+				default: 'list',
+			},
+		},
+
 		notifications: [
 			{
 				seen: {
@@ -179,6 +202,74 @@ userSchema.methods.toJSON = function () {
 	delete userObject.role;
 	delete userObject.teams;
 	return userObject;
+};
+
+userSchema.methods.updateContacts = async function (sendEvent, event, msg) {
+	const user = this;
+	await user.populate('contacts').execPopulate();
+	for (const contact of user.contacts) {
+		const updatedContacts = await contact.generateContactList();
+		sendEvent(contact._id, event, { updatedContacts, msg }, 'users');
+	}
+};
+
+userSchema.methods.generateContactList = async function () {
+	const user = this;
+	await user
+		.populate({
+			path: 'contacts',
+			model: MODEL_PROPERTIES.USER.NAME,
+			options: {
+				sort: { active: -1 },
+			},
+		})
+		.execPopulate();
+	const contactList = user.contacts;
+
+	let index = contactList.findIndex((item) => item.active === false);
+	console.log('index', index);
+
+	if (index === -1) index = contactList.length;
+	const comparableArr = await Promise.all(
+		contactList.map(async (contact) => {
+			let session = await Session.findOne({
+				$and: [
+					{ participants: { $elemMatch: { userId: user._id } } },
+					{ participants: { $elemMatch: { userId: contact._id } } },
+				],
+			}).lean();
+			let messages = await Message.find({ sessionId: session._id }).lean();
+			return { numOfMessages: messages.length, contact };
+		})
+	);
+
+	const activeContacts = comparableArr.slice(0, index);
+	const offlineContacts = comparableArr.slice(index);
+
+	let result = [];
+	const sortingFunction = (a, b) =>
+		a.numOfMessages > b.numOfMessages ? 1 : -1;
+	activeContacts.sort(sortingFunction);
+	offlineContacts.sort(sortingFunction);
+	const activeResult = activeContacts.map((item) => item.contact);
+	const offlineResult = offlineContacts.map((item) => item.contact);
+	result = result.concat(activeResult);
+	result = result.concat(offlineResult);
+	// let i = 0;
+	// let subArray;
+	// let result = [];
+	// while (i < contactList.length) {
+	// 	subArray = contactList.filter(
+	// 		(contact) => contact['active'] === contactList[i]['active']
+	// 	);
+	// 	subArray.sort((a, b) => {
+	// 		return a.receivedAt.getTime() < b.receivedAt.getTime() ? 1 : -1;
+	// 	});
+	// 	i += subArray.length;
+	// 	result = result.concat(subArray);
+	// }
+
+	return result;
 };
 
 userSchema.methods.generateAuthToken = async function () {

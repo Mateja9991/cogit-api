@@ -70,52 +70,49 @@ async function getMessagesHandler(req, res, next) {
 }
 
 async function getSessionHandler(sessionParticipants, teamId) {
-	try {
-		let session;
-		if (teamId) {
-			session = await getTeamSessionHandler(teamId);
-			if (session) {
-				await session.updateParticipants();
-			}
-		} else {
-			session = await getPrivateSessionHandler(sessionParticipants);
+	let session;
+	if (teamId) {
+		session = await getTeamSessionHandler(teamId);
+		if (session) {
+			await session.updateParticipants();
 		}
-		return session
-			? session
-			: await newSessionHandler(sessionParticipants, teamId);
-	} catch (e) {
-		next(e);
+	} else {
+		session = await getPrivateSessionHandler(sessionParticipants);
 	}
+	return session
+		? session
+		: await newSessionHandler(sessionParticipants, teamId);
 }
 
 async function newSessionHandler(sessionParticipants, teamId) {
-	try {
-		const newSession = new Session({
-			teamId: teamId ? teamId : undefined,
-		});
-		if (teamId) {
-			users = await User.find({
-				teams: teamId,
-			}).lean();
-			users.forEach((user) => {
-				newSession.participants.push({
-					newMessages: 0,
-					userId: user._id,
-				});
+	const newSession = new Session({
+		teamId: teamId ? teamId : undefined,
+	});
+	if (teamId) {
+		users = await User.find({
+			teams: teamId,
+		}).lean();
+		users.forEach((user) => {
+			newSession.participants.push({
+				newMessages: 0,
+				userId: user._id,
 			});
-		} else {
-			sessionParticipants.forEach((userId) => {
-				newSession.participants.push({
-					newMessages: 0,
-					userId,
-				});
+		});
+	} else {
+		for (const userId of sessionParticipants) {
+			let user = await User.findById(userId);
+			user.contacts.push(
+				sessionParticipants.find((participant) => !participant.equals(user._id))
+			);
+			await user.save();
+			newSession.participants.push({
+				newMessages: 0,
+				userId,
 			});
 		}
-		await newSession.save();
-		return newSession;
-	} catch (e) {
-		next(e);
 	}
+	await newSession.save();
+	return newSession;
 }
 
 async function getSessionMessagesHandler(options, sessionParticipants, teamId) {
@@ -135,7 +132,7 @@ async function getSessionMessagesHandler(options, sessionParticipants, teamId) {
 		).lean();
 		return sessionMessages;
 	} catch (e) {
-		next(e);
+		throw new Error(e.message);
 	}
 }
 
@@ -147,22 +144,24 @@ async function getTeamSessionHandler(teamId) {
 }
 
 async function getPrivateSessionHandler(sessionParticipants) {
-	let result = null;
-	const sessions = await Session.find({
-		participants: { $elemMatch: { userId: { $in: sessionParticipants } } },
+	const session = await Session.findOne({
+		$and: [
+			{ participants: { $elemMatch: { userId: sessionParticipants[0] } } },
+			{ participants: { $elemMatch: { userId: sessionParticipants[1] } } },
+		],
 	});
-	sessions.forEach((session) => {
-		session.userIds = session.participants.map(
-			(participant) => participant.userId
-		);
-		if (
-			session.userIds.sort().toString() ===
-			sessionParticipants.sort().toString()
-		) {
-			result = session;
-		}
-	});
-	return result;
+	// sessions.forEach((session) => {
+	// 	session.userIds = session.participants.map(
+	// 		(participant) => participant.userId
+	// 	);
+	// 	if (
+	// 		session.userIds.sort().toString() ===
+	// 		sessionParticipants.sort().toString()
+	// 	) {
+	// 		result = session;
+	// 	}
+	// });
+	return session;
 }
 
 async function addParticipantHandler(teamId, userId) {

@@ -9,8 +9,8 @@ const queryParams = queryParamsString
 console.log(queryParams.email);
 console.log(queryParams.password);
 
-const URL = 'https://cogit-api.herokuapp.com/';
-// const URL = 'http://localhost:3000/';
+// const URL = 'https://cogit-api.herokuapp.com/';
+const URL = 'http://localhost:3000/';
 
 fetch(URL + 'users/login', {
 	method: 'POST',
@@ -103,7 +103,9 @@ fetch(URL + 'users/login', {
 		socket.on('connect_error', (err) => {
 			console.log(err.message); // prints the message associated with the error
 		});
-
+		socket.on('user-disconnected', (payload) => {
+			console.log(payload); // prints the message associated with the error
+		});
 		socket.on('new-message', ({ username, message }) => {
 			console.log(username, message);
 			$messageBoard.innerHTML += `<p>${username}:${message}</p>`;
@@ -116,6 +118,10 @@ fetch(URL + 'users/login', {
 		});
 		socket.on('error', (error) => {
 			console.log(error);
+		});
+		socket.on('check-connection', (id) => {
+			console.log('still');
+			socket.emit('keep-alive', id);
 		});
 		socket.on('new-notification', (notif) => {
 			console.log(notif);

@@ -95,10 +95,7 @@ function queryHandler(allItems, query, selectFields) {
 		Number(skip) + Number(offset)
 	);
 	if (selectFields) {
-		const requestedItems = destructureArray(
-			requestedItems,
-			selectFields.split(' ')
-		);
+		requestedItems = destructureArray(requestedItems, selectFields.split(' '));
 	}
 	return requestedItems;
 }
