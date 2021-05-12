@@ -123,14 +123,17 @@ async function getSessionMessagesHandler(options, sessionParticipants, teamId) {
 		} else {
 			session = await getPrivateSessionHandler(sessionParticipants);
 		}
-		const sessionMessages = await Message.find(
+		let sessionMessages = null;
+		if(session) {
+		sessionMessages = await Message.find(
 			{
 				sessionId: session._id,
 			},
 			'from text createdAt -_id',
 			options
 		).lean();
-		return sessionMessages;
+		}
+		return sessionMessages ? sessionMessages : [];
 	} catch (e) {
 		throw new Error(e.message);
 	}

@@ -18,55 +18,41 @@ async function connectionAlive(userId) {
 	const ackIndex = acksMissed.findIndex((ackUser) =>
 		ackUser.userId.equals(userId)
 	);
-	if (ackIndex !== -1) acksMissed.splice(pingedIndex, 1);
+	if (ackIndex !== -1) acksMissed[ackIndex].count = 0;
 }
 
 async function clearNotResponsiveUsers(sendEvent) {
 	for (const pingedUserId of pingedUsers) {
-		let ackIndex = acksMissed.findIndex((el) => el.userId.equals(pingedUserId));
-		let onlineIndex = onlineUsers.findIndex((el) => el.equals(pingedUserId));
-		if (onlineIndex === -1) {
-			onlineUsers.push(pingedUserId);
-			offlineUsers = offlineUsers.filter(
-				(userId) => !userId.equals(pingedUserId)
-			);
-			const onlineUser = await User.findById(pingedUserId);
-			onlineUser.active = true;
-			await onlineUser.save();
-			await onlineUser.updateContacts(
-				sendEvent,
-				SOCKET_EVENTS.USER_DISCONNECTED,
-				'connected'
-			);
-		}
-		if (ackIndex !== -1) {
-			if (acksMissed[ackIndex].count > 3) {
+		let index = acksMissed.findIndex((el) => el.userId.equals(pingedUserId));
+		if (index !== -1) {
+			if (acksMissed[index].count > 3) {
 				offlineUsers.push(pingedUserId);
-				onlineUsers = onlineUsers.filter(
-					(userId) => !userId.equals(pingedUserId)
-				);
-				acksMissed.splice(ackIndex, 1);
-				const offlineUser = await User.findById(pingedUserId);
-				offlineUser.active = false;
-				await offlineUser.save();
-				await offlineUser.updateContacts(
-					sendEvent,
-					SOCKET_EVENTS.USER_DISCONNECTED,
-					'disconnected'
-				);
+				acksMissed[index].count = 0;
 			} else {
-				acksMissed[ackIndex].count++;
-				console.log(
-					acksMissed[ackIndex].userId,
-					'   ',
-					acksMissed[ackIndex].count
-				);
+				console.log(acksMissed[index].userId,'		',acksMissed[index].count);
+				acksMissed[index].count++;
 			}
 		} else {
 			acksMissed.push({ userId: pingedUserId, count: 1 });
 		}
 	}
+	await	updateOfflineUsers(sendEvent);
 	pingedUsers = [];
+}
+
+async function updateOfflineUsers(sendEvent) {
+	for (const offlineUserId of offlineUsers) {
+		const offlineUser = await User.findById(offlineUserId);
+				offlineUser.active = false;
+				await offlineUser.save();
+				console.log(offlineUser);
+				await offlineUser.updateContacts(
+					sendEvent,
+					SOCKET_EVENTS.USER_DISCONNECTED,
+					'disconnected'
+				);
+	}
+	offlineUsers = [];
 }
 
 module.exports = {

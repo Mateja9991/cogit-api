@@ -49,6 +49,17 @@ const userSchema = new Schema(
 				ref: MODEL_PROPERTIES.TEAM.NAME,
 			},
 		],
+		visits: [
+			{
+				teamId: {
+					type: Schema.Types.ObjectId,
+				},
+				date: {
+					type: Date,
+					required: true,
+				},
+			},
+		],
 		contacts: [
 			{
 				type: Schema.Types.ObjectId,
@@ -160,6 +171,20 @@ userSchema.pre('save', async function (next) {
 		}
 		this.avatar = defaultAvatar;
 	}
+	if (this.isModified('visits')) {
+		for (const visit of this.visits) {
+			if (!this.teams.includes(visit.teamId))
+				throw new Error('team visited save hook failed.');
+		}
+	}
+	if (this.isModified('settings')) {
+		await this.settings.populate('projectView').execPopulate();
+		await this.populate('teams').execPopulate();
+		for (const projectView of this.settings.projectView) {
+			if (!this.teams.includes(projectView.teamId))
+				throw new Error('project View save hook failed.');
+		}
+	}
 	next();
 });
 //
@@ -196,6 +221,7 @@ userSchema.methods.toJSON = function () {
 	delete userObject.password;
 	delete userObject.createdAt;
 	delete userObject.updatedAt;
+	delete userObject.visits;
 	delete userObject.__v;
 	delete userObject.notifications;
 	delete userObject.invitations;
@@ -248,7 +274,7 @@ userSchema.methods.generateContactList = async function () {
 
 	let result = [];
 	const sortingFunction = (a, b) =>
-		a.numOfMessages > b.numOfMessages ? 1 : -1;
+		a.numOfMessages < b.numOfMessages ? 1 : -1;
 	activeContacts.sort(sortingFunction);
 	offlineContacts.sort(sortingFunction);
 	const activeResult = activeContacts.map((item) => item.contact);

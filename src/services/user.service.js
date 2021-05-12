@@ -58,6 +58,12 @@ async function loginUserHandler(req, res, next) {
 			await user.save();
 		}
 		const token = await user.generateAuthToken();
+		user.updateContacts(
+			Socket.sendEventToRoom.bind(Socket),
+			SOCKET_EVENTS.USER_DISCONNECTED,
+			'connected'
+		);
+
 		res.send({ user, token, notificationNumber });
 	} catch (e) {
 		next(e);
@@ -155,11 +161,15 @@ async function getAllNotificationsHandler(req, res, next) {
 	}
 }
 async function markAsRead(user, requestedNotifications) {
-	user.notifications.forEach((notif) => {
-		if (requestedNotifications.includes(notif) && !notif.seen)
-			notif.seen = true;
-	});
-	await user.save();
+	try {
+		user.notifications.forEach((notif) => {
+			if (requestedNotifications.includes(notif) && !notif.seen)
+				notif.seen = true;
+		});
+		await user.save();
+	} catch (e) {
+		console.log('notif mark as read failed.');
+	}
 }
 async function getTeamInvitationsHandler(req, res, next) {
 	try {
@@ -391,9 +401,9 @@ async function declineTeamInvitationHandler(req, res, next) {
 async function updateSettingsHandler(req, res, next) {
 	try {
 		const updates = Object.keys(req.body);
-		const settings = ['defaultView', 'projectView', 'theme'];
-		const isValidUpdate = updates.every((update) => settings.includes(update));
-
+		const isValidUpdate = allowedKeys.SETTINGS.every((update) =>
+			settings.includes(update)
+		);
 		if (!isValidUpdate) {
 			res.status(422);
 			throw new Error('Invalid update fields.');

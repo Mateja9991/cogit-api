@@ -4,6 +4,7 @@ const MODEL_PROPERTIES = {
 		ALLOWED_KEYS: {
 			CREATE: ['username', 'email', 'password'],
 			UPDATE: ['username', 'email', 'password', 'settings'],
+			SETTINGS: ['defaultView', 'projectView', 'theme'],
 		},
 		SELECT_FIELDS: 'username email lastActiveAt id _id',
 	},

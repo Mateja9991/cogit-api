@@ -13,6 +13,7 @@ const {
 //
 
 const { MODEL_PROPERTIES } = require('../constants');
+const { isUndefined } = require('lodash');
 const selectFields = MODEL_PROPERTIES.TASK.SELECT_FIELDS;
 const allowedKeys = MODEL_PROPERTIES.TASK.ALLOWED_KEYS;
 
@@ -85,14 +86,13 @@ async function getLeaderTeamsHandler(req, res, next) {
 async function sortUserTeams(user) {
 	const teams = user.teams;
 	const tmp = teams.map((team) => {
-		const userVisitsIndex = team.visit.findIndex((vis) =>
-			vis.userId.equals(user._id)
-		);
-		console.log(userVisitsIndex);
+		const numberOfVisits = user.visits.filter((vis) =>
+			vis.teamId.equals(team._id)
+		).length;
+		console.log(numberOfVisits);
 		return {
 			team,
-			numberOfVisits:
-				userVisitsIndex === -1 ? 0 : team.visit[userVisitsIndex].dates.length,
+			numberOfVisits,
 		};
 	});
 	tmp.sort((a, b) => {
@@ -105,17 +105,22 @@ async function sortUserTeams(user) {
 
 async function getTeamHandler(req, res, next) {
 	try {
-		for (const visit of req.team.visit) {
-			if (visit.userId.equals(req.user._id)) {
-				visit.dates.push(Date.now());
-				await req.team.save();
-				return res.send(req.team);
-			}
+		console.log(req.user.visits.length);
+		if (req.user.visits.length >= 8) {
+			const searchDate = req.user.visits.reduce((date, visit) => {
+				if (date > visit.date.getTime()) date = visit.date.getTime();
+				return date;
+			}, Date.now());
+			console.log(searchDate);
+			req.user.visits = req.user.visits.filter(
+				(visit) => !(visit.date.getTime() === searchDate)
+			);
 		}
-		req.team.visit.push({
-			userId: req.user._id,
-			dates: [Date.now()],
+		req.user.visits.push({
+			teamId: req.team._id,
+			date: Date.now(),
 		});
+		await req.user.save();
 		await req.team.save();
 		await req.team.populate('projects').execPopulate();
 		return res.send(req.team);
@@ -143,6 +148,29 @@ async function getMembersHandler(req, res, next) {
 		).lean();
 
 		res.send(requestedMembers);
+	} catch (e) {
+		next(e);
+	}
+}
+
+async function getAllTeams(req, res, next) {
+	try {
+		const options = optionsBuilder(
+			req.query.limit,
+			req.query.skip,
+			req.query.sortBy,
+			req.query.sortValue
+		);
+		const match = matchBuilder(req.query);
+		const requestedTeams = await Team.find(
+			{
+				...match,
+			},
+			selectFields,
+			options
+		).lean();
+
+		res.send(requestedTeams);
 	} catch (e) {
 		next(e);
 	}
@@ -209,4 +237,5 @@ module.exports = {
 	deleteTeamHandler,
 	deleteSingleTeamHandler,
 	getMembersHandler,
+	getAllTeams,
 };

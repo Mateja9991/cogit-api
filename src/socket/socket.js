@@ -21,7 +21,7 @@ class SocketService {
 		});
 		this.io
 			.of('/users')
-			.use(this.middleware)
+			.use(this.middleware.bind(this))
 			.on('connection', this._userOnConnect.bind(this));
 		setInterval(() => this.pingActiveUsers(), PING_INTERVAL);
 	}
@@ -44,20 +44,15 @@ class SocketService {
 	}
 	async middleware(socketClient, next) {
 		try {
-			const user = await jwtSocketAuth(socketClient.handshake.query.token);
-			if (user) {
-				socketClient.user = user;
-				socketClient.join(socketClient.user._id.toString(), function () {});
-				socketClient.emit(SOCKET_EVENTS.NEW_MESSAGE, {
-					text: 'Hello!  ',
-					username: socketClient.user.username,
-				});
-				next();
-			} else {
+			await jwtSocketAuth(socketClient, this.sendEventToRoom.bind(this));
+
+			if (!socketClient.user) {
 				next(new Error('Not Authorized'));
 			}
+			next();
 		} catch (e) {
 			console.log(e.message);
+			next(new Error('Not Authorized'));
 		}
 	}
 	async _userOnConnect(socketClient) {

@@ -6,6 +6,7 @@ const {
 	jwtAuthMiddleware,
 	ownershipAuthMiddleware,
 	teamMemberAuth,
+	adminAuth,
 } = require('../middleware/auth');
 
 const {
@@ -16,6 +17,7 @@ const {
 	updateTeamHandler,
 	deleteTeamHandler,
 	getMembersHandler,
+	getAllTeams,
 } = require('../services/team.service');
 
 const router = new express.Router();
@@ -23,6 +25,8 @@ const router = new express.Router();
 //        ROUTES
 //
 router.post('/teams', jwtAuthMiddleware, createTeamHandler);
+
+router.get('/teams/all', jwtAuthMiddleware, adminAuth, getAllTeams);
 
 router.get('/teams/me', jwtAuthMiddleware, getAllUserTeamsHandler);
 
