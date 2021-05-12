@@ -8,8 +8,8 @@
 // 	}, {});
 // console.log(queryParams.email);
 // console.log(queryParams.password);
-var globalKurac = false;
-// const URL = 'https://cogit-api.herokuapp.com/';
+var globalVariable = false;
+const URL = 'https://cogit-api.herokuapp.com/';
 const URL = 'http://localhost:3000/';
 var socket;
 // fetch(URL + 'users/login', {
@@ -92,7 +92,7 @@ $requestButton.addEventListener('click', async () => {
 				});
 				socket.on('check-connection', (id) => {
 					console.log('still');
-					if (!globalKurac) socket.emit('keep-alive', id);
+					if (!globalVariable) socket.emit('keep-alive', id);
 				});
 				socket.on('new-notification', (notif) => {
 					console.log(notif);
