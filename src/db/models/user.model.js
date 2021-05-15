@@ -238,7 +238,7 @@ userSchema.methods.generateBase64 = async function () {
 	for (var i = 0; i < len; i++) {
 		binary += String.fromCharCode(bytes[i]);
 	}
-	this.image = Buffer.from(binary, 'binary').toString('base64');
+	return Buffer.from(binary, 'binary').toString('base64');
 };
 
 userSchema.methods.generateContactList = async function () {
