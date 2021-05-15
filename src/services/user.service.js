@@ -109,13 +109,23 @@ async function getProfileHandler(req, res, next) {
 
 async function getAvatarHandler(req, res, next) {
 	try {
+		console.log(123);
 		await req.user.populate('avatar').execPopulate();
+
 		if (!req.user.avatar) {
 			res.status(404);
 			throw new Error('User has no avatar.');
 		}
-		res.set('Content-Type', 'image/png');
-		res.send(req.user.avatar.picture);
+		console.log(123);
+		var binary = '';
+		var bytes = new Uint8Array(req.user.avatar.picture);
+		var len = bytes.byteLength;
+		for (var i = 0; i < len; i++) {
+			binary += String.fromCharCode(bytes[i]);
+		}
+		var pic = btoa(binary);
+		console.log(123);
+		res.send({ pic });
 	} catch (e) {
 		next(e);
 	}

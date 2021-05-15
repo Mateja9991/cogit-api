@@ -58,9 +58,9 @@ $requestButton.addEventListener('click', async () => {
 		body: body ? body : undefined,
 	})
 		.then(async (response) => {
-			if (response.headers.get('Content-Type') === 'image/png')
-				return { jsonResponse: response, picture: true };
-			return { jsonResponse: await response.json(), picture: false };
+			const jsonResponse = await response.json();
+			if (jsonResponse.pic) return { jsonResponse, picture: true };
+			return { jsonResponse, picture: false };
 		})
 		.then(({ jsonResponse, picture }) => {
 			if (route === 'users/login' && jsonResponse.token) {
@@ -108,17 +108,9 @@ $requestButton.addEventListener('click', async () => {
 			if (picture) {
 				$response.innerHTML = '';
 				var imageElem = document.createElement('img');
-				jsonResponse.arrayBuffer().then(function (buffer) {
-					var binary = '';
-					var bytes = new Uint8Array(buffer);
-					var len = bytes.byteLength;
-					for (var i = 0; i < len; i++) {
-						binary += String.fromCharCode(bytes[i]);
-					}
-					var pic = window.btoa(binary);
-					imageElem.src = 'data:image/png;base64,' + pic;
-					$response.appendChild(imageElem);
-				});
+
+				imageElem.src = 'data:image/png;base64,' + jsonResponse.pic;
+				$response.appendChild(imageElem);
 			} else {
 				$response.innerHTML = '';
 				keys.forEach((key) => {

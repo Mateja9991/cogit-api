@@ -218,6 +218,15 @@ userSchema.methods.toJSON = function () {
 	delete userObject.createdAt;
 	delete userObject.updatedAt;
 	delete userObject.__v;
+	if (userObject.avatar) {
+		var binary = '';
+		var bytes = new Uint8Array(userObject.avatar.picture);
+		var len = bytes.byteLength;
+		for (var i = 0; i < len; i++) {
+			binary += String.fromCharCode(bytes[i]);
+		}
+		userObject.avatar = btoa(binary);
+	}
 
 	return userObject;
 };
