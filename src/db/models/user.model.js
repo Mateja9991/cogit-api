@@ -208,7 +208,6 @@ userSchema.methods.toJSON = function () {
 	const user = this;
 	const userObject = user.toObject();
 
-	delete userObject.avatar;
 	delete userObject.password;
 	delete userObject.notifications;
 	delete userObject.invitations;
@@ -229,6 +228,17 @@ userSchema.methods.updateContacts = async function (sendEvent, event, msg) {
 		const updatedContacts = await contact.generateContactList();
 		sendEvent(contact._id, event, { updatedContacts, msg }, 'users');
 	}
+};
+
+userSchema.methods.generateBase64 = async function () {
+	await this.populate('avatar').execPopulate();
+	var binary = '';
+	var bytes = new Uint8Array(this.avatar.picture);
+	var len = bytes.byteLength;
+	for (var i = 0; i < len; i++) {
+		binary += String.fromCharCode(bytes[i]);
+	}
+	this.avatar.picture = Buffer.from(binary, 'binary').toString('base64');
 };
 
 userSchema.methods.generateContactList = async function () {

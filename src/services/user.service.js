@@ -104,19 +104,19 @@ async function logoutUserHandler(req, res, next) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 async function getProfileHandler(req, res, next) {
 	req.user.populate('teams');
+	await req.user.generateBase64();
 	res.send(req.user);
 }
 
 async function getAvatarHandler(req, res, next) {
 	try {
-		console.log(123);
 		await req.user.populate('avatar').execPopulate();
 
 		if (!req.user.avatar) {
 			res.status(404);
 			throw new Error('User has no avatar.');
 		}
-		console.log(123);
+
 		var binary = '';
 		var bytes = new Uint8Array(req.user.avatar.picture);
 		var len = bytes.byteLength;
@@ -124,7 +124,6 @@ async function getAvatarHandler(req, res, next) {
 			binary += String.fromCharCode(bytes[i]);
 		}
 		var pic = Buffer.from(binary, 'binary').toString('base64');
-		console.log(123);
 		res.send({ pic });
 	} catch (e) {
 		next(e);
