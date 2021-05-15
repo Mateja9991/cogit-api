@@ -16,7 +16,6 @@ const {
 	getMyProjectsHandler,
 	getSpecificProjectHandler,
 	updateProjectHandler,
-	addLinkToProjectHandler,
 	deleteProjectHandler,
 } = require('../services/project.service');
 
@@ -58,13 +57,6 @@ router.patch(
 	jwtAuthMiddleware,
 	projectToLeaderAuth,
 	updateProjectHandler
-);
-
-router.patch(
-	'/projects/links/:projectId',
-	jwtAuthMiddleware,
-	projectToMemberAuth,
-	addLinkToProjectHandler
 );
 
 router.delete(

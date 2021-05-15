@@ -7,7 +7,9 @@ const {
 	queryHandler,
 	matchBuilder,
 	destructureObject,
-} = require('./utils/services.utils');
+	newNotification,
+	notifyUsers,
+} = require('./utils');
 //
 //				ROUTER HANDLERS
 //
@@ -29,7 +31,7 @@ async function createTeamHandler(req, res, next) {
 		await team.save();
 		req.user.teams.push(team._id);
 		await req.user.save();
-		newSessionHandler(undefined, team._id);
+		await newSessionHandler(undefined, team._id);
 		res.send(team);
 	} catch (e) {
 		next(e);
@@ -179,6 +181,7 @@ async function getAllTeams(req, res, next) {
 async function updateTeamHandler(req, res, next) {
 	const updates = Object.keys(req.body);
 	const allowedToUpdate = ['name', 'leaderId'];
+	const oldName = req.team.name;
 	const isValidUpdate = updates.every((update) =>
 		allowedToUpdate.includes(update)
 	);
@@ -188,9 +191,15 @@ async function updateTeamHandler(req, res, next) {
 			res.status(422);
 			throw new Error('Invalid update fields');
 		}
-		// await duplicateHandler(Team, 'leaderId', req.user._id, req.body);
 		updates.forEach((update) => {
 			req.team[update] = req.body[update];
+		});
+		const users = await User.find({ teams: req.team._id });
+		await notifyUsers(users, {
+			event: {
+				text: `${req.user.username} has updated team ${oldName}.`,
+				reference: req.team,
+			},
 		});
 		await req.team.save();
 		res.send(req.team);
@@ -199,6 +208,26 @@ async function updateTeamHandler(req, res, next) {
 	}
 }
 
+async function addNoteToTeamHandler(req, res, next) {
+	const updates = Object.keys(req.body);
+
+	try {
+		if (!updates.includes('note')) {
+			res.status(400);
+			throw new Error('Invalid update fields.');
+		}
+		// const url = new URL(updates.link);
+		// if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+		// 	res.status(422);
+		// 	throw new Error('Invalid protocol');
+		// }
+		req.team.notes.push(updates.note);
+		await req.team.save();
+		res.send(req.team);
+	} catch (e) {
+		next(e);
+	}
+}
 async function deleteTeamHandler(req, res, next) {
 	try {
 		await deleteSingleTeamHandler(req.team);
@@ -238,4 +267,5 @@ module.exports = {
 	deleteSingleTeamHandler,
 	getMembersHandler,
 	getAllTeams,
+	addNoteToTeamHandler,
 };

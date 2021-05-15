@@ -15,6 +15,7 @@ const {
 	getLeaderTeamsHandler,
 	getTeamHandler,
 	updateTeamHandler,
+	addNoteToTeamHandler,
 	deleteTeamHandler,
 	getMembersHandler,
 	getAllTeams,
@@ -39,6 +40,13 @@ router.get(
 	jwtAuthMiddleware,
 	teamMemberAuth,
 	getMembersHandler
+);
+
+router.patch(
+	'/teams/:teamId/notes',
+	jwtAuthMiddleware,
+	teamMemberAuth,
+	addNoteToTeamHandler
 );
 
 router.patch(

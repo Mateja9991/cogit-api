@@ -5,7 +5,9 @@ const {
 	matchBuilder,
 	queryHandler,
 	destructureObject,
-} = require('./utils/services.utils');
+	newNotification,
+	notifyUsers,
+} = require('./utils');
 
 const { MODEL_PROPERTIES } = require('../constants');
 const selectFields = MODEL_PROPERTIES.COMMENT.SELECT_FIELDS;
@@ -20,6 +22,12 @@ async function createCommentHandler(req, res, next) {
 			taskId: req.task._id,
 		});
 		await comment.save();
+		await notifyUsers(req.task.editors, {
+			event: {
+				text: `${req.user.username} has posted a comment on your task ${req.task.name}.`,
+				reference: comment,
+			},
+		});
 		res.send(comment);
 	} catch (e) {
 		next(e);

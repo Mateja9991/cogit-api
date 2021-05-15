@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 const Avatar = require('./avatar.model');
 const Session = require('./session.model');
 const Message = require('./message.model');
-const { MODEL_PROPERTIES } = require('../../constants');
+const { MODEL_PROPERTIES, TIME_VALUES } = require('../../constants');
 //
 //              Schema
 //
@@ -42,6 +42,12 @@ const userSchema = new Schema(
 		},
 		active: { type: Boolean, default: false },
 		lastActiveAt: Date,
+		resetToken: {
+			key: { type: String },
+			expiresIn: {
+				type: Date,
+			},
+		},
 		teams: [
 			{
 				type: Schema.Types.ObjectId,
@@ -126,16 +132,6 @@ const userSchema = new Schema(
 						type: Schema.Types.ObjectId,
 						required: true,
 					},
-					eventType: {
-						type: String,
-						enum: [
-							'invitation',
-							'assignment',
-							'message',
-							'invitation_accepted',
-						],
-						required: true,
-					},
 				},
 				receivedAt: {
 					type: Date,
@@ -160,6 +156,9 @@ userSchema.pre('save', async function (next) {
 	if (this.isModified('password')) {
 		this.password = await bcrypt.hash(this.password, 8);
 	}
+	if (this.isModified('resetToken') && this.resetToken) {
+		this.resetToken.key = await bcrypt.hash(this.resetToken.key, 8);
+	}
 	if (!this.avatar) {
 		const defaultAvatar = await Avatar.getDefaultAvatar();
 		if (!defaultAvatar) {
@@ -167,23 +166,14 @@ userSchema.pre('save', async function (next) {
 			const skip = Math.floor(Math.random() * count);
 			this.avatar = await Avatar.findOne({}).skip(skip);
 			console.log('NO DEFAULT');
-			return;
-		}
-		this.avatar = defaultAvatar;
-	}
-	if (this.isModified('visits')) {
-		for (const visit of this.visits) {
-			if (!this.teams.includes(visit.teamId))
-				throw new Error('team visited save hook failed.');
+		} else {
+			this.avatar = defaultAvatar;
 		}
 	}
-	if (this.isModified('settings')) {
-		await this.settings.populate('projectView').execPopulate();
-		await this.populate('teams').execPopulate();
-		for (const projectView of this.settings.projectView) {
-			if (!this.teams.includes(projectView.teamId))
-				throw new Error('project View save hook failed.');
-		}
+	await this.settings.populate('projectView.reference').execPopulate();
+	for (const projectView of this.settings.projectView) {
+		if (!this.teams.includes(projectView.reference.teamId))
+			throw new Error('Invalid projectId');
 	}
 	next();
 });
@@ -217,16 +207,18 @@ userSchema.statics.generateTag = async () => {
 userSchema.methods.toJSON = function () {
 	const user = this;
 	const userObject = user.toObject();
+
 	delete userObject.avatar;
 	delete userObject.password;
-	delete userObject.createdAt;
-	delete userObject.updatedAt;
-	delete userObject.visits;
-	delete userObject.__v;
 	delete userObject.notifications;
 	delete userObject.invitations;
 	delete userObject.role;
 	delete userObject.teams;
+	delete userObject.resetToken;
+	delete userObject.createdAt;
+	delete userObject.updatedAt;
+	delete userObject.__v;
+
 	return userObject;
 };
 

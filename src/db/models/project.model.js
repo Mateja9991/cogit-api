@@ -36,12 +36,6 @@ const projectSchema = new Schema(
 			type: String,
 			required: true,
 		},
-		links: [
-			{
-				type: String,
-				required: true,
-			},
-		],
 	},
 	{
 		timestamps: true,

@@ -28,6 +28,8 @@ const {
 	setAvatarHandler,
 	getAvatarHandler,
 	updateSettingsHandler,
+	sendResetTokenHandler,
+	changePasswordHandler,
 } = require('../services/user.service');
 
 const router = new express.Router();
@@ -114,6 +116,10 @@ router.patch(
 	jwtAuthMiddleware,
 	setAvatarHandler
 );
+
+router.patch('/users/:email/send-token', sendResetTokenHandler);
+
+router.patch('/users/:email/change-password/:key', changePasswordHandler);
 
 router.delete('/users/me', jwtAuthMiddleware, deleteUserHandler);
 

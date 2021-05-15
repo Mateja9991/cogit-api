@@ -1,16 +1,17 @@
-const { Task } = require('../db/models');
+const { Task, List } = require('../db/models');
 
 const Socket = require('../socket/socket');
 const { SOCKET_EVENTS } = require('../constants');
 
 const {
-	duplicateHandler,
 	queryHandler,
 	optionsBuilder,
 	matchBuilder,
 	scheduleJobHandler,
 	destructureObject,
-} = require('./utils/services.utils');
+	notifyUsers,
+	newNotification,
+} = require('./utils');
 
 const { MODEL_PROPERTIES } = require('../constants');
 const selectFields = MODEL_PROPERTIES.TASK.SELECT_FIELDS;
@@ -238,7 +239,15 @@ async function setTeamsPriorityHandler(req, res, next) {
 
 async function changeListHandler(req, res, next) {
 	try {
+		await req.task.populate('listId').execPopulate();
+		const oldList = req.task.listId;
 		req.task.listId = req.params.listId;
+		notifyUsers(req.task.editors, {
+			event: {
+				text: `${req.user.username} has moved task ${req.task.name}. It's moved from list ${oldList.name} to ${req.list.name}.`,
+				reference: req.list,
+			},
+		});
 		await req.task.save();
 		res.send({ success: true });
 	} catch (e) {
@@ -253,26 +262,13 @@ async function assignUserHandler(req, res, next) {
 			throw new Error('Already assigned');
 		}
 		req.task.editors.push(req.assignee._id);
-
-		Socket.sendEventToRoom(
-			req.assignee._id,
-			SOCKET_EVENTS.NEW_NOTIFICATION,
-			{
-				assignedTo: req.task,
-			},
-			'users'
-		);
-		const newEvent = {
+		await newNotification(req.assignee, {
 			event: {
-				text: 'You have been assigned to new task.',
-				reference: req.task._id,
-				eventType: 'assignment',
+				text: `${req.user.username} assigned you to task:'${req.task.name}'.`,
+				reference: task,
 			},
-			receivedAt: Date.now(),
-		};
-		req.assignee.notifications.push(newEvent);
+		});
 
-		await req.assignee.save();
 		await req.task.save();
 
 		scheduleJobHandler(

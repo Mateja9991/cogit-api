@@ -1,17 +1,21 @@
+const bcrypt = require('bcryptjs');
+
 const Socket = require('../socket/socket');
 const { SOCKET_EVENTS } = require('../constants/socket_events');
 const { User, Project, Task, Avatar, Calendar, Team } = require('../db/models');
 const mongoose = require('mongoose');
-
+const timeValues = require('../constants/time_values');
 const { deleteSingleTeamHandler } = require('./team.service');
 
 const {
+	sendResetTokenMail,
 	optionsBuilder,
 	matchBuilder,
 	queryHandler,
 	scheduleJobHandler,
 	destructureObject,
-} = require('./utils/services.utils');
+	newNotification,
+} = require('./utils');
 
 const {
 	getSessionMessagesHandler,
@@ -20,6 +24,7 @@ const {
 } = require('./session.service');
 
 const { MODEL_PROPERTIES } = require('../constants');
+const { getMaxListeners } = require('node:process');
 const selectFields = MODEL_PROPERTIES.USER.SELECT_FIELDS;
 const allowedKeys = MODEL_PROPERTIES.USER.ALLOWED_KEYS;
 
@@ -302,27 +307,13 @@ async function sendTeamInvitationHandler(req, res, next) {
 		}
 
 		user.invitations.push({ teamId: req.team._id, receivedAt: Date.now() });
-
-		Socket.sendEventToRoom(
-			user._id,
-			SOCKET_EVENTS.NEW_NOTIFICATION,
-			{
-				event: 'You have been invited.',
-			},
-			'users'
-		);
-
-		const newEvent = {
+		await newNotification(user, {
 			event: {
-				text: 'You have been invited to new team.',
-				reference: req.team._id,
-				eventType: 'invitation',
+				text: `${req.user.username} invited you to join his team '${req.team.name}'.`,
+				reference: req.team,
 			},
-			receivedAt: Date.now(),
-		};
-		user.notifications.push(newEvent);
+		});
 
-		await user.save();
 		res.send({ success: true });
 	} catch (e) {
 		next(e);
@@ -350,24 +341,12 @@ async function acceptTeamInvitationHandler(req, res, next) {
 		await addParticipantHandler(team._id, req.user._id);
 		await req.user.save();
 		await team.populate('leaderId').execPopulate();
-		Socket.sendEventToRoom(
-			team.leaderId._id,
-			SOCKET_EVENTS.NEW_NOTIFICATION,
-			{
-				event: 'Invitation accepted.',
-			},
-			'users'
-		);
-		const newEvent = {
+		await newNotification(team.leaderId, {
 			event: {
 				text: `User ${req.user.username} has accepted your invitation.`,
-				reference: team._id,
-				eventType: 'invitation_accepted',
+				reference: team,
 			},
-			receivedAt: Date.now(),
-		};
-		team.leaderId.notifications.push(newEvent);
-		await team.leaderId.save();
+		});
 
 		const projects = await Project.find({ teamId: team._id });
 		for (const project of projects) {
@@ -401,8 +380,8 @@ async function declineTeamInvitationHandler(req, res, next) {
 async function updateSettingsHandler(req, res, next) {
 	try {
 		const updates = Object.keys(req.body);
-		const isValidUpdate = allowedKeys.SETTINGS.every((update) =>
-			settings.includes(update)
+		const isValidUpdate = updates.every((update) =>
+			allowedKeys.SETTINGS.includes(update)
 		);
 		if (!isValidUpdate) {
 			res.status(422);
@@ -426,6 +405,61 @@ async function updateSettingsHandler(req, res, next) {
 		});
 		await req.user.save();
 		res.send(req.user.settings);
+	} catch (e) {
+		next(e);
+	}
+}
+
+async function sendResetTokenHandler(req, res, next) {
+	try {
+		const user = await User.findOne({ email: req.params.email });
+		if (!user) {
+			res.status(404);
+			throw new Error('User not found.');
+		}
+		const key = generateKey(6);
+		user.resetToken = {
+			key,
+			expiresIn: new Date(Date.now() + timeValues.hour),
+		};
+		await user.save();
+		sendResetTokenMail('zlatanovic007@gmail.com', key);
+		res.send(user);
+	} catch (e) {
+		next(e);
+	}
+}
+function generateKey(len) {
+	let key = '';
+	for (let i = 0; i < len; i++) key += Math.floor(Math.random() * 10);
+	return key;
+}
+async function changePasswordHandler(req, res, next) {
+	try {
+		const user = await User.findOne({ email: req.params.email });
+		if (!user) {
+			res.status(404);
+			throw new Error('User not found.');
+		}
+		const rtKey = user.resetToken.key;
+		if (
+			user.resetToken &&
+			(user.resetToken.expiresIn.getTime() < Date.now() ||
+				!(await bcrypt.compare(req.params.key, rtKey)))
+		) {
+			throw new Error('Invalid reset token');
+		}
+		user.resetToken.expiresIn = new Date(Date.now());
+		await user.save();
+		console.log(user.resetToken);
+		const token = await user.generateAuthToken();
+		await user.updateContacts(
+			Socket.sendEventToRoom.bind(Socket),
+			SOCKET_EVENTS.USER_DISCONNECTED,
+			'connected'
+		);
+
+		res.send({ user, token });
 	} catch (e) {
 		next(e);
 	}
@@ -514,4 +548,6 @@ module.exports = {
 	setAvatarHandler,
 	getAvatarHandler,
 	updateSettingsHandler,
+	sendResetTokenHandler,
+	changePasswordHandler,
 };

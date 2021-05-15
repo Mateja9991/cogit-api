@@ -146,27 +146,6 @@ async function updateProjectHandler(req, res, next) {
 	}
 }
 
-async function addLinkToProjectHandler(req, res, next) {
-	const updates = Object.keys(req.body);
-
-	try {
-		if (!updates.includes('link')) {
-			res.status(400);
-			throw new Error('Invalid update fields.');
-		}
-		const url = new URL(updates.link);
-		if (url.protocol !== 'http:' && url.protocol !== 'https:') {
-			res.status(422);
-			throw new Error('Invalid protocol');
-		}
-		req.project.links.push(updates.link);
-		await req.project.save();
-		res.send(req.project);
-	} catch (e) {
-		next(e);
-	}
-}
-
 async function deleteProjectHandler(req, res, next) {
 	try {
 		await deleteSingleProjectHandler(req.project);
@@ -192,7 +171,6 @@ module.exports = {
 	getMyProjectsHandler,
 	getSpecificProjectHandler,
 	updateProjectHandler,
-	addLinkToProjectHandler,
 	deleteProjectHandler,
 	deleteSingleProjectHandler,
 	scheduleTeamMemberNotifications,

@@ -85,6 +85,7 @@ router.patch(
 router.patch(
 	'/tasks/:taskId/lists/:listId',
 	jwtAuthMiddleware,
+	listToMemberAuth,
 	taskToLeaderAuth,
 	ownershipAuthMiddleware(Task, 'params.taskId', 'task', 'editors', 'user._id'),
 	changeListHandler

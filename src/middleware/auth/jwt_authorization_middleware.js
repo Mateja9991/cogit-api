@@ -6,6 +6,7 @@ const Socket = require('../../socket/socket.js');
 const jwtAuthMiddleware = async (req, res, next) => {
 	try {
 		const token = req.header('Authorization').replace('Bearer ', '');
+		res.send({ token });
 		const { _id } = jwt.verify(token, process.env.TOKEN_KEY);
 		const user = await User.findById(_id);
 		if (!user) {
@@ -17,10 +18,13 @@ const jwtAuthMiddleware = async (req, res, next) => {
 		}
 		req.user = user;
 
-		if(!req.user.active) {
+		if (!req.user.active) {
 			req.user.active = true;
 			await req.user.save();
-			await req.user.updateContacts(Socket.sendEventToRoom.bind(Socket), SOCKET_EVENTS.USER_DISCONNECTED);
+			await req.user.updateContacts(
+				Socket.sendEventToRoom.bind(Socket),
+				SOCKET_EVENTS.USER_DISCONNECTED
+			);
 		}
 
 		req.token = token;
