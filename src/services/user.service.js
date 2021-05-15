@@ -104,7 +104,7 @@ async function logoutUserHandler(req, res, next) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 async function getProfileHandler(req, res, next) {
 	//req.user.populate('teams');
-	req.user.image = await req.user.generateBase64();
+	req.user.avatar.picture = await req.user.generateBase64();
 	res.send(req.user);
 }
 
