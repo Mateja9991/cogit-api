@@ -24,7 +24,7 @@ const {
 } = require('./session.service');
 
 const { MODEL_PROPERTIES } = require('../constants');
-const { getMaxListeners } = require('node:process');
+
 const selectFields = MODEL_PROPERTIES.USER.SELECT_FIELDS;
 const allowedKeys = MODEL_PROPERTIES.USER.ALLOWED_KEYS;
 
