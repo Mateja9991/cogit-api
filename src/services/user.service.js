@@ -123,7 +123,7 @@ async function getAvatarHandler(req, res, next) {
 		for (var i = 0; i < len; i++) {
 			binary += String.fromCharCode(bytes[i]);
 		}
-		var pic = btoa(binary);
+		var pic = Buffer.from(binary, 'binary').toString('base64');
 		console.log(123);
 		res.send({ pic });
 	} catch (e) {
