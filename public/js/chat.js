@@ -9,8 +9,8 @@
 // console.log(queryParams.email);
 // console.log(queryParams.password);
 var globalVariable = false;
-// const URL = 'https://cogit-api.herokuapp.com/';
-const URL = 'http://localhost:3000/';
+const URL = 'https://cogit-api.herokuapp.com/';
+//const URL = 'http://localhost:3000/';
 var socket;
 // fetch(URL + 'users/login', {
 // 	method: 'POST',
