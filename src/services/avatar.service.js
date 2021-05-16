@@ -35,8 +35,8 @@ async function getAllAvatarsHandler(req, res, next) {
 async function getOneAvatarHandler(req, res, next) {
 	try {
 		const avatar = await Avatar.findById(req.params.avatarId);
-		res.set('Content-Type', 'image/png');
-		res.send(avatar.picture);
+		// res.set('Content-Type', 'image/png');
+		res.send(avatar);
 	} catch (e) {
 		next(e);
 	}

@@ -232,13 +232,7 @@ userSchema.methods.updateContacts = async function (sendEvent, event, msg) {
 
 userSchema.methods.generateBase64 = async function () {
 	await this.populate('avatar').execPopulate();
-	var binary = '';
-	var bytes = new Uint8Array(this.avatar.picture);
-	var len = bytes.byteLength;
-	for (var i = 0; i < len; i++) {
-		binary += String.fromCharCode(bytes[i]);
-	}
-	return Buffer.from(binary, 'binary').toString('base64');
+	return this.avatar.generateBase64();
 };
 
 userSchema.methods.generateContactList = async function () {

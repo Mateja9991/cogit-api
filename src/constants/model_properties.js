@@ -95,7 +95,7 @@ const MODEL_PROPERTIES = {
 			CREATE: ['name'],
 			UPDATE: ['name'],
 		},
-		SELECT_FIELDS: ' _id id ',
+		SELECT_FIELDS: ' _id name picture id ',
 	},
 };
 
