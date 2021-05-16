@@ -272,12 +272,24 @@ async function getSingleUserHandler(queryObject) {
 //
 
 async function updateUserHandler(req, res, next) {
-	const updates = Object.keys(req.body);
-	const isValidUpdate = updates.every((update) =>
-		allowedKeys.UPDATE.includes(update)
-	);
-
 	try {
+		const updates = Object.keys(req.body);
+		if (updates.includes('password')) {
+			if (updates.includes('oldPassword')) {
+				await req.user.checkPassword(req.body.oldPassword);
+				console.log(123);
+				updates.splice(
+					updates.findIndex((update) => update === 'oldPassword'),
+					1
+				);
+			} else {
+				throw new Error('Old Password Not Found.');
+			}
+		}
+		console.log(updates);
+		const isValidUpdate = updates.every((update) =>
+			allowedKeys.UPDATE.includes(update)
+		);
 		if (!isValidUpdate) {
 			res.status(422);
 			throw new Error('Invalid update fields.');

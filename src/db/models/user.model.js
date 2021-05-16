@@ -174,17 +174,20 @@ userSchema.pre('save', async function (next) {
 //
 //              Model methods
 //
-userSchema.statics.findByCredentials = async (tag, password) => {
+userSchema.statics.findByCredentials = async function (tag, password) {
 	let user;
 	if (validator.isEmail(tag)) user = await User.findOne({ email: tag });
 	else user = await User.findOne({ username: tag });
 	if (!user) {
 		throw new Error('Unable to login.');
 	}
-	if (!(await bcrypt.compare(password, user.password))) {
-		throw new Error('Unable to login.');
-	}
+	await user.checkPassword(password);
 	return user;
+};
+userSchema.methods.checkPassword = async function (password) {
+	if (!(await bcrypt.compare(password, this.password))) {
+		throw new Error('Incorrect password.');
+	}
 };
 userSchema.statics.generateTag = async () => {
 	const lastTag = await User.countDocuments({});
