@@ -117,13 +117,6 @@ async function getAvatarHandler(req, res, next) {
 			throw new Error('User has no avatar.');
 		}
 
-		var binary = '';
-		var bytes = new Uint8Array(req.user.avatar.picture);
-		var len = bytes.byteLength;
-		for (var i = 0; i < len; i++) {
-			binary += String.fromCharCode(bytes[i]);
-		}
-		var pic = Buffer.from(binary, 'binary').toString('base64');
 		res.send({ pic });
 	} catch (e) {
 		next(e);

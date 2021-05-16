@@ -166,8 +166,6 @@ userSchema.pre('save', async function (next) {
 			const skip = Math.floor(Math.random() * count);
 			this.avatar = await Avatar.findOne({}).skip(skip);
 			console.log('NO DEFAULT');
-		} else {
-			this.avatar = defaultAvatar;
 		}
 	}
 	await this.settings.populate('projectView.reference').execPopulate();
@@ -231,8 +229,11 @@ userSchema.methods.updateContacts = async function (sendEvent, event, msg) {
 };
 
 userSchema.methods.generateBase64 = async function () {
-	await this.populate('avatar').execPopulate();
-	return this.avatar.generateBase64();
+	if (this.avatar) {
+		await this.populate('avatar').execPopulate();
+		return this.avatar.generateBase64();
+	}
+	return await Avatar.getDefaultAvatar();
 };
 
 userSchema.methods.generateContactList = async function () {
