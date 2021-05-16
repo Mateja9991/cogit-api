@@ -9,7 +9,7 @@ async function uploadAvatarHandler(req, res, next) {
 	try {
 		const avatarObject = destructureObject(req.body, allowedKeys.CREATE);
 		const avatarBuffer = await sharp(req.file.buffer)
-			.resize({ width: 250, height: 250 })
+			.resize({ width: 150, height: 150 })
 			.png()
 			.toBuffer();
 		const newAvatar = new Avatar({
