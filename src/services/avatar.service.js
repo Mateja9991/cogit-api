@@ -42,28 +42,6 @@ async function getOneAvatarHandler(req, res, next) {
 	}
 }
 
-async function setDefaultAvatarHandler(req, res, next) {
-	try {
-		const newDefault = await Avatar.findById(req.params.avatarId);
-		if (!newDefault) {
-			res.status(404);
-			throw new Error('Avatar not found.');
-		}
-		const allAvatars = await Avatar.find({});
-		for (const avatar of allAvatars) {
-			if (avatar.isDefault) {
-				avatar.isDefault = false;
-				await avatar.save();
-			}
-		}
-		newDefault.isDefault = true;
-		await newDefault.save();
-		res.send({ success: true });
-	} catch (e) {
-		next(e);
-	}
-}
-
 async function deleteAvatarHandler(req, res, next) {
 	try {
 		await Avatar.findOneAndDelete({ _id: req.params.avatarId });
@@ -77,6 +55,5 @@ module.exports = {
 	uploadAvatarHandler,
 	getAllAvatarsHandler,
 	getOneAvatarHandler,
-	setDefaultAvatarHandler,
 	deleteAvatarHandler,
 };

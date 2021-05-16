@@ -14,18 +14,10 @@ const avatarSchema = new Schema({
 		type: Buffer,
 		required: true,
 	},
-	isDefault: {
-		type: Boolean,
-		default: false,
-	},
 });
 //
 //
 //
-avatarSchema.statics.getDefaultAvatar = async function () {
-	const defaultAvatar = await Avatar.findOne({ isDefault: true });
-	return defaultAvatar;
-};
 
 avatarSchema.methods.generateBase64 = function () {
 	var binary = '';

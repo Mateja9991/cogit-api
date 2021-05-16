@@ -160,13 +160,9 @@ userSchema.pre('save', async function (next) {
 		this.resetToken.key = await bcrypt.hash(this.resetToken.key, 8);
 	}
 	if (!this.avatar) {
-		const defaultAvatar = await Avatar.getDefaultAvatar();
-		if (!defaultAvatar) {
-			const count = await Avatar.countDocuments();
-			const skip = Math.floor(Math.random() * count);
-			this.avatar = await Avatar.findOne({}).skip(skip);
-			console.log('NO DEFAULT');
-		}
+		const count = await Avatar.countDocuments();
+		const skip = Math.floor(Math.random() * count);
+		this.avatar = await Avatar.findOne({}).skip(skip);
 	}
 	await this.settings.populate('projectView.reference').execPopulate();
 	for (const projectView of this.settings.projectView) {
@@ -229,11 +225,8 @@ userSchema.methods.updateContacts = async function (sendEvent, event, msg) {
 };
 
 userSchema.methods.generateBase64 = async function () {
-	if (this.avatar) {
-		await this.populate('avatar').execPopulate();
-		return this.avatar.generateBase64();
-	}
-	return await Avatar.getDefaultAvatar();
+	await this.populate('avatar').execPopulate();
+	return this.avatar.generateBase64();
 };
 
 userSchema.methods.generateContactList = async function () {
