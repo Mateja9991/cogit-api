@@ -84,8 +84,8 @@ async function setAvatarHandler(req, res, next) {
 		}
 		req.user.avatar = req.params.avatarId;
 		await req.user.save();
-		res.set('Content-Type', 'image/png');
-		res.send(avatar.picture);
+		req.user.avatar.picture = await req.user.generateBase64();
+		res.send(req.user.avatar);
 	} catch (e) {
 		next(e);
 	}
