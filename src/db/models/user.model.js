@@ -30,7 +30,7 @@ const userSchema = new Schema(
 			lowercase: true,
 			validate(value) {
 				if (!validator.isEmail(value)) {
-					throw new Error('Not an email.');
+					throw new Error('Email is not valid.');
 				}
 			},
 		},
@@ -38,7 +38,7 @@ const userSchema = new Schema(
 			type: String,
 			required: true,
 			trim: true,
-			minlength: [7, 'Password too short (<7).'],
+			minlength: [7, 'Password too short (must be at least 7 characters).'],
 		},
 		active: { type: Boolean, default: false },
 		lastActiveAt: Date,

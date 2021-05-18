@@ -1,5 +1,6 @@
 const express = require('express');
 const path = require('path');
+const { errorHandler } = require('./utils');
 const router = new express.Router();
 
 router.use(function (req, res, next) {
@@ -21,5 +22,7 @@ router.use(require('./comment.router'));
 router.use(require('./session.router'));
 router.use(require('./user.router'));
 router.use(require('./avatar.router'));
+
+router.use(errorHandler);
 
 module.exports = router;

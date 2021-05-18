@@ -22,13 +22,6 @@ app.use(express.json());
 app.use(router);
 app.use(express.static(publicPath));
 
-app.use(function (err, req, res, next) {
-	console.log('error: ', err, '	status code: ', res.statusCode);
-	if (res.statusCode < 400) res.status(400);
-
-	return res.json({ error: err.message });
-});
-
 server.listen(port, () => {
 	console.log(`Server is up on port: ${port}`);
 });
