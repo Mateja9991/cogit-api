@@ -1,8 +1,30 @@
-function duplicateErrorHandler(err, res) {
+const models = require('../../db/models/');
+
+async function duplicateErrorHandler(err, res) {
 	const statusCode = 409;
-	const field = Object.keys(err.keyValue);
-	const message = `User with that ${field} already exists.`;
-	res.status(statusCode).send({ error: message, field });
+	const fields = Object.keys(err.keyValue);
+	console.log(err);
+	let message = '';
+	let model = '';
+	let document;
+	for (const field of fields) {
+		if (field.includes('Id')) {
+			let lowercase = field.replace('Id', '');
+			model = lowercase.charAt(0).toUpperCase() + lowercase.slice(1);
+			if (model === 'Leader') model = 'User';
+			console.log(model);
+			document = await models[model].findById(err.keyValue[field]);
+			console.log(document);
+		}
+	}
+	if (document.name || document.username) {
+		message = `${model} '${
+			document.name || document.username
+		}' alredy has instance with name '${err.keyValue['name']}'`;
+	} else {
+		message = `Instance with that ${fields} alredy exists.`;
+	}
+	res.status(statusCode).send({ error: message, fields });
 }
 
 function validationErrorHandler(err, res) {
@@ -12,12 +34,12 @@ function validationErrorHandler(err, res) {
 	res.status(statusCode).send({ error: errors, fields });
 }
 
-function errorHandler(err, req, res, next) {
+async function errorHandler(err, req, res, next) {
 	try {
 		if (err.name === 'ValidationError')
 			return (err = validationErrorHandler(err, res));
 		if (err.code && err.code == 11000)
-			return (err = duplicateErrorHandler(err, res));
+			return (err = await duplicateErrorHandler(err, res));
 		else if (res.status < 400) res.status(400);
 		return res.send({ error: err.message });
 	} catch (err) {

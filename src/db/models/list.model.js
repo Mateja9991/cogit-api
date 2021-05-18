@@ -30,7 +30,6 @@ const listSchema = new Schema(
 	}
 );
 listSchema.index({ name: 1, projectId: 1 }, { unique: true });
-listSchema.index({ projectId: 1 });
 //
 //              Virtuals
 //
