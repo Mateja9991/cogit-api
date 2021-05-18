@@ -3,7 +3,8 @@ const models = require('../../db/models/');
 async function duplicateErrorHandler(err, res) {
 	const statusCode = 409;
 	const fields = Object.keys(err.keyValue);
-	console.log(err);
+	Object.keys(err).forEach((key) => console.log(key, ': ', err[key]));
+
 	let message = '';
 	let model = '';
 	let document;
@@ -17,7 +18,7 @@ async function duplicateErrorHandler(err, res) {
 			console.log(document);
 		}
 	}
-	if (document.name || document.username) {
+	if (document && (document.name || document.username)) {
 		message = `${model} '${
 			document.name || document.username
 		}' alredy has instance with name '${err.keyValue['name']}'`;
