@@ -41,7 +41,7 @@ async function errorHandler(err, req, res, next) {
 			return (err = validationErrorHandler(err, res));
 		if (err.code && err.code == 11000)
 			return (err = await duplicateErrorHandler(err, res));
-		else if (res.status < 400) res.status(400);
+		else if (res.statusCode < 400) res.status(400);
 		return res.send({ error: err.message });
 	} catch (err) {
 		res.status(500).send({ error: 'Unknown Error.' });
