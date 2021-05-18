@@ -1,11 +1,11 @@
-function handleDuplicateKeyError(err, res) {
+function duplicateErrorHandler(err, res) {
 	const statusCode = 409;
 	const field = Object.keys(err.keyValue);
 	const message = `User with that ${field} already exists.`;
 	res.status(statusCode).send({ error: message, field });
 }
 
-function handleValidationError(err, res) {
+function validationErrorHandler(err, res) {
 	const statusCode = 422;
 	const errors = Object.values(err.errors).map((err) => err.message);
 	const fields = Object.values(err.errors).map((err) => err.path);
@@ -15,9 +15,9 @@ function handleValidationError(err, res) {
 function errorHandler(err, req, res, next) {
 	try {
 		if (err.name === 'ValidationError')
-			return (err = handleValidationError(err, res));
+			return (err = validationErrorHandler(err, res));
 		if (err.code && err.code == 11000)
-			return (err = handleDuplicateKeyError(err, res));
+			return (err = duplicateErrorHandler(err, res));
 		else if (res.status < 400) res.status(400);
 		return res.send({ error: err.message });
 	} catch (err) {
