@@ -22,6 +22,7 @@ async function createCommentHandler(req, res, next) {
 			taskId: req.task._id,
 		});
 		await comment.save();
+		await req.task.populate('editors').execPopulate();
 		await notifyUsers(req.task.editors, {
 			event: {
 				text: `${req.user.username} has posted a comment on your task ${req.task.name}.`,

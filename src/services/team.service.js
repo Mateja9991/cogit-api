@@ -231,9 +231,8 @@ async function addNoteToTeamHandler(req, res, next) {
 async function deleteTeamHandler(req, res, next) {
 	try {
 		await deleteSingleTeamHandler(req.team);
-		res.send({
-			success: true,
-		});
+		await req.user.populate('teams').execPopulate();
+		res.send(req.user.teams);
 	} catch (e) {
 		next(e);
 	}
@@ -251,10 +250,15 @@ async function deleteSingleTeamHandler(team) {
 	});
 	console.log(users);
 	for (const user of users) {
-		user.teams.splice(user.teams.indexOf(team._id), 1);
+		await newNotification(user, {
+			event: {
+				text: `Team '${team.name}' has been deleted.`,
+				reference: team,
+			},
+		});
+		user.teams = user.teams.filter((teamId) => !teamId.equals(team));
 		await user.save();
 	}
-	console.log(users);
 	await team.remove();
 }
 module.exports = {

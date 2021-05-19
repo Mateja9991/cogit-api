@@ -287,7 +287,10 @@ async function assignUserHandler(req, res, next) {
 
 async function deleteTaskHandler(req, res, next) {
 	try {
-		return res.json(await deleteSingleTaskHandler(req.task));
+		const list = await List.findById(req.task.listId);
+		await deleteSingleTaskHandler(req.task);
+		await list.populate('tasks').execPopulate();
+		return res.json(list.tasks);
 	} catch (e) {
 		next(e);
 	}

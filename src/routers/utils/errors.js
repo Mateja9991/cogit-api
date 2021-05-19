@@ -37,6 +37,7 @@ function validationErrorHandler(err, res) {
 
 async function errorHandler(err, req, res, next) {
 	try {
+		console.log(err);
 		if (err.name === 'ValidationError')
 			return (err = validationErrorHandler(err, res));
 		if (err.code && err.code == 11000)

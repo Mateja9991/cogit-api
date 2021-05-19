@@ -1,4 +1,4 @@
-const { User, Project, Task } = require('../db/models');
+const { User, Project, Task, Team } = require('../db/models');
 const { deleteSingleListHandler } = require('./list.service');
 const {
 	optionsBuilder,
@@ -148,11 +148,10 @@ async function updateProjectHandler(req, res, next) {
 
 async function deleteProjectHandler(req, res, next) {
 	try {
+		const team = await Team.findById(req.project.teamId);
 		await deleteSingleProjectHandler(req.project);
-
-		res.send({
-			success: true,
-		});
+		await team.populate('projects').execPopulate();
+		res.send(team.projects);
 	} catch (e) {
 		next(e);
 	}

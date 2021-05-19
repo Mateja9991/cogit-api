@@ -17,7 +17,7 @@ async function newNotification(user, event) {
 
 async function notifyUsers(users, event) {
 	for (const user of users) {
-		newNotification(editor, event);
+		newNotification(user, event);
 	}
 }
 

@@ -1,4 +1,4 @@
-const { List, Task } = require('../db/models');
+const { List, Task, Project } = require('../db/models');
 const { queryHandler, destructureObject } = require('./utils/services.utils');
 const { deleteSingleTaskHandler } = require('./task.service');
 //
@@ -85,10 +85,10 @@ async function updateListHandler(req, res, next) {
 
 async function deleteListHandler(req, res, next) {
 	try {
+		const project = await Project.findById(req.list.projectId);
 		await deleteSingleListHandler(req.list);
-		res.send({
-			success: true,
-		});
+		await project.populate('lists').execPopulate();
+		res.send(project.lists);
 	} catch (e) {
 		next(e);
 	}
