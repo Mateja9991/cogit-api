@@ -392,6 +392,24 @@ async function declineTeamInvitationHandler(req, res, next) {
 	}
 }
 
+async function leaveTeamHandler(req, res, next) {
+	try {
+		console.log(req.team.leaderId);
+		console.log(req.user._id);
+		if (req.team.leaderId.equals(req.user._id)) {
+			res.status(406);
+			throw new Error('You are Team leader.');
+		}
+		req.user.teams = req.user.teams.filter(
+			(team) => !team.equals(req.team._id)
+		);
+		await req.user.save();
+		res.send({ success: true });
+	} catch (e) {
+		next(e);
+	}
+}
+
 async function updateSettingsHandler(req, res, next) {
 	try {
 		const updates = Object.keys(req.body);
@@ -565,4 +583,5 @@ module.exports = {
 	updateSettingsHandler,
 	sendResetTokenHandler,
 	changePasswordHandler,
+	leaveTeamHandler,
 };

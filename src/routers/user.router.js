@@ -5,6 +5,7 @@ const { Team } = require('../db/models');
 const {
 	jwtAuthMiddleware,
 	ownershipAuthMiddleware,
+	teamMemberAuth,
 } = require('../middleware/auth/index');
 const {
 	createUserHandler,
@@ -30,6 +31,7 @@ const {
 	updateSettingsHandler,
 	sendResetTokenHandler,
 	changePasswordHandler,
+	leaveTeamHandler,
 } = require('../services/user.service');
 
 const router = new express.Router();
@@ -107,6 +109,13 @@ router.patch(
 	'/users/me/decline/teams/:teamId',
 	jwtAuthMiddleware,
 	declineTeamInvitationHandler
+);
+
+router.patch(
+	'/users/me/leave/teams/:teamId',
+	jwtAuthMiddleware,
+	teamMemberAuth,
+	leaveTeamHandler
 );
 
 router.patch('/users/me/settings', jwtAuthMiddleware, updateSettingsHandler);
