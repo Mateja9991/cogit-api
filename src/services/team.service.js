@@ -209,24 +209,24 @@ async function updateTeamHandler(req, res, next) {
 }
 
 async function addNoteToTeamHandler(req, res, next) {
-	const updates = Object.keys(req.body);
-
 	try {
+		const updates = Object.keys(req.body);
 		if (!updates.includes('note')) {
 			res.status(400);
 			throw new Error('Invalid update fields.');
 		}
-		// const url = new URL(updates.link);
-		// if (url.protocol !== 'http:' && url.protocol !== 'https:') {
-		// 	res.status(422);
-		// 	throw new Error('Invalid protocol');
-		// }
-		req.team.notes.push(updates.note);
+		req.team.notes.push(req.body['note']);
+		console.log(req.team.notes);
 		await req.team.save();
 		res.send(req.team);
 	} catch (e) {
 		next(e);
 	}
+	// const url = new URL(updates.link);
+	// if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+	// 	res.status(422);
+	// 	throw new Error('Invalid protocol');
+	// }
 }
 async function deleteTeamHandler(req, res, next) {
 	try {

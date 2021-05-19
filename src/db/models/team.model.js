@@ -18,7 +18,7 @@ const teamSchema = new Schema(
 			{
 				type: String,
 				trim: true,
-				maxlength: [250, 'Note too long (>250).'],
+				maxlength: [300, 'Notes maximum length is  300 characters.'],
 				required: true,
 			},
 		],
