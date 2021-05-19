@@ -404,7 +404,7 @@ async function leaveTeamHandler(req, res, next) {
 			(team) => !team.equals(req.team._id)
 		);
 		await req.user.save();
-		res.send({ success: true });
+		res.send(req.user.teams);
 	} catch (e) {
 		next(e);
 	}
