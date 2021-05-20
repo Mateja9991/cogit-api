@@ -65,7 +65,6 @@ class SocketService {
 		socketClient.on('keep-alive', () => {
 			OnlineUsersServices.connectionAlive(socketClient.user._id);
 		});
-		socketClient.on('checkNotifications', async () => {});
 		socketClient.on('newMessageToSession', async (sessionId, payload) => {
 			sessionId = mongoose.Types.ObjectId(sessionId);
 			await sendMessageToSessionHandler(

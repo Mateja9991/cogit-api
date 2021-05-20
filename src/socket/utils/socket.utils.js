@@ -29,28 +29,28 @@ async function clearNotResponsiveUsers(sendEvent) {
 				offlineUsers.push(pingedUserId);
 				acksMissed[index].count = 0;
 			} else {
-				console.log(acksMissed[index].userId,'		',acksMissed[index].count);
+				console.log(acksMissed[index].userId, '		', acksMissed[index].count);
 				acksMissed[index].count++;
 			}
 		} else {
 			acksMissed.push({ userId: pingedUserId, count: 1 });
 		}
 	}
-	await	updateOfflineUsers(sendEvent);
+	await updateOfflineUsers(sendEvent);
 	pingedUsers = [];
 }
 
 async function updateOfflineUsers(sendEvent) {
 	for (const offlineUserId of offlineUsers) {
 		const offlineUser = await User.findById(offlineUserId);
-				offlineUser.active = false;
-				await offlineUser.save();
-				console.log(offlineUser);
-				await offlineUser.updateContacts(
-					sendEvent,
-					SOCKET_EVENTS.USER_DISCONNECTED,
-					'disconnected'
-				);
+		offlineUser.active = false;
+		await offlineUser.save();
+		console.log(offlineUser);
+		await offlineUser.updateContacts(
+			sendEvent,
+			SOCKET_EVENTS.USER_DISCONNECTED,
+			'disconnected'
+		);
 	}
 	offlineUsers = [];
 }

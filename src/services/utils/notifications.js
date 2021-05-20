@@ -9,7 +9,7 @@ async function newNotification(user, event) {
 		user._id,
 		SOCKET_EVENTS.NEW_NOTIFICATION,
 		{
-			event,
+			notificationNumber: user.notifications.length,
 		},
 		'users'
 	);
