@@ -18,8 +18,8 @@ class SocketService {
 	initializeSocketServer(server) {
 		this.io = socketio(server, {
 			cors: {
-				origin: 'https://example.com',
-				methods: ['GET', 'POST'],
+				origin: '*',
+				methods: '*',
 				allowedHeaders: ['my-custom-header'],
 				credentials: true,
 			},
