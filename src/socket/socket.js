@@ -16,7 +16,14 @@ const { startSession } = require('../db/models/avatar.model');
 
 class SocketService {
 	initializeSocketServer(server) {
-		this.io = socketio(server);
+		this.io = socketio(server, {
+			cors: {
+				origin: 'https://example.com',
+				methods: ['GET', 'POST'],
+				allowedHeaders: ['my-custom-header'],
+				credentials: true,
+			},
+		});
 		this.io.on('connection', () => {
 			console.log('Visitor connected');
 		});
