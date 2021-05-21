@@ -24,7 +24,7 @@ class SocketService {
 				credentials: true,
 			},
 		});
-		this.io.on('connection', () => {
+		this.io.on('connect', () => {
 			console.log('Visitor connected');
 		});
 		this.io
