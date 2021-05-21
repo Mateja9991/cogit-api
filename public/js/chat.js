@@ -8,11 +8,7 @@
 // 	}, {});
 // console.log(queryParams.email);
 // console.log(queryParams.password);
-socket = io('/users', {});
-socket.on('check-connection', (id) => {
-	console.log('still');
-	socket.emit('keep-alive', id);
-});
+
 var globalVariable = false;
 const URL = 'https://cogit-api.herokuapp.com/';
 // const URL = 'http://localhost:3000/';
@@ -69,6 +65,11 @@ $requestButton.addEventListener('click', async () => {
 		})
 		.then(({ jsonResponse, picture }) => {
 			if (route === 'users/login' && jsonResponse.token) {
+				socket = io('/users', {});
+				socket.on('check-connection', (id) => {
+					console.log('still');
+					socket.emit('keep-alive', id);
+				});
 				if (socket) socket.emit('logout', {});
 				fetchedToken = jsonResponse.token;
 				socket.on('connect_error', (err) => {
