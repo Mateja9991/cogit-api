@@ -143,23 +143,20 @@ async function getAllNotificationsHandler(req, res, next) {
 			req.query,
 			selectFields
 		);
-
-		//// ZASTO?!
-
-		// let i = 0;
-		// let subArray;
-		// let result = [];
-		// console.log(requestedNotifications[i]);
-		// while (i < requestedNotifications.length) {
-		// 	subArray = requestedNotifications.filter((notif) =>
-		// 		sortBy ? notif[sortBy] === requestedNotifications[i][sortBy] : true
-		// 	);
-		// 	subArray.sort((a, b) => {
-		// 		return a.receivedAt.getTime() < b.receivedAt.getTime() ? 1 : -1;
-		// 	});
-		// 	i += subArray.length;
-		// 	result = result.concat(subArray);
-		// }
+		let i = 0;
+		let subArray;
+		let result = [];
+		console.log(requestedNotifications[i]);
+		while (i < requestedNotifications.length) {
+			subArray = requestedNotifications.filter((notif) =>
+				sortBy ? notif[sortBy] === requestedNotifications[i][sortBy] : true
+			);
+			subArray.sort((a, b) => {
+				return a.receivedAt.getTime() < b.receivedAt.getTime() ? 1 : -1;
+			});
+			i += subArray.length;
+			result = result.concat(subArray);
+		}
 		res.send(requestedNotifications);
 
 		await markAsRead(req.user, requestedNotifications);
@@ -203,7 +200,7 @@ async function getTeamInvitationsHandler(req, res, next) {
 
 async function getUserMessagesHandler(req, res, next) {
 	try {
-		const receiver = await User.findById(req.params.userId).lean();
+		const contact = await User.findById(req.params.userId).lean();
 		const options = optionsBuilder(
 			req.query.limit,
 			req.query.skip,
@@ -213,7 +210,7 @@ async function getUserMessagesHandler(req, res, next) {
 
 		const messages = await getSessionMessagesHandler(options, [
 			req.user._id,
-			receiver._id,
+			contact._id,
 		]);
 		res.send(messages);
 	} catch (e) {
@@ -543,7 +540,7 @@ async function deleteAnyUserHandler(req, res, next) {
 	try {
 		if (!req.admin) {
 			res.status(403);
-			throw new Error('You are not admin');
+			throw new Error('You are not admin.');
 		}
 		const user = User.findById(req.params.userId);
 		if (user.teams.length) {

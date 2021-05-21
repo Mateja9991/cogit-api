@@ -11,7 +11,6 @@ const {
 //
 //				ROUTER HANDLERS
 //
-
 const { MODEL_PROPERTIES } = require('../constants');
 const selectFields = MODEL_PROPERTIES.TASK.SELECT_FIELDS;
 const allowedKeys = MODEL_PROPERTIES.TASK.ALLOWED_KEYS;
@@ -120,7 +119,6 @@ async function getTeamHandler(req, res, next) {
 			date: Date.now(),
 		});
 		await req.user.save();
-		await req.team.save();
 		await req.team.populate('projects').execPopulate();
 		return res.send(req.team);
 	} catch (e) {

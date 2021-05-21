@@ -7,7 +7,7 @@ router.use(function (req, res, next) {
 	res.header('Access-Control-Allow-Headers', '*');
 	res.header('Access-Control-Allow-Origin', '*');
 	res.header('Access-Control-Allow-Credentials', true);
-	res.header('Access-Control-Allow-Methods', '*');
+	res.header('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE');
 	next();
 });
 
@@ -17,7 +17,6 @@ router.use(require('./list.router'));
 router.use(require('./project.router'));
 router.use(require('./team.router'));
 router.use(require('./calendar.router'));
-router.use(require('./message.router'));
 router.use(require('./comment.router'));
 router.use(require('./session.router'));
 router.use(require('./user.router'));

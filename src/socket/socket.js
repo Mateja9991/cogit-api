@@ -152,10 +152,8 @@ async function sendMessageToSessionHandler(sessionId, senderId, message) {
 		for (const participant of session.participants) {
 			if (!participant.userId.equals(senderId)) {
 				sendMessageEvent(participant.userId, {
-					team: {
-						teamId: session.teamId,
-					},
-					user: sender,
+					team: session.teamId,
+					usr: sender,
 					message,
 				});
 			}
