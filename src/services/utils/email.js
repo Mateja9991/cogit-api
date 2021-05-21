@@ -3,7 +3,7 @@ sgMail.setApiKey(process.env.sendgrid_key);
 const appEmail = 'app.cogit@gmail.com';
 
 function sendResetTokenMail(to, body) {
-	sendMail(to, 'Change Password', body);
+	sendMail(to, 'Cogit [New Pasword]', body);
 }
 function sendMail(to, subject, body) {
 	sgMail

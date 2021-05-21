@@ -64,6 +64,7 @@ class SocketService {
 			socketClient.disconnect(true);
 		});
 		socketClient.on('keep-alive', () => {
+			console.log('hej');
 			OnlineUsersServices.connectionAlive(socketClient.user._id);
 		});
 		socketClient.on('newMessageToSession', async (sessionId, payload) => {

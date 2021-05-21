@@ -92,7 +92,7 @@ $requestButton.addEventListener('click', async () => {
 				});
 				socket.on('check-connection', (id) => {
 					console.log('still');
-					if (!globalVariable) socket.emit('keep-alive', id);
+					socket.emit('keep-alive', id);
 				});
 				socket.on('new-notification', (notif) => {
 					console.log(notif);
