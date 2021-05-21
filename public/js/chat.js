@@ -14,8 +14,8 @@ socket.on('check-connection', (id) => {
 	socket.emit('keep-alive', id);
 });
 var globalVariable = false;
-//const URL = 'https://cogit-api.herokuapp.com/';
-const URL = 'http://localhost:3000/';
+const URL = 'https://cogit-api.herokuapp.com/';
+// const URL = 'http://localhost:3000/';
 var socket;
 // fetch(URL + 'users/login', {
 // 	method: 'POST',
