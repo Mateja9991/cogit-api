@@ -21,7 +21,7 @@ async function duplicateErrorHandler(err, res) {
 	if (document && (document.name || document.username)) {
 		message = `${model} '${
 			document.name || document.username
-		}' alredy has instance with name '${err.keyValue['name']}'`;
+		}' alredy has instance with name '${err.keyValue['name']}.'`;
 	} else {
 		message = `Instance with that ${fields} alredy exists.`;
 	}

@@ -77,9 +77,9 @@ $requestButton.addEventListener('click', async () => {
 				socket.on('user-disconnected', (payload) => {
 					console.log(payload); // prints the message associated with the error
 				});
-				socket.on('new-message', ({ username, message }) => {
-					console.log(username, message);
-					$messageBoard.innerHTML += `<p>${username}:${message}</p>`;
+				socket.on('new-message', ({ team, user, message }) => {
+					console.log(team, user, message);
+					$messageBoard.innerHTML += `<p>${user.username}:${message.text}</p>`;
 				});
 				socket.on('message-history', (history) => {
 					$messageBoard.innerHTML = '';

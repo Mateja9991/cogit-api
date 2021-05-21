@@ -12,6 +12,7 @@ const {
 	RESPONSE_TIMER,
 } = require('../constants');
 const { jwtSocketAuth } = require('./socket.auth/');
+const { startSession } = require('../db/models/avatar.model');
 
 class SocketService {
 	initializeSocketServer(server) {
@@ -145,10 +146,14 @@ async function sendMessageToSessionHandler(sessionId, senderId, message) {
 				participant.newMessages = participant.newMessages++;
 			}
 		});
+		// await session.populate('teamId').execPopulate();
 		for (const participant of session.participants) {
 			if (!participant.userId.equals(senderId)) {
 				sendMessageEvent(participant.userId, {
-					username: sender.username,
+					team: {
+						teamId: session.teamId,
+					},
+					user: sender,
 					message,
 				});
 			}

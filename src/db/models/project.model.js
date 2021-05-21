@@ -14,13 +14,12 @@ const projectSchema = new Schema(
 			required: true,
 			ref: MODEL_PROPERTIES.TEAM.NAME,
 		},
-		tags: {
+		tag: {
 			type: String,
 			required: true,
 			enum: ['on hold', 'important', 'none'],
 			default: 'none',
 		},
-
 		isArchived: {
 			type: Boolean,
 			default: false,
@@ -35,7 +34,6 @@ const projectSchema = new Schema(
 		},
 		description: {
 			type: String,
-			required: true,
 		},
 	},
 	{
