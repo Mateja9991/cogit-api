@@ -20,7 +20,6 @@ class SocketService {
 			cors: {
 				origin: '*',
 				methods: '*',
-				allowedHeaders: '*',
 				credentials: true,
 			},
 		});
