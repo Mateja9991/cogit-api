@@ -54,6 +54,13 @@ projectSchema.virtual('lists', {
 	localField: '_id',
 	foreignField: 'projectId',
 });
+
+projectSchema.pre('remove', async function () {
+	await this.populate('lists').execPopulate();
+	for (const list of this.lists) {
+		await list.remove();
+	}
+});
 //
 //
 //

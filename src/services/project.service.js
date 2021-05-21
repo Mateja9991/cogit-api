@@ -19,7 +19,10 @@ const allowedKeys = MODEL_PROPERTIES.PROJECT.ALLOWED_KEYS;
 
 async function createProjectHandler(req, res, next) {
 	try {
-		if (new Date(req.body.deadline).getTime() < Date.now()) {
+		if (
+			req.body.deadline &&
+			new Date(req.body.deadline).getTime() < Date.now()
+		) {
 			res.status(422);
 			throw new Error('Invalid date.');
 		}
@@ -149,21 +152,13 @@ async function updateProjectHandler(req, res, next) {
 async function deleteProjectHandler(req, res, next) {
 	try {
 		const team = await Team.findById(req.project.teamId);
-		await deleteSingleProjectHandler(req.project);
+		await req.project.remove();
 		await team.populate('projects').execPopulate();
 		res.send(team.projects);
 	} catch (e) {
 		next(e);
 	}
 }
-async function deleteSingleProjectHandler(project) {
-	await project.populate('lists').execPopulate();
-	for (const list of project.lists) {
-		await deleteSingleListHandler(list);
-	}
-	await project.remove();
-}
-
 module.exports = {
 	createProjectHandler,
 	getTeamsProjectsHandler,
@@ -171,6 +166,5 @@ module.exports = {
 	getSpecificProjectHandler,
 	updateProjectHandler,
 	deleteProjectHandler,
-	deleteSingleProjectHandler,
 	scheduleTeamMemberNotifications,
 };

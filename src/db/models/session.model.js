@@ -1,6 +1,8 @@
 const { Schema, model } = require('mongoose');
 const { MODEL_PROPERTIES } = require('../../constants');
 const User = require('./user.model');
+const Message = require('./message.model');
+
 //
 //              Schema
 //
@@ -28,6 +30,13 @@ const sessionSchema = new Schema({
 //              Middleware
 //
 sessionSchema.methods.updateParticipants = async function () {};
+
+sessionSchema.pre('remove', async function () {
+	const messages = await Message.find({ sesionId: this._id });
+	for (const msg of messages) {
+		await msg.remove();
+	}
+});
 //
 const Session = model(MODEL_PROPERTIES.SESSION.NAME, sessionSchema);
 

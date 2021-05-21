@@ -86,21 +86,12 @@ async function updateListHandler(req, res, next) {
 async function deleteListHandler(req, res, next) {
 	try {
 		const project = await Project.findById(req.list.projectId);
-		await deleteSingleListHandler(req.list);
+		await req.list.remove();
 		await project.populate('lists').execPopulate();
 		res.send(project.lists);
 	} catch (e) {
 		next(e);
 	}
-}
-async function deleteSingleListHandler(list) {
-	const tasksToDelete = await Task.find({
-		listId: list._id,
-	});
-	for (const task of tasksToDelete) {
-		await deleteSingleTaskHandler(task);
-	}
-	await list.remove();
 }
 
 module.exports = {
@@ -109,5 +100,4 @@ module.exports = {
 	getSpecificListHandler,
 	updateListHandler,
 	deleteListHandler,
-	deleteSingleListHandler,
 };

@@ -51,10 +51,19 @@ listSchema.pre('save', async function (next) {
 	}
 	next();
 });
+
 listSchema.pre('find', async function (next) {
 	this.sort({ order: 1 });
 	next();
 });
+
+listSchema.pre('remove', async function () {
+	await this.populate('tasks').execPopulate();
+	for (const task of this.tasks) {
+		await task.remove();
+	}
+});
+
 listSchema.methods.changeOrder = async function () {
 	const numberOfLists = await List.countDocuments();
 	const start = Math.min(this._previousOrder, this.order);

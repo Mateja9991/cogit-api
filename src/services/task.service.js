@@ -18,10 +18,6 @@ const selectFields = MODEL_PROPERTIES.TASK.SELECT_FIELDS;
 const allowedKeys = MODEL_PROPERTIES.TASK.ALLOWED_KEYS;
 
 async function createTaskHandler(req, res, next) {
-	if (new Date(req.body.deadline).getTime < Date.now()) {
-		res.status(422);
-		throw new Error('Invalid date.');
-	}
 	if (!req.body.deadline) {
 		await req.list.populate('projectId').execPopulate();
 		req.body.deadline = req.list.projectId.deadline;
@@ -50,11 +46,10 @@ async function createSubTaskHandler(req, res, next) {
 			usersPriority: parentTask.usersPriority,
 		};
 		const taskObject = destructureObject(req.body, allowedKeys.CREATE);
-		if (new Date(req.body.deadline).getTime < Date.now()) {
-			res.status(422);
-			throw new Error('Invalid date.');
-		}
-		if (new Date(req.body.deadline) > parentTask.deadline) {
+		if (
+			req.body.deadline &&
+			new Date(req.body.deadline) > parentTask.deadline
+		) {
 			req.body.deadline = parentTask.deadline;
 		}
 		await createTask(
@@ -73,6 +68,10 @@ async function createSubTaskHandler(req, res, next) {
 
 async function createTask(req, res, task, next) {
 	try {
+		if (task.deadline && new Date(task.deadline).getTime() < Date.now()) {
+			res.status(422);
+			throw new Error('Invalid date.');
+		}
 		const newTask = new Task({ ...task });
 		newTask.creatorId = req.user._id;
 		if (

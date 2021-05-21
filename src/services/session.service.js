@@ -77,6 +77,7 @@ async function getSessionHandler(sessionParticipants, teamId) {
 			await session.updateParticipants();
 		}
 	} else {
+		console.log('private session');
 		session = await getPrivateSessionHandler(sessionParticipants);
 	}
 	return session
@@ -88,6 +89,7 @@ async function newSessionHandler(sessionParticipants, teamId) {
 	const newSession = new Session({
 		teamId: teamId ? teamId : undefined,
 	});
+	console.log();
 	if (teamId) {
 		users = await User.find({
 			teams: teamId,
@@ -124,14 +126,14 @@ async function getSessionMessagesHandler(options, sessionParticipants, teamId) {
 			session = await getPrivateSessionHandler(sessionParticipants);
 		}
 		let sessionMessages = null;
-		if(session) {
-		sessionMessages = await Message.find(
-			{
-				sessionId: session._id,
-			},
-			'from text createdAt -_id',
-			options
-		).lean();
+		if (session) {
+			sessionMessages = await Message.find(
+				{
+					sessionId: session._id,
+				},
+				'from text createdAt -_id',
+				options
+			).lean();
 		}
 		return sessionMessages ? sessionMessages : [];
 	} catch (e) {
@@ -151,8 +153,10 @@ async function getPrivateSessionHandler(sessionParticipants) {
 		$and: [
 			{ participants: { $elemMatch: { userId: sessionParticipants[0] } } },
 			{ participants: { $elemMatch: { userId: sessionParticipants[1] } } },
+			{ teamId: { $exists: false } },
 		],
 	});
+	console.log(session);
 	// sessions.forEach((session) => {
 	// 	session.userIds = session.participants.map(
 	// 		(participant) => participant.userId

@@ -76,6 +76,7 @@ class SocketService {
 		});
 		socketClient.on('newMessageToUser', async (email, payload) => {
 			try {
+				console.log('TO USER');
 				const user = await User.findOne({
 					email,
 				});
@@ -97,6 +98,7 @@ class SocketService {
 		});
 		socketClient.on('newMessageToTeam', async (teamId, payload, callback) => {
 			try {
+				console.log('TO TEAM');
 				teamId = mongoose.Types.ObjectId(teamId);
 				const team = await Team.findById(teamId);
 				if (!team) {

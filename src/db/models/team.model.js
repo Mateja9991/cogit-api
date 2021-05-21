@@ -1,5 +1,8 @@
 const { Schema, model } = require('mongoose');
 const { MODEL_PROPERTIES } = require('../../constants');
+const Project = require('./project.model');
+const User = require('./user.model');
+const Session = require('./session.model');
 //
 //              Schema
 //
@@ -38,6 +41,15 @@ teamSchema.virtual('projects', {
 	ref: MODEL_PROPERTIES.PROJECT.NAME,
 	localField: '_id',
 	foreignField: 'teamId',
+});
+
+teamSchema.pre('remove', async function () {
+	await this.populate('projects').execPopulate();
+	for (const project of this.projects) {
+		await project.remove();
+	}
+	const session = await Session.findOne({ teamId: this._id });
+	await session.remove();
 });
 //
 //

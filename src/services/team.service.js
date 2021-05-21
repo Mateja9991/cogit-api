@@ -1,8 +1,6 @@
 const { User, Team } = require('../db/models');
-const { deleteSingleProjectHandler } = require('./project.service');
 const { newSessionHandler } = require('./session.service');
 const {
-	duplicateHandler,
 	optionsBuilder,
 	queryHandler,
 	matchBuilder,
@@ -15,7 +13,6 @@ const {
 //
 
 const { MODEL_PROPERTIES } = require('../constants');
-const { isUndefined } = require('lodash');
 const selectFields = MODEL_PROPERTIES.TASK.SELECT_FIELDS;
 const allowedKeys = MODEL_PROPERTIES.TASK.ALLOWED_KEYS;
 
@@ -228,6 +225,7 @@ async function addNoteToTeamHandler(req, res, next) {
 	// 	throw new Error('Invalid protocol');
 	// }
 }
+
 async function deleteTeamHandler(req, res, next) {
 	try {
 		await deleteSingleTeamHandler(req.team);
@@ -239,16 +237,13 @@ async function deleteTeamHandler(req, res, next) {
 }
 
 async function deleteSingleTeamHandler(team) {
-	await team.populate('projects').execPopulate();
-	if (team.projects.length) {
-		for (project of team.projects) {
-			await deleteSingleProjectHandler(project);
-		}
-	}
 	const users = await User.find({
 		teams: team._id,
 	});
-	console.log(users);
+	for (const user of users) {
+		user.teams = user.teams.filter((teamId) => !teamId.equals(team));
+		await user.save();
+	}
 	for (const user of users) {
 		await newNotification(user, {
 			event: {
@@ -256,8 +251,6 @@ async function deleteSingleTeamHandler(team) {
 				reference: team,
 			},
 		});
-		user.teams = user.teams.filter((teamId) => !teamId.equals(team));
-		await user.save();
 	}
 	await team.remove();
 }
