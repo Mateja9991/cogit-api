@@ -24,13 +24,13 @@ class SocketService {
 				credentials: true,
 			},
 		});
-		this.io.on('connect', () => {
+		this.io.on('connection', () => {
 			console.log('Visitor connected');
 		});
 		this.io
 			.of('/users')
 			// .use(this.middleware.bind(this))
-			.on('connect', this._userOnConnect.bind(this));
+			.on('connection', this._userOnConnect.bind(this));
 		setInterval(() => this.pingActiveUsers(), PING_INTERVAL);
 	}
 	async pingActiveUsers() {
