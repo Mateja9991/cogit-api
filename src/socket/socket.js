@@ -29,8 +29,8 @@ class SocketService {
 		});
 		this.io
 			.of('/users')
-			.use(this.middleware.bind(this))
-			.on('connection', this._userOnConnect.bind(this));
+			// .use(this.middleware.bind(this))
+			.on('connect', this._userOnConnect.bind(this));
 		setInterval(() => this.pingActiveUsers(), PING_INTERVAL);
 	}
 	async pingActiveUsers() {

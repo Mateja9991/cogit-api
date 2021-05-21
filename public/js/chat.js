@@ -8,9 +8,14 @@
 // 	}, {});
 // console.log(queryParams.email);
 // console.log(queryParams.password);
+socket = io('/users', {});
+socket.on('check-connection', (id) => {
+	console.log('still');
+	socket.emit('keep-alive', id);
+});
 var globalVariable = false;
-const URL = 'https://cogit-api.herokuapp.com/';
-// const URL = 'http://localhost:3000/';
+//const URL = 'https://cogit-api.herokuapp.com/';
+const URL = 'http://localhost:3000/';
 var socket;
 // fetch(URL + 'users/login', {
 // 	method: 'POST',
@@ -66,11 +71,6 @@ $requestButton.addEventListener('click', async () => {
 			if (route === 'users/login' && jsonResponse.token) {
 				if (socket) socket.emit('logout', {});
 				fetchedToken = jsonResponse.token;
-				socket = io('/users', {
-					query: {
-						token: jsonResponse.token,
-					},
-				});
 				socket.on('connect_error', (err) => {
 					console.log(err.message); // prints the message associated with the error
 				});
