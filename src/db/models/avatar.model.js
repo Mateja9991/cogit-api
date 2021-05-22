@@ -11,7 +11,7 @@ const avatarSchema = new Schema({
 		trim: true,
 	},
 	picture: {
-		type: Buffer,
+		type: String,
 		required: true,
 	},
 });
@@ -19,9 +19,9 @@ const avatarSchema = new Schema({
 //
 //
 
-avatarSchema.methods.generateBase64 = function () {
+avatarSchema.statics.generateBase64 = function (buff) {
 	var binary = '';
-	var bytes = new Uint8Array(this.picture);
+	var bytes = new Uint8Array(buff);
 	var len = bytes.byteLength;
 	for (var i = 0; i < len; i++) {
 		binary += String.fromCharCode(bytes[i]);
@@ -34,7 +34,6 @@ avatarSchema.methods.toJSON = function () {
 	const avatarObject = avatar.toObject();
 
 	delete avatarObject.picture;
-	avatarObject.picture = this.generateBase64();
 
 	return avatarObject;
 };

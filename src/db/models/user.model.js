@@ -227,11 +227,6 @@ userSchema.methods.updateContacts = async function (sendEvent, event, msg) {
 	}
 };
 
-userSchema.methods.generateBase64 = async function () {
-	await this.populate('avatar').execPopulate();
-	return this.avatar.generateBase64();
-};
-
 userSchema.methods.generateContactList = async function () {
 	const user = this;
 	await user

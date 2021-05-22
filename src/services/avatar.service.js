@@ -12,9 +12,10 @@ async function uploadAvatarHandler(req, res, next) {
 			.resize({ width: 150, height: 150 })
 			.png()
 			.toBuffer();
+		const base64 = Avatar.generateBase64(avatarBuffer);
 		const newAvatar = new Avatar({
 			...avatarObject,
-			picture: avatarBuffer,
+			picture: base64,
 		});
 		await newAvatar.save();
 		res.send({ success: true });

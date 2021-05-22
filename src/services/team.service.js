@@ -143,22 +143,22 @@ async function getMembersHandler(req, res, next) {
 			MODEL_PROPERTIES.USER.SELECT_FIELDS,
 			options
 		);
-		const requestedMembers = await Promise.all(
-			members.map(async (member) => {
-				member.avatar.picture = await member.generateBase64();
-				memberObject = member.toObject();
-				memberObject.role = req.team.leaderId.equals(member._id)
-					? 'leader'
-					: 'member';
-				return memberObject;
-			})
-		);
+		const requestedMembers = await attachRoles(members, req.team.leaderId);
 		res.send(requestedMembers);
 	} catch (e) {
 		next(e);
 	}
 }
-
+async function attachRoles(members, leaderId) {
+	return Promise.all(
+		members.map(async (member) => {
+			// member.avatar.picture = await member.generateBase64();
+			memberObject = member.toObject();
+			memberObject.role = leaderId.equals(member._id) ? 'leader' : 'member';
+			return memberObject;
+		})
+	);
+}
 async function getAllTeams(req, res, next) {
 	try {
 		const options = optionsBuilder(

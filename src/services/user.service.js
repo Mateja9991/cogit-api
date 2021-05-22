@@ -84,8 +84,8 @@ async function setAvatarHandler(req, res, next) {
 		}
 		req.user.avatar = req.params.avatarId;
 		await req.user.save();
-		req.user.avatar.picture = await req.user.generateBase64();
-		res.send(req.user.avatar);
+		// req.user.avatar.picture = await req.user.generateBase64();
+		res.send(avatar);
 	} catch (e) {
 		next(e);
 	}
@@ -103,10 +103,11 @@ async function logoutUserHandler(req, res, next) {
 ///////////////////////////////////									GET ROUTES								////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 async function getProfileHandler(req, res, next) {
-	//req.user.populate('teams');
-	if (req.user.avatar) {
-		req.user.avatar.picture = await req.user.generateBase64();
-	}
+	await req.user.populate('teams').execPopulate();
+	await req.user.populate('avatar').execPopulate();
+	// if (req.user.avatar) {
+	// 	req.user.avatar.picture = await req.user.generateBase64();
+	// }
 	res.send(req.user);
 }
 
@@ -116,8 +117,8 @@ async function getAvatarHandler(req, res, next) {
 			res.status(404);
 			throw new Error('User has no avatar.');
 		}
-		console.log(req.user.generateBase64);
-		const pic = await req.user.generateBase64();
+		// console.log(req.user.generateBase64);
+		// const pic = await req.user.generateBase64();
 		res.send({ pic });
 	} catch (e) {
 		next(e);
