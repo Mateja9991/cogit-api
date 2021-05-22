@@ -103,18 +103,25 @@ async function getUserTasksHandler(req, res, next) {
 		);
 		for (const task of usersTasks) {
 			await task.populate('subTasks').execPopulate();
+			attachPriority(task, req.user);
 		}
 		res.send(usersTasks);
 	} catch (e) {
 		next(e);
 	}
 }
-
+function attachPriority(task, user) {
+	const taskObject = task.toObject();
+	if (task.usersPriority && task.usersPriority.includes(user._id))
+		taskObject.isPriority = true;
+	else taskObject.isPriority = false;
+	return taskObject;
+}
 async function getSpecificTaskHandler(req, res, next) {
 	try {
 		await req.task.populate('subTasks').execPopulate();
 		await req.task.populate('comments').execPopulate();
-		res.send(req.task);
+		res.send(attachPriority(req.task, req.user));
 	} catch (e) {
 		next(e);
 	}

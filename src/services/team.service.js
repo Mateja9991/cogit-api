@@ -12,8 +12,8 @@ const {
 //				ROUTER HANDLERS
 //
 const { MODEL_PROPERTIES } = require('../constants');
-const selectFields = MODEL_PROPERTIES.TASK.SELECT_FIELDS;
-const allowedKeys = MODEL_PROPERTIES.TASK.ALLOWED_KEYS;
+const selectFields = MODEL_PROPERTIES.TEAM.SELECT_FIELDS;
+const allowedKeys = MODEL_PROPERTIES.TEAM.ALLOWED_KEYS;
 
 async function createTeamHandler(req, res, next) {
 	try {
@@ -135,15 +135,24 @@ async function getMembersHandler(req, res, next) {
 			req.query.sortValue
 		);
 		const match = matchBuilder(req.query);
-		const requestedMembers = await User.find(
+		const members = await User.find(
 			{
 				teams: req.team._id,
 				...match,
 			},
-			selectFields,
+			MODEL_PROPERTIES.USER.SELECT_FIELDS,
 			options
-		).lean();
-
+		);
+		const requestedMembers = await Promise.all(
+			members.map(async (member) => {
+				member.avatar.picture = await member.generateBase64();
+				memberObject = member.toObject();
+				memberObject.role = req.team.leaderId.equals(member._id)
+					? 'leader'
+					: 'member';
+				return memberObject;
+			})
+		);
 		res.send(requestedMembers);
 	} catch (e) {
 		next(e);

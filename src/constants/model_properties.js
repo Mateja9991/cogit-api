@@ -6,7 +6,7 @@ const MODEL_PROPERTIES = {
 			UPDATE: ['username', 'email', 'password', 'settings'],
 			SETTINGS: ['defaultView', 'projectView', 'theme'],
 		},
-		SELECT_FIELDS: 'username email lastActiveAt id _id',
+		SELECT_FIELDS: 'username email lastActiveAt avatar id _id',
 	},
 	TEAM: {
 		NAME: 'Team',
