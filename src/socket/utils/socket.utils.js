@@ -29,7 +29,6 @@ async function clearNotResponsiveUsers(sendEvent) {
 				offlineUsers.push(pingedUserId);
 				acksMissed[index].count = 0;
 			} else {
-				console.log(acksMissed[index].userId, '		', acksMissed[index].count);
 				acksMissed[index].count++;
 			}
 		} else {
@@ -45,7 +44,6 @@ async function updateOfflineUsers(sendEvent) {
 		const offlineUser = await User.findById(offlineUserId);
 		offlineUser.active = false;
 		await offlineUser.save();
-		console.log(offlineUser);
 		await offlineUser.updateContacts(
 			sendEvent,
 			SOCKET_EVENTS.USER_DISCONNECTED,
