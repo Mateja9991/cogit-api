@@ -19,9 +19,11 @@ async function duplicateErrorHandler(err, res) {
 		}
 	}
 	if (document && (document.name || document.username)) {
-		message = `${model} '${
-			document.name || document.username
-		}' alredy has instance with name '${err.keyValue['name']}.'`;
+		if (model !== 'List')
+			message = `${model} '${
+				document.name || document.username
+			}' alredy has instance with name '${err.keyValue['name']}.'`;
+		else message = `${model} name taken.`;
 	} else {
 		message = `Instance with that ${fields} alredy exists.`;
 	}

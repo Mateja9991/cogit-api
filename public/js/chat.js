@@ -10,8 +10,8 @@
 // console.log(queryParams.password);
 
 var globalVariable = false;
-const URL = 'https://cogit-api.herokuapp.com/';
-// const URL = 'http://localhost:3000/';
+//const URL = 'https://cogit-api.herokuapp.com/';
+const URL = 'http://localhost:3000/';
 var socket;
 // fetch(URL + 'users/login', {
 // 	method: 'POST',
@@ -65,7 +65,11 @@ $requestButton.addEventListener('click', async () => {
 		})
 		.then(({ jsonResponse, picture }) => {
 			if (route === 'users/login' && jsonResponse.token) {
-				socket = io('/users', {});
+				socket = io('/users', {
+					query: {
+						token: fetchedToken,
+					},
+				});
 				socket.on('check-connection', (id) => {
 					console.log('still');
 					socket.emit('keep-alive', id);
