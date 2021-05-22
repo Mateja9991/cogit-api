@@ -33,8 +33,6 @@ avatarSchema.methods.toJSON = function () {
 	const avatar = this;
 	const avatarObject = avatar.toObject();
 
-	delete avatarObject.picture;
-
 	return avatarObject;
 };
 
