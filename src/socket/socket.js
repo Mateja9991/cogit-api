@@ -12,7 +12,6 @@ const {
 	RESPONSE_TIMER,
 } = require('../constants');
 const { jwtSocketAuth } = require('./socket.auth/');
-const { startSession } = require('../db/models/avatar.model');
 
 class SocketService {
 	initializeSocketServer(server) {
@@ -23,8 +22,14 @@ class SocketService {
 				credentials: true,
 			},
 		});
-		this.io.on('connection', () => {
+		this.io.on('connection', (socketClient) => {
 			console.log('Visitor connected');
+			setInterval(() => {
+				socketClient.emit('check-connection');
+			}, PING_INTERVAL);
+			socketClient.on('keep-alive', () => {
+				console.log('hej');
+			});
 		});
 		this.io
 			.of('/users')
