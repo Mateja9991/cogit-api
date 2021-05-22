@@ -34,12 +34,8 @@ class SocketService {
 		const activeUsers = await User.find({ active: true });
 		activeUsers.forEach((user) => {
 			OnlineUsersServices.pingUser(user._id);
-			this.sendEventToRoom(
-				user._id,
-				SOCKET_EVENTS.CHECK_CONNECTION,
-				{},
-				'users'
-			);
+
+			this.sendEventToRoom(user._id, SOCKET_EVENTS.CHECK_CONNECTION, {});
 		});
 		setTimeout(() => {
 			OnlineUsersServices.clearNotResponsiveUsers(
@@ -132,7 +128,7 @@ class SocketService {
 const Socket = new SocketService();
 
 async function sendMessageEvent(room, payload) {
-	Socket.sendEventToRoom(room, SOCKET_EVENTS.NEW_MESSAGE, payload, 'users');
+	Socket.sendEventToRoom(room, SOCKET_EVENTS.NEW_MESSAGE, payload);
 }
 
 async function sendMessageToSessionHandler(sessionId, senderId, message) {
