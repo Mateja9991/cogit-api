@@ -19,7 +19,6 @@ class SocketService {
 			cors: {
 				origin: '*',
 				methods: '*',
-				credentials: true,
 			},
 		});
 		// this.io.on('connection', () => {
