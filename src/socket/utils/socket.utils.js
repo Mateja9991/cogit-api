@@ -23,6 +23,7 @@ async function connectionAlive(userId) {
 
 async function clearNotResponsiveUsers(sendEvent) {
 	for (const pingedUserId of pingedUsers) {
+		console.log(pingedUserId);
 		let index = acksMissed.findIndex((el) => el.userId.equals(pingedUserId));
 		if (index !== -1) {
 			if (acksMissed[index].count > 3) {

@@ -118,11 +118,8 @@ class SocketService {
 		});
 	}
 
-	sendEventToRoom(room, eventName, payload, namespace) {
-		this.io
-			.of('/' + namespace)
-			.to(room)
-			.emit(eventName, payload);
+	sendEventToRoom(room, eventName, payload) {
+		this.io.to(room.toString()).emit(eventName, payload);
 	}
 }
 const Socket = new SocketService();
