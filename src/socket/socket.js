@@ -22,17 +22,10 @@ class SocketService {
 				credentials: true,
 			},
 		});
-		this.io.on('connection', (socketClient) => {
-			console.log('Visitor connected');
-			setInterval(() => {
-				socketClient.emit('check-connection');
-			}, PING_INTERVAL);
-			socketClient.on('keep-alive', () => {
-				console.log('hej');
-			});
-		});
+		// this.io.on('connection', () => {
+		// 	console.log('Visitor connected');
+		// });
 		this.io
-			.of('/users')
 			.use(this.middleware.bind(this))
 			.on('connection', this._userOnConnect.bind(this));
 		setInterval(() => this.pingActiveUsers(), PING_INTERVAL);

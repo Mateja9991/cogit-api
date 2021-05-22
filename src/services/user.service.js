@@ -117,9 +117,10 @@ async function getAvatarHandler(req, res, next) {
 			res.status(404);
 			throw new Error('User has no avatar.');
 		}
+		await req.user.populate('avatar').execPopulate();
 		// console.log(req.user.generateBase64);
 		// const pic = await req.user.generateBase64();
-		res.send({ pic });
+		res.send(req.user.avatar);
 	} catch (e) {
 		next(e);
 	}

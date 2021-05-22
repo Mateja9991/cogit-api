@@ -153,6 +153,7 @@ async function attachRoles(members, leaderId) {
 	return Promise.all(
 		members.map(async (member) => {
 			// member.avatar.picture = await member.generateBase64();
+			await member.populate('avatar').execPopulate();
 			memberObject = member.toObject();
 			memberObject.role = leaderId.equals(member._id) ? 'leader' : 'member';
 			return memberObject;

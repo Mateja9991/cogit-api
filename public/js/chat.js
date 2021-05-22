@@ -65,16 +65,15 @@ $requestButton.addEventListener('click', async () => {
 		})
 		.then(({ jsonResponse, picture }) => {
 			if (route === 'users/login' && jsonResponse.token) {
-				socket = io('/users', {
-					query: {
-						token: fetchedToken,
-					},
+				socket = io({
+					withCredentials: true,
+					auth: { token: jsonResponse.token },
 				});
+				// socket.emit('authorize', jsonResponse.token);
 				socket.on('check-connection', (id) => {
 					console.log('still');
 					socket.emit('keep-alive', id);
 				});
-				if (socket) socket.emit('logout', {});
 				fetchedToken = jsonResponse.token;
 				socket.on('connect_error', (err) => {
 					console.log(err.message); // prints the message associated with the error
