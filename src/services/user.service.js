@@ -141,13 +141,14 @@ async function getAllNotificationsHandler(req, res, next) {
 	try {
 		const requestedNotifications = queryHandler(
 			req.user.notifications,
-			req.query,
-			selectFields
+			req.query
 		);
 		let i = 0;
 		let subArray;
 		let result = [];
 		console.log(requestedNotifications[i]);
+		sortBy = req.query.sortBy;
+		console.log(requestedNotifications);
 		while (i < requestedNotifications.length) {
 			subArray = requestedNotifications.filter((notif) =>
 				sortBy ? notif[sortBy] === requestedNotifications[i][sortBy] : true
