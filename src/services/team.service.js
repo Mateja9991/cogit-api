@@ -160,6 +160,14 @@ async function attachRoles(members, leaderId) {
 		})
 	);
 }
+async function getTeamNotesHandler(req, res, next) {
+	try {
+		res.send(req.team.notes);
+	} catch (e) {
+		next(e);
+	}
+}
+
 async function getAllTeams(req, res, next) {
 	try {
 		const options = optionsBuilder(
@@ -273,4 +281,5 @@ module.exports = {
 	getMembersHandler,
 	getAllTeams,
 	addNoteToTeamHandler,
+	getTeamNotesHandler,
 };

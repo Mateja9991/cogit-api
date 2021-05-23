@@ -148,7 +148,7 @@ async function getAllNotificationsHandler(req, res, next) {
 		let result = [];
 		console.log(requestedNotifications[i]);
 		sortBy = req.query.sortBy;
-		console.log(requestedNotifications);
+
 		while (i < requestedNotifications.length) {
 			subArray = requestedNotifications.filter((notif) =>
 				sortBy ? notif[sortBy] === requestedNotifications[i][sortBy] : true
@@ -159,7 +159,7 @@ async function getAllNotificationsHandler(req, res, next) {
 			i += subArray.length;
 			result = result.concat(subArray);
 		}
-		res.send(requestedNotifications);
+		res.send(result);
 
 		await markAsRead(req.user, requestedNotifications);
 	} catch (e) {
@@ -175,6 +175,7 @@ async function markAsRead(user, requestedNotifications) {
 		});
 		await user.save();
 	} catch (e) {
+		console.log(e);
 		console.log('notif mark as read failed.');
 	}
 }
