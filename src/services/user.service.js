@@ -208,7 +208,8 @@ async function getUserMessagesHandler(req, res, next) {
 			'createdAt',
 			1
 		);
-
+		await req.user.populate('avatar', 'username _id avatar').execPopulate();
+		await contact.populate('avatar').execPopulate();
 		const messages = await getSessionMessagesHandler(options, [
 			req.user._id,
 			contact._id,
@@ -232,6 +233,10 @@ async function getTeamMessagesHandler(req, res, next) {
 			undefined,
 			req.params.teamId
 		);
+		for (const msg of messages) {
+			await msg.populate('from', 'username _id avatar').execPopulate();
+			await msg.from.populate('avatar').execPopulate();
+		}
 		res.send(messages);
 	} catch (e) {
 		next(e);
@@ -562,6 +567,7 @@ async function testNotif(req, res, next) {
 		Socket.sendEventToRoom(req.user._id, SOCKET_EVENTS.NEW_NOTIFICATION, {
 			notification: 'test',
 		});
+		res.send({ success: true });
 	} catch (e) {
 		next(e);
 	}

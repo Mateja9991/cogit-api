@@ -133,7 +133,7 @@ async function getSessionMessagesHandler(options, sessionParticipants, teamId) {
 				},
 				'from text createdAt -_id',
 				options
-			).lean();
+			);
 		}
 		return sessionMessages ? sessionMessages : [];
 	} catch (e) {
