@@ -32,12 +32,15 @@ const {
 	sendResetTokenHandler,
 	changePasswordHandler,
 	leaveTeamHandler,
+	testNotif,
 } = require('../services/user.service');
 
 const router = new express.Router();
 //
 //        ROUTES
 //
+
+router.get('/napravi-notifikaciju', jwtAuthMiddleware, testNotif);
 router.post('/users', createUserHandler);
 
 router.post('/users/login', loginUserHandler);

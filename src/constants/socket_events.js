@@ -1,7 +1,7 @@
 const SOCKET_EVENTS = {
 	NEW_MESSAGE: 'new-message',
 	NEW_NOTIFICATION: 'new-notification',
-	USER_DISCONNECTED: 'contacts-updated',
+	CONTACTS_UPDATED: 'contacts-updated',
 	CHECK_CONNECTION: 'check-connection',
 };
 

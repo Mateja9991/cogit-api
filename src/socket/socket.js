@@ -63,7 +63,6 @@ class SocketService {
 			socketClient.disconnect(true);
 		});
 		socketClient.on('keep-alive', () => {
-			console.log('hej');
 			OnlineUsersServices.connectionAlive(socketClient.user._id);
 		});
 		socketClient.on('newMessageToSession', async (sessionId, payload) => {
@@ -131,13 +130,14 @@ async function sendMessageToSessionHandler(sessionId, senderId, message) {
 	try {
 		let session = await Session.findById(sessionId);
 		const sender = await User.findById(senderId);
+
 		if (!session) {
 			throw new Error('Session not found.');
 		}
 		const msg = new Message({
 			text: message,
 			sessionId: sessionId,
-			from: sender.username,
+			from: sender._id,
 		});
 		await msg.save();
 		session.participants.forEach((participant) => {
@@ -148,9 +148,11 @@ async function sendMessageToSessionHandler(sessionId, senderId, message) {
 		// await session.populate('teamId').execPopulate();
 		for (const participant of session.participants) {
 			if (!participant.userId.equals(senderId)) {
+				console.log('JEEKEKQWEKWQKEW');
+				console.log(sender.username);
 				sendMessageEvent(participant.userId, {
 					team: session.teamId,
-					usr: sender,
+					user: sender,
 					message,
 				});
 			}

@@ -24,6 +24,7 @@ const {
 } = require('./session.service');
 
 const { MODEL_PROPERTIES } = require('../constants');
+const { jwtAuthMiddleware } = require('../middleware/auth');
 
 const selectFields = MODEL_PROPERTIES.USER.SELECT_FIELDS;
 const allowedKeys = MODEL_PROPERTIES.USER.ALLOWED_KEYS;
@@ -65,8 +66,7 @@ async function loginUserHandler(req, res, next) {
 		const token = await user.generateAuthToken();
 		user.updateContacts(
 			Socket.sendEventToRoom.bind(Socket),
-			SOCKET_EVENTS.USER_DISCONNECTED,
-			'connected'
+			SOCKET_EVENTS.CONTACTS_UPDATED
 		);
 
 		res.send({ user, token, notificationNumber });
@@ -487,8 +487,7 @@ async function changePasswordHandler(req, res, next) {
 		const token = await user.generateAuthToken();
 		await user.updateContacts(
 			Socket.sendEventToRoom.bind(Socket),
-			SOCKET_EVENTS.USER_DISCONNECTED,
-			'connected'
+			SOCKET_EVENTS.CONTACTS_UPDATED
 		);
 
 		res.send({ user, token });
@@ -558,6 +557,16 @@ async function deleteAnyUserHandler(req, res, next) {
 	}
 }
 
+async function testNotif(req, res, next) {
+	try {
+		Socket.sendEventToRoom(req.user._id, SOCKET_EVENTS.NEW_NOTIFICATION, {
+			notification: 'test',
+		});
+	} catch (e) {
+		next(e);
+	}
+}
+
 module.exports = {
 	createUserHandler,
 	loginUserHandler,
@@ -583,4 +592,5 @@ module.exports = {
 	sendResetTokenHandler,
 	changePasswordHandler,
 	leaveTeamHandler,
+	testNotif,
 };

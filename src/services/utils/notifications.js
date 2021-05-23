@@ -5,14 +5,9 @@ async function newNotification(user, event) {
 	event.receivedAt = Date.now();
 	user.notifications.push(event);
 	await user.save();
-	Socket.sendEventToRoom(
-		user._id,
-		SOCKET_EVENTS.NEW_NOTIFICATION,
-		{
-			notificationNumber: user.notifications.length,
-		},
-		'users'
-	);
+	Socket.sendEventToRoom(user._id, SOCKET_EVENTS.NEW_NOTIFICATION, {
+		notificationNumber: user.notifications.length,
+	});
 }
 
 async function notifyUsers(users, event) {

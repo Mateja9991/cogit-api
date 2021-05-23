@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 const Avatar = require('./avatar.model');
 const Session = require('./session.model');
 const Message = require('./message.model');
-const { MODEL_PROPERTIES, TIME_VALUES } = require('../../constants');
+const { MODEL_PROPERTIES, SOCKET_EVENTS } = require('../../constants');
 //
 //              Schema
 //
@@ -218,12 +218,12 @@ userSchema.methods.toJSON = function () {
 	return userObject;
 };
 
-userSchema.methods.updateContacts = async function (sendEvent, event, msg) {
+userSchema.methods.updateContacts = async function (sendEvent) {
 	const user = this;
 	await user.populate('contacts').execPopulate();
 	for (const contact of user.contacts) {
 		const updatedContacts = await contact.generateContactList();
-		sendEvent(contact._id, event, { updatedContacts, msg }, 'users');
+		sendEvent(contact._id, SOCKET_EVENTS.CONTACTS_UPDATED, { updatedContacts });
 	}
 };
 
