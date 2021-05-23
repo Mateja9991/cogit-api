@@ -139,19 +139,14 @@ async function getUserHandler(req, res, next) {
 
 async function getAllNotificationsHandler(req, res, next) {
 	try {
-		const requestedNotifications = queryHandler(
-			req.user.notifications,
-			req.query
-		);
 		let i = 0;
 		let subArray;
 		let result = [];
-		console.log(requestedNotifications[i]);
 		sortBy = req.query.sortBy;
 
-		while (i < requestedNotifications.length) {
-			subArray = requestedNotifications.filter((notif) =>
-				sortBy ? notif[sortBy] === requestedNotifications[i][sortBy] : true
+		while (i < req.user.notifications.length) {
+			subArray = req.user.notifications.filter((notif) =>
+				sortBy ? notif[sortBy] === req.user.notifications[i][sortBy] : true
 			);
 			subArray.sort((a, b) => {
 				return a.receivedAt.getTime() < b.receivedAt.getTime() ? 1 : -1;
@@ -159,7 +154,8 @@ async function getAllNotificationsHandler(req, res, next) {
 			i += subArray.length;
 			result = result.concat(subArray);
 		}
-		res.send(result);
+		const requestedNotifications = queryHandler(result, req.query);
+		res.send(requestedNotifications);
 
 		await markAsRead(req.user, requestedNotifications);
 	} catch (e) {
