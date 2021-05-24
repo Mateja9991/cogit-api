@@ -9,7 +9,7 @@ const Project = require('./project.model');
 const List = require('./list.model');
 const Task = require('./task.model');
 const Comment = require('./comment.model');
-
+const Note = require('./note.model');
 // Project.find({}).then((projects) => {
 // 	for (const project of projects) {
 // 		project.remove().then(() => {
@@ -30,4 +30,5 @@ module.exports = {
 	List,
 	Task,
 	Comment,
+	Note,
 };

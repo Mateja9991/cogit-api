@@ -16,6 +16,14 @@ const MODEL_PROPERTIES = {
 		},
 		SELECT_FIELDS: 'name id _id',
 	},
+	NOTE: {
+		NAME: 'Note',
+		ALLOWED_KEYS: {
+			CREATE: ['text'],
+			UPDATE: ['text'],
+		},
+		SELECT_FIELDS: 'text createdAt creatorId teamId id _id',
+	},
 	PROJECT: {
 		NAME: 'Project',
 		ALLOWED_KEYS: {

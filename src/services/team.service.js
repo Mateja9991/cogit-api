@@ -160,13 +160,6 @@ async function attachRoles(members, leaderId) {
 		})
 	);
 }
-async function getTeamNotesHandler(req, res, next) {
-	try {
-		res.send(req.team.notes);
-	} catch (e) {
-		next(e);
-	}
-}
 
 async function getAllTeams(req, res, next) {
 	try {
@@ -221,27 +214,6 @@ async function updateTeamHandler(req, res, next) {
 	}
 }
 
-async function addNoteToTeamHandler(req, res, next) {
-	try {
-		const updates = Object.keys(req.body);
-		if (!updates.includes('note')) {
-			res.status(400);
-			throw new Error('Invalid update fields.');
-		}
-		req.team.notes.push(req.body['note']);
-		console.log(req.team.notes);
-		await req.team.save();
-		res.send(req.team);
-	} catch (e) {
-		next(e);
-	}
-	// const url = new URL(updates.link);
-	// if (url.protocol !== 'http:' && url.protocol !== 'https:') {
-	// 	res.status(422);
-	// 	throw new Error('Invalid protocol');
-	// }
-}
-
 async function deleteTeamHandler(req, res, next) {
 	try {
 		await deleteSingleTeamHandler(req.team);
@@ -280,6 +252,4 @@ module.exports = {
 	deleteSingleTeamHandler,
 	getMembersHandler,
 	getAllTeams,
-	addNoteToTeamHandler,
-	getTeamNotesHandler,
 };

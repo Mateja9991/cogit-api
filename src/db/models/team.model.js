@@ -17,14 +17,6 @@ const teamSchema = new Schema(
 			required: true,
 			ref: MODEL_PROPERTIES.USER.NAME,
 		},
-		notes: [
-			{
-				type: String,
-				trim: true,
-				maxlength: [300, 'Notes maximum length is  300 characters.'],
-				required: true,
-			},
-		],
 	},
 	{
 		timestamps: true,

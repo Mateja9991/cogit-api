@@ -19,6 +19,7 @@ const {
 	commentToMemberAuth,
 } = require('./comment.authorization.js');
 const { adminAuth } = require('./admin.authorization.js');
+const { noteToLeaderAuth } = require('./note.authorization');
 module.exports = {
 	jwtAuthMiddleware,
 	ownershipAuthMiddleware,
@@ -34,4 +35,5 @@ module.exports = {
 	commentToLeaderAuth,
 	commentToMemberAuth,
 	adminAuth,
+	noteToLeaderAuth,
 };

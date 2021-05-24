@@ -21,6 +21,7 @@ router.use(require('./comment.router'));
 router.use(require('./session.router'));
 router.use(require('./user.router'));
 router.use(require('./avatar.router'));
+router.use(require('./note.router'));
 
 router.use(errorHandler);
 

@@ -87,10 +87,10 @@ taskSchema.virtual('comments', {
 //				DOCUMENT METHODS
 taskSchema.methods.toJSON = function () {
 	const task = this;
+	const taskObject = task.toObject();
 	delete taskObject.usersPriority;
 	delete taskObject.updatedAt;
 	delete taskObject.__v;
-	taskObject = task.toObject();
 	return taskObject;
 };
 
