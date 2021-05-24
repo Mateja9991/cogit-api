@@ -35,6 +35,18 @@ teamSchema.virtual('projects', {
 	foreignField: 'teamId',
 });
 
+teamSchema.virtual('members', {
+	ref: MODEL_PROPERTIES.USER.NAME,
+	localField: '_id',
+	foreignField: 'teams',
+});
+
+teamSchema.virtual('notes', {
+	ref: MODEL_PROPERTIES.NOTE.NAME,
+	localField: '_id',
+	foreignField: 'teamId',
+});
+
 teamSchema.pre('remove', async function () {
 	await this.populate('projects').execPopulate();
 	for (const project of this.projects) {

@@ -18,7 +18,7 @@ const {
 const router = new express.Router();
 
 router.post(
-	'notes/teams/:teamId',
+	'/notes/teams/:teamId',
 	jwtAuthMiddleware,
 	teamMemberAuth,
 	createNoteHandler
@@ -32,7 +32,7 @@ router.get(
 );
 
 router.patch(
-	'notes/:noteId',
+	'/notes/:noteId',
 	jwtAuthMiddleware,
 	ownershipAuthMiddleware(
 		Note,
@@ -45,7 +45,7 @@ router.patch(
 );
 
 router.delete(
-	'notes/:noteId',
+	'/notes/:noteId',
 	jwtAuthMiddleware,
 	noteToLeaderAuth,
 	ownershipAuthMiddleware(

@@ -119,29 +119,31 @@ function attachPriority(task, user) {
 }
 async function getSpecificTaskHandler(req, res, next) {
 	try {
-		await req.task.populate('subTasks').execPopulate();
-		await req.task
-			.populate('editors', MODEL_PROPERTIES.USER.SELECT_FIELDS)
-			.execPopulate();
-		for (const user of req.task.editors) {
-			await user
-				.populate('avatar', MODEL_PROPERTIES.AVATAR.SELECT_FIELDS)
-				.execPopulate();
-		}
-		await req.task
-			.populate('comments', MODEL_PROPERTIES.COMMENT.SELECT_FIELDS)
-			.execPopulate();
-		for (const comment of req.task.comments) {
-			await comment
-				.populate('creatorId', MODEL_PROPERTIES.USER.SELECT_FIELDS)
-				.execPopulate();
-		}
+		await populateTask(task);
 		res.send(attachPriority(req.task, req.user));
 	} catch (e) {
 		next(e);
 	}
 }
-
+async function populateTask(task) {
+	await task.populate('subTasks').execPopulate();
+	await task
+		.populate('editors', MODEL_PROPERTIES.USER.SELECT_FIELDS)
+		.execPopulate();
+	for (const user of task.editors) {
+		await user
+			.populate('avatar', MODEL_PROPERTIES.AVATAR.SELECT_FIELDS)
+			.execPopulate();
+	}
+	await task
+		.populate('comments', MODEL_PROPERTIES.COMMENT.SELECT_FIELDS)
+		.execPopulate();
+	for (const comment of task.comments) {
+		await comment
+			.populate('creatorId', MODEL_PROPERTIES.USER.SELECT_FIELDS)
+			.execPopulate();
+	}
+}
 async function getTeamPriorityTasksHandler(req, res, next) {
 	try {
 		const priorityTasks = await getTasksHandler(
@@ -149,9 +151,6 @@ async function getTeamPriorityTasksHandler(req, res, next) {
 			{ editors: req.user._id, isTeamPriority: true },
 			selectFields
 		);
-		for (const task of priorityTasks) {
-			await task.populate('subTasks').execPopulate();
-		}
 		res.send(priorityTasks);
 	} catch (e) {
 		next(e);
@@ -165,9 +164,6 @@ async function getUserPriorityTasksHandler(req, res, next) {
 			{ editors: req.user._id, usersPriority: req.user._id },
 			selectFields
 		);
-		for (const task of priorityTasks) {
-			await task.populate('subTasks').execPopulate();
-		}
 		res.send(priorityTasks);
 	} catch (e) {
 		next(e);
@@ -181,9 +177,7 @@ async function getTasksFromListHandler(req, res, next) {
 			{ listId: req.list._id },
 			selectFields
 		);
-		for (const task of tasks) {
-			await task.populate('subTasks').execPopulate();
-		}
+
 		res.send(tasks);
 	} catch (e) {
 		next(e);
@@ -207,7 +201,9 @@ async function getTasksHandler(req, queryFields) {
 		selectFields,
 		options
 	);
-
+	for (const task of tasks) {
+		await populateTask(task);
+	}
 	return tasks;
 }
 
