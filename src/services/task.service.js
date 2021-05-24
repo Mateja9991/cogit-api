@@ -76,6 +76,7 @@ async function createTask(req, res, task, next) {
 		const newTask = new Task({ ...task });
 		newTask.creatorId = req.user._id;
 		if (
+			newTask.editors &&
 			!Array.from(newTask.editors).find((editor) =>
 				editor._id.equals(req.user._id)
 			)
