@@ -7,6 +7,7 @@ const {
 	matchBuilder,
 	scheduleJobHandler,
 	destructureObject,
+	checkAndUpdate,
 } = require('./services.utils');
 
 module.exports = {
@@ -19,4 +20,5 @@ module.exports = {
 	destructureObject,
 	sendResetTokenMail,
 	notifyUsers,
+	checkAndUpdate,
 };

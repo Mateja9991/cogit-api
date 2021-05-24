@@ -1,5 +1,5 @@
 const { List, Task, Project } = require('../db/models');
-const { queryHandler, destructureObject } = require('./utils/services.utils');
+const { queryHandler, destructureObject, checkAndUpdate } = require('./utils');
 const { deleteSingleTaskHandler } = require('./task.service');
 //
 //				ROUTER HANDLERS
@@ -59,21 +59,8 @@ async function getSpecificListHandler(req, res, next) {
 
 async function updateListHandler(req, res, next) {
 	try {
-		const updates = Object.keys(req.body);
-		const isValidUpdate = updates.every((update) =>
-			allowedKeys.UPDATE.includes(update)
-		);
-
-		if (!isValidUpdate) {
-			res.status(422);
-			throw new Error('Invalid update fields.');
-		}
-
-		updates.forEach((update) => {
-			req.list[update] = req.body[update];
-		});
-		await req.list.save();
-		if (updates.includes('order')) {
+		await checkAndUpdate('LIST', req.list, req.body, res);
+		if (Object.keys(req.body).includes('order')) {
 			console.log('order changed.');
 			await req.list.changeOrder();
 		}

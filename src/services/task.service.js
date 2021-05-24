@@ -11,6 +11,7 @@ const {
 	destructureObject,
 	notifyUsers,
 	newNotification,
+	checkAndUpdate,
 } = require('./utils');
 
 const { MODEL_PROPERTIES } = require('../constants');
@@ -208,20 +209,8 @@ async function getTasksHandler(req, queryFields) {
 }
 
 async function updateTaskHandler(req, res, next) {
-	const updates = Object.keys(req.body);
-	const isValidUpdate = updates.every((update) =>
-		allowedKeys.UPDATE.includes(update)
-	);
-
 	try {
-		if (!isValidUpdate) {
-			res.status(422);
-			throw new Error('Invalid update fields');
-		}
-		updates.forEach((update) => {
-			req.task[update] = req.body[update];
-		});
-		await req.task.save();
+		await checkAndUpdate('TASK', req.task, req.body, res);
 		res.send(req.task);
 	} catch (e) {
 		next(e);

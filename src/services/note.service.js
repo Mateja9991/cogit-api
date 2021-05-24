@@ -1,10 +1,11 @@
-const { Note } = require('../db/models');
+const { Note, Team } = require('../db/models');
 const {
 	optionsBuilder,
 	matchBuilder,
 	queryHandler,
 	destructureObject,
 	notifyUsers,
+	checkAndUpdate,
 } = require('./utils');
 
 const { MODEL_PROPERTIES } = require('../constants');
@@ -58,31 +59,18 @@ async function getTeamNotesHandler(req, res, next) {
 
 async function updateNoteHandler(req, res, next) {
 	try {
-		req.team.notes = [];
-		// const index = req.team.notes.findIndex((item) =>
-		// 	item._id.equals(req.query.noteId)
-		// );
-		// if (index == -1) {
-		// 	res.status(404);
-		// 	throw new Error('Note not found');
-		// }
-		await req.team.save();
-		res.send(req.team.notes);
+		await checkAndUpdate('NOTE', req.note, req.body, res);
+		res.send(req.note);
 	} catch (e) {
 		next(e);
 	}
-	// const url = new URL(updates.link);
-	// if (url.protocol !== 'http:' && url.protocol !== 'https:') {
-	// 	res.status(422);
-	// 	throw new Error('Invalid protocol');
-	// }
 }
 async function deleteNoteHandler(req, res, next) {
 	try {
-		await note.remove();
-		console.log(note);
-		await req.team.populate('notes').execPopulate();
-		res.send(req.team.notes);
+		await req.note.remove();
+		const team = await Team.findById(req.note.teamId);
+		await team.populate('notes').execPopulate();
+		res.send(team.notes);
 	} catch (e) {
 		next(e);
 	}

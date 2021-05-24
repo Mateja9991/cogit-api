@@ -2,7 +2,6 @@ const lodash = require('lodash');
 const schedule = require('node-schedule');
 const timeValues = require('../../constants/time_values');
 const { SOCKET_EVENTS, MODEL_PROPERTIES } = require('../../constants');
-const { property, result } = require('lodash');
 
 async function duplicateHandler(model, parentPropertyPath, parentId, child) {
 	const isDuplicate = await model.findOne({
@@ -167,6 +166,21 @@ function notify({ time: timeLeft, key }, room, Socket, model, documentId) {
 		});
 }
 
+async function checkAndUpdate(model, document, body, res) {
+	const updates = Object.keys(body);
+	const isValidUpdate = updates.every((update) =>
+		MODEL_PROPERTIES[model].ALLOWED_KEYS.UPDATE.includes(update)
+	);
+	if (!isValidUpdate) {
+		res.status(422);
+		throw new Error('Invalid update fields');
+	}
+	updates.forEach((update) => {
+		document[update] = body[update];
+	});
+	await document.save();
+}
+
 module.exports = {
 	duplicateHandler,
 	optionsBuilder,
@@ -174,4 +188,5 @@ module.exports = {
 	matchBuilder,
 	scheduleJobHandler,
 	destructureObject,
+	checkAndUpdate,
 };

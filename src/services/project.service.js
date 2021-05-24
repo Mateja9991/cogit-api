@@ -5,7 +5,8 @@ const {
 	queryHandler,
 	matchBuilder,
 	destructureObject,
-} = require('./utils/services.utils');
+	checkAndUpdate,
+} = require('./utils');
 
 const { scheduleJobHandler } = require('./utils/services.utils');
 const Socket = require('../socket/socket');
@@ -131,18 +132,7 @@ async function getSpecificProjectHandler(req, res, next) {
 
 async function updateProjectHandler(req, res, next) {
 	try {
-		const updates = Object.keys(req.body);
-		const isValidUpdate = updates.every((update) =>
-			allowedKeys.UPDATE.includes(update)
-		);
-		if (!isValidUpdate) {
-			res.status(422);
-			throw new Error('Invalid update fields.');
-		}
-		updates.forEach((update) => {
-			req.project[update] = req.body[update];
-		});
-		await req.project.save();
+		await checkAndUpdate('PROJECT', req.project, req.body, res);
 		res.send(req.project);
 	} catch (e) {
 		next(e);

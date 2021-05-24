@@ -15,6 +15,7 @@ const {
 	scheduleJobHandler,
 	destructureObject,
 	newNotification,
+	checkAndUpdate,
 } = require('./utils');
 
 const {
@@ -279,18 +280,7 @@ async function updateUserHandler(req, res, next) {
 				throw new Error('Old Password Not Found.');
 			}
 		}
-		console.log(updates);
-		const isValidUpdate = updates.every((update) =>
-			allowedKeys.UPDATE.includes(update)
-		);
-		if (!isValidUpdate) {
-			res.status(422);
-			throw new Error('Invalid update fields.');
-		}
-		updates.forEach((update) => {
-			req.user[update] = req.body[update];
-		});
-		await req.user.save();
+		await checkAndUpdate('USER', req.user, req.body, res);
 		res.send(req.user);
 	} catch (e) {
 		next(e);

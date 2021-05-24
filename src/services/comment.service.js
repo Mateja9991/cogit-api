@@ -7,6 +7,7 @@ const {
 	destructureObject,
 	newNotification,
 	notifyUsers,
+	checkAndUpdate,
 } = require('./utils');
 
 const { MODEL_PROPERTIES } = require('../constants');
@@ -73,18 +74,7 @@ async function getTaskCommentsHandler(req, res, next) {
 
 async function updateCommentHandler(req, res, next) {
 	try {
-		const updates = Object.keys(req.body);
-		const isValidUpdate = updates.every((update) =>
-			allowedKeys.UPDATE.includes(update)
-		);
-		if (!isValidUpdate) {
-			res.status(422);
-			throw new Error('Invalid update fields');
-		}
-		updates.forEach((update) => {
-			req.comment[update] = req.body[update];
-		});
-		await req.comment.save();
+		await checkAndUpdate('COMMENT', req.comment, req.body, res);
 		res.send(req.comment);
 	} catch (e) {
 		next(e);

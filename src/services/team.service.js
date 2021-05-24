@@ -7,6 +7,7 @@ const {
 	destructureObject,
 	newNotification,
 	notifyUsers,
+	checkAndUpdate,
 } = require('./utils');
 //
 //				ROUTER HANDLERS
@@ -185,29 +186,16 @@ async function getAllTeams(req, res, next) {
 }
 
 async function updateTeamHandler(req, res, next) {
-	const updates = Object.keys(req.body);
-	const allowedToUpdate = ['name', 'leaderId'];
-	const oldName = req.team.name;
-	const isValidUpdate = updates.every((update) =>
-		allowedToUpdate.includes(update)
-	);
-
 	try {
-		if (!isValidUpdate) {
-			res.status(422);
-			throw new Error('Invalid update fields');
-		}
-		updates.forEach((update) => {
-			req.team[update] = req.body[update];
-		});
-		const users = await User.find({ teams: req.team._id });
-		await notifyUsers(users, {
+		const oldName = req.team.name;
+		await checkAndUpdate('TEAM', req.team, req.body, res);
+		await req.team.populate('members').execPopulate();
+		await notifyUsers(req.team.members, {
 			event: {
 				text: `${req.user.username} has updated team ${oldName}.`,
 				reference: req.team,
 			},
 		});
-		await req.team.save();
 		res.send(req.team);
 	} catch (e) {
 		next(e);
