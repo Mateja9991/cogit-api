@@ -59,7 +59,12 @@ async function getTaskCommentsHandler(req, res, next) {
 			},
 			selectFields,
 			options
-		).lean();
+		);
+		for (const comment of comments) {
+			await comment
+				.populate('creatorId', 'id _id username avatar')
+				.execPopulate();
+		}
 		res.send(comments);
 	} catch (e) {
 		next(e);

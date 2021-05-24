@@ -120,7 +120,14 @@ function attachPriority(task, user) {
 async function getSpecificTaskHandler(req, res, next) {
 	try {
 		await req.task.populate('subTasks').execPopulate();
-		await req.task.populate('comments').execPopulate();
+		await req.task
+			.populate('comments', MODEL_PROPERTIES.COMMENT.SELECT_FIELDS)
+			.execPopulate();
+		for (const comment of req.task.comments) {
+			await comment
+				.populate('creatorId', MODEL_PROPERTIES.USER.SELECT_FIELDS)
+				.execPopulate();
+		}
 		res.send(attachPriority(req.task, req.user));
 	} catch (e) {
 		next(e);

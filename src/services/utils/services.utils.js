@@ -2,7 +2,7 @@ const lodash = require('lodash');
 const schedule = require('node-schedule');
 const timeValues = require('../../constants/time_values');
 const { SOCKET_EVENTS, MODEL_PROPERTIES } = require('../../constants');
-const { property } = require('lodash');
+const { property, result } = require('lodash');
 
 async function duplicateHandler(model, parentPropertyPath, parentId, child) {
 	const isDuplicate = await model.findOne({
@@ -57,7 +57,7 @@ function matchBuilder(query) {
 	};
 }
 
-function queryHandler(allItems, query, selectFields) {
+function queryHandler(allItems, query, selectFields, subSortBy, subSortValue) {
 	const sortBy = query.sortBy;
 	const sortValue = query.sortValue ? query.sortValue : 1;
 	const skip = query.skip ? query.skip : 0;
@@ -73,7 +73,7 @@ function queryHandler(allItems, query, selectFields) {
 	);
 
 	if (sortBy) {
-		allItems.sort((a, b) => {
+		requestedItems.sort((a, b) => {
 			let valueA = a[sortBy];
 			let valueB = b[sortBy];
 			if (typeof valueA === 'string' || valueA instanceof String) {
@@ -88,6 +88,24 @@ function queryHandler(allItems, query, selectFields) {
 			}
 			return 0;
 		});
+	}
+	if (subSortBy) {
+		let i = 0;
+		let subArray;
+		let result = [];
+		while (i < requestedItems.length) {
+			subArray = requestedItems.filter((item) =>
+				sortBy ? item[sortBy] === requestedItems[i][sortBy] : true
+			);
+			subArray.sort((a, b) => {
+				return a[subSortBy] < b[subSortBy]
+					? 1 * subSortValue
+					: -1 * subSortValue;
+			});
+			i += subArray.length;
+			result = result.concat(subArray);
+		}
+		requestedItems = result;
 	}
 
 	requestedItems = requestedItems.slice(

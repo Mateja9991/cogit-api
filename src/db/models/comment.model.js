@@ -21,6 +21,10 @@ const commentSchema = new Schema({
 		required: true,
 		ref: MODEL_PROPERTIES.TASK.NAME,
 	},
+	createdAt: {
+		type: Date,
+		default: Date.now,
+	},
 	creatorId: {
 		type: Schema.Types.ObjectId,
 		required: true,

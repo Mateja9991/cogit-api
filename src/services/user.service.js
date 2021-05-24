@@ -139,22 +139,14 @@ async function getUserHandler(req, res, next) {
 
 async function getAllNotificationsHandler(req, res, next) {
 	try {
-		let i = 0;
-		let subArray;
-		let result = [];
-		sortBy = req.query.sortBy;
+		const requestedNotifications = queryHandler(
+			req.user.notifications,
+			req.query,
+			undefined,
+			'receivedAt',
+			1
+		);
 
-		while (i < req.user.notifications.length) {
-			subArray = req.user.notifications.filter((notif) =>
-				sortBy ? notif[sortBy] === req.user.notifications[i][sortBy] : true
-			);
-			subArray.sort((a, b) => {
-				return a.receivedAt.getTime() < b.receivedAt.getTime() ? 1 : -1;
-			});
-			i += subArray.length;
-			result = result.concat(subArray);
-		}
-		const requestedNotifications = queryHandler(result, req.query);
 		res.send(requestedNotifications);
 
 		await markAsRead(req.user, requestedNotifications);
@@ -562,8 +554,11 @@ async function deleteAnyUserHandler(req, res, next) {
 
 async function testNotif(req, res, next) {
 	try {
-		Socket.sendEventToRoom(req.user._id, SOCKET_EVENTS.NEW_NOTIFICATION, {
-			notification: 'test',
+		newNotification(req.user, {
+			event: {
+				text: `TEst.`,
+				reference: req.user,
+			},
 		});
 		res.send({ success: true });
 	} catch (e) {

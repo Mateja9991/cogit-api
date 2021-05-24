@@ -1,5 +1,6 @@
 const { MODEL_PROPERTIES } = require('../../constants');
 const { Team, Project, List, Comment, Task } = require('../../db/models');
+const { getTeamPriorityTasksHandler } = require('../../services/task.service');
 
 async function commentToLeaderAuth(req, res, next) {
 	try {
@@ -59,6 +60,7 @@ async function commentToMemberAuth(req, res, next) {
 		// 		},
 		// 	})
 		// 	.execPopulate();
+		const task = await Task.findById(comment.taskId).lean();
 		const list = await List.findById(task.listId).lean();
 		const project = await Project.findById(list.projectId).lean();
 		if (!req.user.teams.includes(project.teamId)) {

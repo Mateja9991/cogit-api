@@ -55,7 +55,7 @@ const MODEL_PROPERTIES = {
 			CREATE: ['text'],
 			UPDATE: ['text'],
 		},
-		SELECT_FIELDS: 'text taskId likes',
+		SELECT_FIELDS: 'text taskId createdAt creatorId likes id _id',
 	},
 	MESSAGE: {
 		NAME: 'Message',
