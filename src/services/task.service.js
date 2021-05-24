@@ -286,7 +286,7 @@ async function assignUserHandler(req, res, next) {
 		await newNotification(req.assignee, {
 			event: {
 				text: `${req.user.username} assigned you to task:'${req.task.name}'.`,
-				reference: task,
+				reference: req.task,
 			},
 		});
 
