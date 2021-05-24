@@ -147,6 +147,9 @@ async function populateTask(task) {
 		await comment
 			.populate('creatorId', MODEL_PROPERTIES.USER.SELECT_FIELDS)
 			.execPopulate();
+		await comment.creatorId
+			.populate('avatar', MODEL_PROPERTIES.AVATAR.SELECT_FIELDS)
+			.execPopulate();
 	}
 }
 async function getTeamPriorityTasksHandler(req, res, next) {
