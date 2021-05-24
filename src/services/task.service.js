@@ -128,13 +128,16 @@ async function getSpecificTaskHandler(req, res, next) {
 }
 async function populateTask(task) {
 	await task.populate('subTasks').execPopulate();
-	await task
-		.populate('editors', MODEL_PROPERTIES.USER.SELECT_FIELDS)
-		.execPopulate();
-	for (const user of task.editors) {
-		await user
-			.populate('avatar', MODEL_PROPERTIES.AVATAR.SELECT_FIELDS)
+	if (task.editors && task.editors.length) {
+		await task
+			.populate('editors', MODEL_PROPERTIES.USER.SELECT_FIELDS)
 			.execPopulate();
+		console.log(task);
+		for (const user of task.editors) {
+			await user
+				.populate('avatar', MODEL_PROPERTIES.AVATAR.SELECT_FIELDS)
+				.execPopulate();
+		}
 	}
 	await task
 		.populate('comments', MODEL_PROPERTIES.COMMENT.SELECT_FIELDS)
