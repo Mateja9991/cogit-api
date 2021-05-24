@@ -121,6 +121,14 @@ async function getSpecificTaskHandler(req, res, next) {
 	try {
 		await req.task.populate('subTasks').execPopulate();
 		await req.task
+			.populate('editors', MODEL_PROPERTIES.USER.SELECT_FIELDS)
+			.execPopulate();
+		for (const user of req.task.editors) {
+			await user
+				.populate('avatar', MODEL_PROPERTIES.AVATAR.SELECT_FIELDS)
+				.execPopulate();
+		}
+		await req.task
 			.populate('comments', MODEL_PROPERTIES.COMMENT.SELECT_FIELDS)
 			.execPopulate();
 		for (const comment of req.task.comments) {
