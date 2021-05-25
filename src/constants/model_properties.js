@@ -55,7 +55,7 @@ const MODEL_PROPERTIES = {
 			UPDATE: ['name', 'deadline', 'description', 'isCompleted', 'isArchived'],
 		},
 		SELECT_FIELDS:
-			'name description editors isCompleted parentTaskId isArchived isTeamPriority id _id',
+			'name description deadline editors isCompleted parentTaskId isArchived isTeamPriority id _id',
 	},
 	COMMENT: {
 		NAME: 'Comment',
