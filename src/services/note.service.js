@@ -40,7 +40,7 @@ async function getTeamNotesHandler(req, res, next) {
 			req.query.limit,
 			req.query.skip,
 			'createdAt',
-			1
+			-1
 		);
 		const match = matchBuilder(req.query);
 		const notes = await Note.find(
