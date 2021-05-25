@@ -121,7 +121,7 @@ function attachPriority(task, user) {
 }
 async function getSpecificTaskHandler(req, res, next) {
 	try {
-		await populateTask(task);
+		await populateTask(req.task);
 		res.send(attachPriority(req.task, req.user));
 	} catch (e) {
 		next(e);
