@@ -51,6 +51,12 @@ async function getTeamNotesHandler(req, res, next) {
 			selectFields,
 			options
 		);
+		for (const note of notes) {
+			await note
+				.populate('creatorId', MODEL_PROPERTIES.USER.SELECT_FIELDS)
+				.execPopulate();
+			await note.creatorId.populate('avatar').execPopulate();
+		}
 		res.send(notes);
 	} catch (e) {
 		next(e);
