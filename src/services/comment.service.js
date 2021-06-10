@@ -23,14 +23,15 @@ async function createCommentHandler(req, res, next) {
 			taskId: req.task._id,
 		});
 		await comment.save();
-		await req.task.populate('editors').execPopulate();
+		await comment.populate('creatorId').execPopulate();
+		await comment.creatorId.populate('avatar').execPopulate();
 		await notifyUsers(req.task.editors, {
 			event: {
 				text: `${req.user.username} has posted a comment on your task ${req.task.name}.`,
 				reference: comment,
 			},
 		});
-		res.send(comment);
+		await req.res.send(comment);
 	} catch (e) {
 		next(e);
 	}
@@ -38,10 +39,16 @@ async function createCommentHandler(req, res, next) {
 
 async function getSpecificCommentHandler(req, res, next) {
 	try {
+		await req.comment.populate('creatorId').execPopulate();
+		await req.comment.creatorId.populate('avatar').execPopulate();
 		res.send(req.comment);
 	} catch (e) {
 		next(e);
 	}
+}
+
+async function populateComments(comments) {
+	return comments;
 }
 
 async function getTaskCommentsHandler(req, res, next) {
@@ -62,9 +69,8 @@ async function getTaskCommentsHandler(req, res, next) {
 			options
 		);
 		for (const comment of comments) {
-			await comment
-				.populate('creatorId', 'id _id username avatar')
-				.execPopulate();
+			await comment.populate('creatorId').execPopulate();
+			await comment.creatorId.populate('avatar').execPopulate();
 		}
 		res.send(comments);
 	} catch (e) {

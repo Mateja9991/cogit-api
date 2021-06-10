@@ -145,7 +145,7 @@ async function getAllNotificationsHandler(req, res, next) {
 			req.query,
 			undefined,
 			'receivedAt',
-			1
+			-1
 		);
 
 		res.send(requestedNotifications);
@@ -430,26 +430,53 @@ async function updateSettingsHandler(req, res, next) {
 async function sendResetTokenHandler(req, res, next) {
 	try {
 		const user = await User.findOne({ email: req.params.email });
-		if (!user) {
-			res.status(404);
-			throw new Error('User not found.');
-		}
-		const key = generateKey(6);
-		user.resetToken = {
-			key,
-			expiresIn: new Date(Date.now() + timeValues.hour),
-		};
-		await user.save();
-		sendResetTokenMail('zlatanovic007@gmail.com', key);
+		// if (!user) {
+		// 	res.status(404);
+		// 	throw new Error('User not found.');
+		// }
+		// const key = generateKey(10);
+		// new Promise(function (resolve, reject) {
+		// 	const { spawn } = require('child_process');
+		// 	const pyprog = spawn('python', [
+		// 		'/home/mateja/TRECA/SI/webapi/src/services/utils/python_mail.py',
+		// 		'app.cogit@gmail.com',
+		// 		'CogitAplikacija',
+		// 		'zlatanovic007@gmail.com',
+		// 		key,
+		// 	]);
+		// 	pyprog.stdout.on('data', function (data) {
+		// 		resolve(data.toString());
+		// 	});
+		// 	pyprog.stderr.on('data', (data) => {
+		// 		reject(data.toString());
+		// 	});
+		// })
+		// 	.then((data) => {
+		// 		console.log(data);
+		// 	})
+		// 	.catch((err) => {
+		// 		console.log(err);
+		// 	});
+		// user.resetToken = {
+		// 	key,
+		// 	expiresIn: new Date(Date.now() + timeValues.hour),
+		// };
+		// await user.save();
 		res.send(user);
 	} catch (e) {
 		next(e);
 	}
 }
 function generateKey(len) {
-	let key = '';
-	for (let i = 0; i < len; i++) key += Math.floor(Math.random() * 10);
-	return key;
+	var newPassword = [];
+	var characters =
+		'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+	for (var i = 0; i < len; i++) {
+		newPassword.push(
+			characters.charAt(Math.floor(Math.random() * characters.length))
+		);
+	}
+	return newPassword.join('');
 }
 async function changePasswordHandler(req, res, next) {
 	try {

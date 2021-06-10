@@ -251,37 +251,36 @@ userSchema.methods.generateContactList = async function () {
 					{ participants: { $elemMatch: { userId: user._id } } },
 					{ participants: { $elemMatch: { userId: contact._id } } },
 				],
-			}).lean();
-			let messages = await Message.find({ sessionId: session._id }).lean();
-			return { numOfMessages: messages.length, contact };
+			});
+			let messages = await Message.find({ sessionId: session._id });
+			const lastMessage = messages.reduce((date, msg) =>
+				date < msg.createdAt.getTime() ? msg.createdAt.getTime() : date
+			)(0);
+			let numOfUnread;
+			const index = Session.participants.findIndex((participant) =>
+				participant.userId.equals(user._id)
+			);
+			if (index !== -1) numOfUnread = Session.participants[index].newMessages;
+			return {
+				numOfMessages: messages.length,
+				numOfUnread: newMessages,
+				lastMessage,
+				contact,
+			};
 		})
 	);
 
-	const activeContacts = comparableArr.slice(0, index);
-	const offlineContacts = comparableArr.slice(index);
-
-	let result = [];
-	const sortingFunction = (a, b) =>
-		a.numOfMessages < b.numOfMessages ? 1 : -1;
-	activeContacts.sort(sortingFunction);
-	offlineContacts.sort(sortingFunction);
-	const activeResult = activeContacts.map((item) => item.contact);
-	const offlineResult = offlineContacts.map((item) => item.contact);
-	result = result.concat(activeResult);
-	result = result.concat(offlineResult);
-	// let i = 0;
-	// let subArray;
-	// let result = [];
-	// while (i < contactList.length) {
-	// 	subArray = contactList.filter(
-	// 		(contact) => contact['active'] === contactList[i]['active']
-	// 	);
-	// 	subArray.sort((a, b) => {
-	// 		return a.receivedAt.getTime() < b.receivedAt.getTime() ? 1 : -1;
-	// 	});
-	// 	i += subArray.length;
-	// 	result = result.concat(subArray);
-	// }
+	comparableArr.sort(
+		(a, b) =>
+			a.active !== b.active && a.active < b.active
+				? 1 * sortValue
+				: -1 * sortValue
+		//||
+		// b[subSortBy] < a[subSortBy]
+		// ? 1 * subSortValue
+		// : -1 * subSortValue
+	);
+	result = comparableArr.map((item) => item.contact);
 
 	return result;
 };

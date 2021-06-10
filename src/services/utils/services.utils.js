@@ -56,6 +56,16 @@ function matchBuilder(query) {
 	};
 }
 
+// function cond(params) {
+// 	for (const condition of params) {
+// 		if (condition.a[condition.sortBy] !== condition.b[condition.sortBy]) {
+// 			if (a[sortBy] < b[sortBy]) return 1 * sortValue;
+// 			else return -1 * sortValue;
+// 		}
+// 	}
+// 	return 0;
+// }
+
 function queryHandler(allItems, query, selectFields, subSortBy, subSortValue) {
 	const sortBy = query.sortBy;
 	const sortValue = query.sortValue ? query.sortValue : 1;
@@ -63,49 +73,21 @@ function queryHandler(allItems, query, selectFields, subSortBy, subSortValue) {
 	const offset = query.limit ? query.limit : allItems.length - skip;
 	const match = matchBuilder(query);
 	const matchKeys = Object.keys(match);
-
 	let requestedItems = allItems.filter(
 		(item) =>
 			matchKeys.length ===
 			matchKeys.filter((key) => lodash.get(item, key).toString() === match[key])
 				.length
 	);
+	requestedItems.sort((a, b) =>
+		(a[sortBy] !== b[sortBy] && a[sortBy] < b[sortBy]
+			? 1 * sortValue
+			: -1 * sortValue) || b[subSortBy] < a[subSortBy]
+			? 1 * subSortValue
+			: -1 * subSortValue
+	);
 
-	if (sortBy) {
-		requestedItems.sort((a, b) => {
-			let valueA = a[sortBy];
-			let valueB = b[sortBy];
-			if (typeof valueA === 'string' || valueA instanceof String) {
-				valueA = valueA.toUpperCase();
-				valueB = valueB.toUpperCase();
-			}
-			if (valueA < valueB) {
-				return -1 * sortValue;
-			}
-			if (valueA > valueB) {
-				return 1 * sortValue;
-			}
-			return 0;
-		});
-	}
-	if (subSortBy) {
-		let i = 0;
-		let subArray;
-		let result = [];
-		while (i < requestedItems.length) {
-			subArray = requestedItems.filter((item) =>
-				sortBy ? item[sortBy] === requestedItems[i][sortBy] : true
-			);
-			subArray.sort((a, b) => {
-				return a[subSortBy] < b[subSortBy]
-					? 1 * subSortValue
-					: -1 * subSortValue;
-			});
-			i += subArray.length;
-			result = result.concat(subArray);
-		}
-		requestedItems = result;
-	}
+	console.log(requestedItems);
 
 	requestedItems = requestedItems.slice(
 		Number(skip),
