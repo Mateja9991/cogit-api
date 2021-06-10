@@ -228,61 +228,62 @@ userSchema.methods.updateContacts = async function (sendEvent) {
 };
 
 userSchema.methods.generateContactList = async function () {
-	const user = this;
-	await user
-		.populate({
-			path: 'contacts',
-			model: MODEL_PROPERTIES.USER.NAME,
-			options: {
-				sort: { active: -1 },
-			},
-		})
-		.execPopulate();
-	const contactList = user.contacts;
+	// const user = this;
+	// await user
+	// 	.populate({
+	// 		path: 'contacts',
+	// 		model: MODEL_PROPERTIES.USER.NAME,
+	// 		options: {
+	// 			sort: { active: -1 },
+	// 		},
+	// 	})
+	// 	.execPopulate();
+	// const contactList = user.contacts;
 
-	let index = contactList.findIndex((item) => item.active === false);
-	console.log('index', index);
+	// let index = contactList.findIndex((item) => item.active === false);
+	// console.log('index', index);
 
-	if (index === -1) index = contactList.length;
-	const comparableArr = await Promise.all(
-		contactList.map(async (contact) => {
-			let session = await Session.findOne({
-				$and: [
-					{ participants: { $elemMatch: { userId: user._id } } },
-					{ participants: { $elemMatch: { userId: contact._id } } },
-				],
-			});
-			let messages = await Message.find({ sessionId: session._id });
-			const lastMessage = messages.reduce((date, msg) =>
-				date < msg.createdAt.getTime() ? msg.createdAt.getTime() : date
-			)(0);
-			let numOfUnread;
-			const index = Session.participants.findIndex((participant) =>
-				participant.userId.equals(user._id)
-			);
-			if (index !== -1) numOfUnread = Session.participants[index].newMessages;
-			return {
-				numOfMessages: messages.length,
-				numOfUnread: newMessages,
-				lastMessage,
-				contact,
-			};
-		})
-	);
+	// if (index === -1) index = contactList.length;
+	// const comparableArr = await Promise.all(
+	// 	contactList.map(async (contact) => {
+	// 		let session = await Session.findOne({
+	// 			$and: [
+	// 				{ participants: { $elemMatch: { userId: user._id } } },
+	// 				{ participants: { $elemMatch: { userId: contact._id } } },
+	// 			],
+	// 		});
+	// 		let messages = await Message.find({ sessionId: session._id });
+	// 		const lastMessage = messages.reduce((date, msg) =>
+	// 			date < msg.createdAt.getTime() ? msg.createdAt.getTime() : date
+	// 		)(0);
+	// 		let numOfUnread;
+	// 		const index = Session.participants.findIndex((participant) =>
+	// 			participant.userId.equals(user._id)
+	// 		);
+	// 		if (index !== -1) numOfUnread = Session.participants[index].newMessages;
+	// 		return {
+	// 			numOfMessages: messages.length,
+	// 			numOfUnread: newMessages,
+	// 			lastMessage,
+	// 			contact,
+	// 		};
+	// 	})
+	// );
 
-	comparableArr.sort(
-		(a, b) =>
-			a.active !== b.active && a.active < b.active
-				? 1 * sortValue
-				: -1 * sortValue
-		//||
-		// b[subSortBy] < a[subSortBy]
-		// ? 1 * subSortValue
-		// : -1 * subSortValue
-	);
-	result = comparableArr.map((item) => item.contact);
+	// comparableArr.sort(
+	// 	(a, b) =>
+	// 		a.active !== b.active && a.active < b.active
+	// 			? 1 * sortValue
+	// 			: -1 * sortValue
+	// 	//||
+	// 	// b[subSortBy] < a[subSortBy]
+	// 	// ? 1 * subSortValue
+	// 	// : -1 * subSortValue
+	// );
+	// result = comparableArr.map((item) => item.contact);
 
-	return result;
+	// return result;
+	return [];
 };
 
 userSchema.methods.generateAuthToken = async function () {
