@@ -1,4 +1,5 @@
-const { Schema, model } = require('mongoose');
+const mongoose = require('mongoose');
+const { Schema, model } = mongoose;
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -218,28 +219,40 @@ userSchema.methods.toJSON = function () {
 	return userObject;
 };
 
-userSchema.methods.updateContacts = async function (sendEvent) {
+// userSchema.methods.updateContacts = async function (sendEvent) {
+// 	const user = this;
+// 	await user.populate('contacts').execPopulate();
+// 	for (const contact of user.contacts) {
+// 		const updatedContacts = await contact.generateContactList();
+// 		sendEvent(contact._id, SOCKET_EVENTS.CONTACTS_UPDATED, { updatedContacts });
+// 	}
+// };
+
+userSchema.methods.generateContactList = async function (
+	userId,
+	sendEventToRoom
+) {
 	const user = this;
+	await user
+		.populate({
+			path: 'contacts',
+			model: MODEL_PROPERTIES.USER.NAME,
+		})
+		.execPopulate();
+	user.contacts.forEach((element) => {
+		console.log('Pre update: ', element.email);
+	});
+	user.contacts = user.contacts.filter(
+		(contactId) => !contactId.equals(userId)
+	);
+	user.contacts.unshift(userId);
+	await user.save();
 	await user.populate('contacts').execPopulate();
-	for (const contact of user.contacts) {
-		const updatedContacts = await contact.generateContactList();
-		sendEvent(contact._id, SOCKET_EVENTS.CONTACTS_UPDATED, { updatedContacts });
-	}
-};
-
-userSchema.methods.generateContactList = async function () {
-	// const user = this;
-	// await user
-	// 	.populate({
-	// 		path: 'contacts',
-	// 		model: MODEL_PROPERTIES.USER.NAME,
-	// 		options: {
-	// 			sort: { active: -1 },
-	// 		},
-	// 	})
-	// 	.execPopulate();
+	user.contacts.forEach((element) => {
+		console.log('Post update: ', element.email);
+	});
+	sendEventToRoom(user._id, SOCKET_EVENTS.CONTACTS_UPDATED, user.contacts);
 	// const contactList = user.contacts;
-
 	// let index = contactList.findIndex((item) => item.active === false);
 	// console.log('index', index);
 
@@ -252,12 +265,15 @@ userSchema.methods.generateContactList = async function () {
 	// 				{ participants: { $elemMatch: { userId: contact._id } } },
 	// 			],
 	// 		});
-	// 		let messages = await Message.find({ sessionId: session._id });
-	// 		const lastMessage = messages.reduce((date, msg) =>
-	// 			date < msg.createdAt.getTime() ? msg.createdAt.getTime() : date
-	// 		)(0);
+	// 		// let messages = await Message.find({ sessionId: session._id });
+	// 		// console.log(messages);
+	// 		const lastMessage = messages.reduce(
+	// 			(date, msg) =>
+	// 				date < msg.createdAt.getTime() ? msg.createdAt.getTime() : date,
+	// 			0
+	// 		);
 	// 		let numOfUnread;
-	// 		const index = Session.participants.findIndex((participant) =>
+	// 		const index = session.participants.findIndex((participant) =>
 	// 			participant.userId.equals(user._id)
 	// 		);
 	// 		if (index !== -1) numOfUnread = Session.participants[index].newMessages;
@@ -272,7 +288,7 @@ userSchema.methods.generateContactList = async function () {
 
 	// comparableArr.sort(
 	// 	(a, b) =>
-	// 		a.active !== b.active && a.active < b.active
+	// 		a.lastMessage !== b.lastMessage && a.lastMessage < b.lastMessage
 	// 			? 1 * sortValue
 	// 			: -1 * sortValue
 	// 	//||
@@ -283,7 +299,6 @@ userSchema.methods.generateContactList = async function () {
 	// result = comparableArr.map((item) => item.contact);
 
 	// return result;
-	return [];
 };
 
 userSchema.methods.generateAuthToken = async function () {

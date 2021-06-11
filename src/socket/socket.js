@@ -4,7 +4,6 @@ const socketio = require('socket.io');
 
 const { User, Team, Session, Message } = require('../db/models');
 const OnlineUsersServices = require('./utils/socket.utils');
-
 const { getSessionHandler } = require('../services/session.service');
 const {
 	SOCKET_EVENTS,
@@ -56,6 +55,14 @@ class SocketService {
 		}
 	}
 	async _userOnConnect(socketClient) {
+		socketClient.use(async (packet, next) => {
+			try {
+				socketClient.user = await User.findById(socketClient.user._id);
+			} catch (err) {
+				next(err);
+			}
+			next();
+		});
 		socketClient.on('disconnect', async () => {
 			console.log('Tab closed');
 		});
@@ -75,7 +82,6 @@ class SocketService {
 		});
 		socketClient.on('newMessageToUser', async (email, payload) => {
 			try {
-				console.log('TO USER');
 				const user = await User.findOne({
 					email,
 				});
@@ -85,19 +91,30 @@ class SocketService {
 				const sessionParticipants = [socketClient.user._id, user._id];
 				console.log(sessionParticipants);
 				const session = await getSessionHandler(sessionParticipants);
-				console.log('sessionId', session._id);
+
+				await user.generateContactList(
+					socketClient.user._id,
+					this.sendEventToRoom.bind(this)
+				);
+				if (!user._id.equals(socketClient.user._id)) {
+					await socketClient.user.generateContactList(
+						user._id,
+						this.sendEventToRoom.bind(this)
+					);
+				}
+
 				await sendMessageToSessionHandler(
 					session._id,
 					socketClient.user._id,
 					payload
 				);
+				socketClient.user = await User.findById(socketClient.user._id);
 			} catch (e) {
 				console.log(e);
 			}
 		});
 		socketClient.on('newMessageToTeam', async (teamId, payload, callback) => {
 			try {
-				console.log('TO TEAM');
 				teamId = mongoose.Types.ObjectId(teamId);
 				const team = await Team.findById(teamId);
 				if (!team) {
@@ -109,7 +126,6 @@ class SocketService {
 					socketClient.user._id,
 					payload
 				);
-				callback('done');
 			} catch (e) {
 				console.log(e);
 			}
@@ -148,7 +164,6 @@ async function sendMessageToSessionHandler(sessionId, senderId, message) {
 		// await session.populate('teamId').execPopulate();
 		for (const participant of session.participants) {
 			if (!participant.userId.equals(senderId)) {
-				console.log('JEEKEKQWEKWQKEW');
 				console.log(sender.username);
 				sendMessageEvent(participant.userId, {
 					team: session.teamId,

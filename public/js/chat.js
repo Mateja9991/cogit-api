@@ -10,8 +10,8 @@
 // console.log(queryParams.password);
 
 var globalVariable = false;
-const URL = 'https://cogit-api.herokuapp.com/';
-//const URL = 'http://localhost:3000/';
+//const URL = 'https://cogit-api.herokuapp.com/';
+const URL = 'http://localhost:3000/';
 var socket;
 // fetch(URL + 'users/login', {
 // 	method: 'POST',
@@ -90,6 +90,9 @@ $requestButton.addEventListener('click', async () => {
 					history.forEach((msg) => {
 						$messageBoard.innerHTML += `<p>${msg}</p>`;
 					});
+				});
+				socket.on('contacts-updated', (contacts) => {
+					contacts.forEach((contact) => console.log(contact.email));
 				});
 				socket.on('error', (error) => {
 					console.log(error);

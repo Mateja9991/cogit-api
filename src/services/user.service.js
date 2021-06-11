@@ -65,11 +65,6 @@ async function loginUserHandler(req, res, next) {
 			await user.save();
 		}
 		const token = await user.generateAuthToken();
-		user.updateContacts(
-			Socket.sendEventToRoom.bind(Socket),
-			SOCKET_EVENTS.CONTACTS_UPDATED
-		);
-
 		res.send({ user, token, notificationNumber });
 	} catch (e) {
 		next(e);
@@ -192,7 +187,7 @@ async function getTeamInvitationsHandler(req, res, next) {
 
 async function getUserMessagesHandler(req, res, next) {
 	try {
-		const contact = await User.findById(req.params.userId).lean();
+		const contact = await User.findById(req.params.userId);
 		const options = optionsBuilder(
 			req.query.limit,
 			req.query.skip,
@@ -430,38 +425,17 @@ async function updateSettingsHandler(req, res, next) {
 async function sendResetTokenHandler(req, res, next) {
 	try {
 		const user = await User.findOne({ email: req.params.email });
-		// if (!user) {
-		// 	res.status(404);
-		// 	throw new Error('User not found.');
-		// }
-		// const key = generateKey(10);
-		// new Promise(function (resolve, reject) {
-		// 	const { spawn } = require('child_process');
-		// 	const pyprog = spawn('python', [
-		// 		'/home/mateja/TRECA/SI/webapi/src/services/utils/python_mail.py',
-		// 		'app.cogit@gmail.com',
-		// 		'CogitAplikacija',
-		// 		'zlatanovic007@gmail.com',
-		// 		key,
-		// 	]);
-		// 	pyprog.stdout.on('data', function (data) {
-		// 		resolve(data.toString());
-		// 	});
-		// 	pyprog.stderr.on('data', (data) => {
-		// 		reject(data.toString());
-		// 	});
-		// })
-		// 	.then((data) => {
-		// 		console.log(data);
-		// 	})
-		// 	.catch((err) => {
-		// 		console.log(err);
-		// 	});
-		// user.resetToken = {
-		// 	key,
-		// 	expiresIn: new Date(Date.now() + timeValues.hour),
-		// };
-		// await user.save();
+		if (!user) {
+			res.status(404);
+			throw new Error('User not found.');
+		}
+		const key = generateKey(6);
+		user.resetToken = {
+			key,
+			expiresIn: new Date(Date.now() + timeValues.hour),
+		};
+		await user.save();
+		sendResetTokenMail('zlatanovic007@gmail.com', key);
 		res.send(user);
 	} catch (e) {
 		next(e);
@@ -493,14 +467,11 @@ async function changePasswordHandler(req, res, next) {
 		) {
 			throw new Error('Invalid reset token');
 		}
+
 		user.resetToken.expiresIn = new Date(Date.now());
 		await user.save();
 		console.log(user.resetToken);
 		const token = await user.generateAuthToken();
-		await user.updateContacts(
-			Socket.sendEventToRoom.bind(Socket),
-			SOCKET_EVENTS.CONTACTS_UPDATED
-		);
 
 		res.send({ user, token });
 	} catch (e) {

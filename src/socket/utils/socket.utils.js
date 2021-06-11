@@ -45,11 +45,6 @@ async function updateOfflineUsers(sendEvent) {
 		const offlineUser = await User.findById(offlineUserId);
 		offlineUser.active = false;
 		await offlineUser.save();
-		await offlineUser.updateContacts(
-			sendEvent,
-			SOCKET_EVENTS.USER_DISCONNECTED,
-			'disconnected'
-		);
 	}
 	offlineUsers = [];
 }

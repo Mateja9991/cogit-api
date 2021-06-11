@@ -20,10 +20,6 @@ const jwtAuthMiddleware = async (req, res, next) => {
 		if (!req.user.active) {
 			req.user.active = true;
 			await req.user.save();
-			await req.user.updateContacts(
-				Socket.sendEventToRoom.bind(Socket),
-				SOCKET_EVENTS.USER_DISCONNECTED
-			);
 		}
 
 		req.token = token;

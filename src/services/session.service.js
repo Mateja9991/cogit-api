@@ -102,11 +102,11 @@ async function newSessionHandler(sessionParticipants, teamId) {
 		});
 	} else {
 		for (const userId of sessionParticipants) {
-			let user = await User.findById(userId);
-			user.contacts.push(
-				sessionParticipants.find((participant) => !participant.equals(user._id))
-			);
-			await user.save();
+			// let user = await User.findById(userId);
+			// // user.contacts.push(
+			// 	sessionParticipants.find((participant) => !participant.equals(user._id))
+			// );
+			// await user.save();
 			newSession.participants.push({
 				newMessages: 0,
 				userId,
