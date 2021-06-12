@@ -1,5 +1,5 @@
-const { User, Project, Task, Team } = require('../db/models');
-const { deleteSingleListHandler } = require('./list.service');
+const { User, Project, Task, Team, List } = require('../db/models');
+const { attachPriority } = require('./task.service');
 const {
 	optionsBuilder,
 	queryHandler,
@@ -111,12 +111,17 @@ async function getProjectsFromOneTeam(team, options, match) {
 
 async function getSpecificProjectHandler(req, res, next) {
 	try {
-		await req.project.populate('lists').execPopulate();
+		req.project.lists = await List.find({ projectId: req.project._id }).lean();
 		for (const list of req.project.lists) {
 			list.tasks = await Task.find({
 				listId: list._id,
 				parentTaskId: null,
-			}).lean();
+			});
+			let taskObjects = [];
+			for (task of list.tasks) {
+				taskObjects.push(attachPriority(task, req.user));
+			}
+			list.tasks = taskObjects;
 		}
 		const projectView = req.user.settings.projectView.find((projectView) =>
 			projectView.reference.equals(req.project._id)

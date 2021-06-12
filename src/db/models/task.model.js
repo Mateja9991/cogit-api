@@ -87,7 +87,6 @@ taskSchema.virtual('comments', {
 taskSchema.methods.toJSON = function () {
 	const task = this;
 	const taskObject = task.toObject();
-	delete taskObject.usersPriority;
 	delete taskObject.updatedAt;
 	delete taskObject.__v;
 	return taskObject;
@@ -99,6 +98,13 @@ taskSchema.methods.notificationMessage = function (timeLeft, timeKey) {
 	} tasks deadline.`;
 };
 
+taskSchema.methods.attachPriority = function (user) {
+	const taskObject = task.toObject();
+	if (task.usersPriority && task.usersPriority.includes(user._id))
+		taskObject.usersPriority = true;
+	else taskObject.usersPriority = false;
+	return taskObject;
+};
 taskSchema.pre('remove', async function () {
 	const comments = await Comment.find({ taskId: this._id });
 	const subTasks = await Task.find({ parentTaskId: this._id }).exec();

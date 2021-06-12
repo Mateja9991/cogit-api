@@ -113,10 +113,10 @@ async function getUserTasksHandler(req, res, next) {
 	}
 }
 function attachPriority(task, user) {
-	const taskObject = task.toObject();
+	let taskObject = task.toObject();
 	if (task.usersPriority && task.usersPriority.includes(user._id))
-		taskObject.isPriority = true;
-	else taskObject.isPriority = false;
+		taskObject.usersPriority = true;
+	else taskObject.usersPriority = false;
 	return taskObject;
 }
 async function getSpecificTaskHandler(req, res, next) {
@@ -329,4 +329,5 @@ module.exports = {
 	setTeamsPriorityHandler,
 	changeListHandler,
 	scheduleTaskEditorsNotifications,
+	attachPriority,
 };
