@@ -121,6 +121,15 @@ async function getAvatarHandler(req, res, next) {
 	}
 }
 
+async function getContactsHandler(req, res, next) {
+	try {
+		await req.user.populate('contacts').execPopulate();
+		res.send(req.user.contacts);
+	} catch (e) {
+		next(e);
+	}
+}
+
 async function getUserHandler(req, res, next) {
 	try {
 		const user = await User.findById(req.params.userId).lean();
@@ -575,6 +584,7 @@ module.exports = {
 	getUserByUsernameHandler,
 	setAvatarHandler,
 	getAvatarHandler,
+	getContactsHandler,
 	updateSettingsHandler,
 	sendResetTokenHandler,
 	changePasswordHandler,

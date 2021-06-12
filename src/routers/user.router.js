@@ -51,6 +51,8 @@ router.get('/users/all', jwtAuthMiddleware, getAllUsersHandler);
 
 router.get('/users/me', jwtAuthMiddleware, getProfileHandler);
 
+router.get('/users/me/contacts', jwtAuthMiddleware, getContactsHandler);
+
 router.get('/users/me/avatar', jwtAuthMiddleware, getAvatarHandler);
 
 router.get('/users/:userId', jwtAuthMiddleware, getUserHandler);
