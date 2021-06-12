@@ -28,6 +28,7 @@ const {
 	getUserByUsernameHandler,
 	setAvatarHandler,
 	getAvatarHandler,
+	getContactsHandler,
 	updateSettingsHandler,
 	sendResetTokenHandler,
 	changePasswordHandler,

@@ -124,6 +124,9 @@ async function getAvatarHandler(req, res, next) {
 async function getContactsHandler(req, res, next) {
 	try {
 		await req.user.populate('contacts').execPopulate();
+		for (const contact of req.user.contacts) {
+			await contact.populate('avatar').execPopulate();
+		}
 		res.send(req.user.contacts);
 	} catch (e) {
 		next(e);
