@@ -127,7 +127,13 @@ async function getContactsHandler(req, res, next) {
 		for (const contact of req.user.contacts) {
 			await contact.populate('avatar').execPopulate();
 		}
-		res.send(req.user.contacts);
+		const requestedContacts = queryHandler(
+			req.user.contacts,
+			req.query,
+			selectFields
+		);
+
+		res.send(requestedContacts);
 	} catch (e) {
 		next(e);
 	}
