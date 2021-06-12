@@ -204,7 +204,7 @@ async function getUserMessagesHandler(req, res, next) {
 			req.query.limit,
 			req.query.skip,
 			'createdAt',
-			1
+			-1
 		);
 		await req.user.populate('avatar', 'username _id avatar').execPopulate();
 		await contact.populate('avatar').execPopulate();
