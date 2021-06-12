@@ -434,6 +434,27 @@ async function updateSettingsHandler(req, res, next) {
 	}
 }
 
+async function updateContactListHandler(req, res, next) {
+	try {
+		const user = await User.findOne({ username: req.params.username });
+		if (!user) {
+			res.status(404);
+			throw new Error('User not found.');
+		}
+		if (req.user.contacts.includes(user._id)) {
+			req.user.contacts = req.user.contacts.filter(
+				(userId) => !userId.equals(user._id)
+			);
+		} else {
+			req.user.contacts.push(user._id);
+		}
+		await req.user.save();
+		res.send(req.user.contacts);
+	} catch (e) {
+		next(e);
+	}
+}
+
 async function sendResetTokenHandler(req, res, next) {
 	try {
 		const user = await User.findOne({ email: req.params.email });
@@ -589,6 +610,7 @@ module.exports = {
 	getAvatarHandler,
 	getContactsHandler,
 	updateSettingsHandler,
+	updateContactListHandler,
 	sendResetTokenHandler,
 	changePasswordHandler,
 	leaveTeamHandler,

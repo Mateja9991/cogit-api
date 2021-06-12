@@ -30,6 +30,7 @@ const {
 	getAvatarHandler,
 	getContactsHandler,
 	updateSettingsHandler,
+	updateContactListHandler,
 	sendResetTokenHandler,
 	changePasswordHandler,
 	leaveTeamHandler,
@@ -91,6 +92,12 @@ router.get(
 );
 
 router.patch('/users/me', jwtAuthMiddleware, updateUserHandler);
+
+router.patch(
+	'/users/me/contacts/:username',
+	jwtAuthMiddleware,
+	updateContactListHandler
+);
 
 router.patch(
 	'/users/:userId/teams/:teamId',
