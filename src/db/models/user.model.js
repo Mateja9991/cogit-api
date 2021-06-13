@@ -4,12 +4,23 @@ const validator = require('validator');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const Avatar = require('./avatar.model');
-const Session = require('./session.model');
-const Message = require('./message.model');
 const { MODEL_PROPERTIES, SOCKET_EVENTS } = require('../../constants');
+const Session = require('./session.model');
+
 //
 //              Schema
 //
+// const contactSchema = new Schema({
+// 	user: {
+// 		type: Schema.Types.ObjectId,
+// 		required: true,
+// 		ref: MODEL_PROPERTIES.USER.NAME,
+// 	},
+// 	newMessages: {
+// 		type: Number,
+// 		default: 0,
+// 	},
+// });
 const userSchema = new Schema(
 	{
 		username: {
@@ -239,19 +250,15 @@ userSchema.methods.generateContactList = async function (
 			model: MODEL_PROPERTIES.USER.NAME,
 		})
 		.execPopulate();
-	user.contacts.forEach((element) => {
-		console.log('Pre update: ', element.email);
-	});
+
 	user.contacts = user.contacts.filter(
 		(contactId) => !contactId.equals(userId)
 	);
 	user.contacts.unshift(userId);
 	await user.save();
 	await user.populate('contacts').execPopulate();
-	user.contacts.forEach((element) => {
-		console.log('Post update: ', element.email);
-	});
-	sendEventToRoom(user._id, SOCKET_EVENTS.CONTACTS_UPDATED, user.contacts);
+
+	sendEventToRoom(user._id, SOCKET_EVENTS.CONTACTS_UPDATED, contacts);
 	// const contactList = user.contacts;
 	// let index = contactList.findIndex((item) => item.active === false);
 	// console.log('index', index);

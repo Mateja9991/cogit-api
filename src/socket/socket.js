@@ -55,14 +55,14 @@ class SocketService {
 		}
 	}
 	async _userOnConnect(socketClient) {
-		socketClient.use(async (packet, next) => {
-			try {
-				socketClient.user = await User.findById(socketClient.user._id);
-			} catch (err) {
-				next(err);
-			}
-			next();
-		});
+		// socketClient.use(async (packet, next) => {
+		// 	try {
+		// 		socketClient.user = await User.findById(socketClient.user._id);
+		// 	} catch (err) {
+		// 		next(err);
+		// 	}
+		// 	next();
+		// });
 		socketClient.on('disconnect', async () => {
 			console.log('Tab closed');
 		});
@@ -91,17 +91,6 @@ class SocketService {
 				const sessionParticipants = [socketClient.user._id, user._id];
 				console.log(sessionParticipants);
 				const session = await getSessionHandler(sessionParticipants);
-
-				await user.generateContactList(
-					socketClient.user._id,
-					this.sendEventToRoom.bind(this)
-				);
-				if (!user._id.equals(socketClient.user._id)) {
-					await socketClient.user.generateContactList(
-						user._id,
-						this.sendEventToRoom.bind(this)
-					);
-				}
 
 				await sendMessageToSessionHandler(
 					session._id,
@@ -155,13 +144,9 @@ async function sendMessageToSessionHandler(sessionId, senderId, message) {
 			sessionId: sessionId,
 			from: sender._id,
 		});
+		msg.seenBy.push(sender._id);
 		await msg.save();
-		session.participants.forEach((participant) => {
-			if (!participant.userId.equals(senderId)) {
-				participant.newMessages = participant.newMessages++;
-			}
-		});
-		// await session.populate('teamId').execPopulate();
+
 		for (const participant of session.participants) {
 			if (!participant.userId.equals(senderId)) {
 				console.log(sender.username);
@@ -169,6 +154,9 @@ async function sendMessageToSessionHandler(sessionId, senderId, message) {
 					team: session.teamId,
 					user: sender,
 					message,
+					callback: () => {
+						console.log('PROCITANO');
+					},
 				});
 			}
 		}

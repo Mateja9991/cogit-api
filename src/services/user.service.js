@@ -214,10 +214,19 @@ async function getUserMessagesHandler(req, res, next) {
 		);
 		await req.user.populate('avatar', 'username _id avatar').execPopulate();
 		await contact.populate('avatar').execPopulate();
-		const messages = await getSessionMessagesHandler(options, [
+		const allMessages = await getSessionMessagesHandler(options, [
 			req.user._id,
 			contact._id,
 		]);
+		const messages = allMessages.filter(
+			(msg) => !msg.deletedBy.includes(req.user._id)
+		);
+		for (const msg of messages) {
+			if (!msg.from.equals(req.user._id)) {
+				msg.seenBy.push(req.user._id);
+				await msg.save();
+			}
+		}
 		res.send(messages);
 	} catch (e) {
 		next(e);
@@ -451,11 +460,19 @@ async function updateContactListHandler(req, res, next) {
 			req.user.contacts = req.user.contacts.filter(
 				(userId) => !userId.equals(user._id)
 			);
+			const messages = await getSessionMessagesHandler(undefined, [
+				req.user._id,
+				user._id,
+			]);
+			for (const msg of messages) {
+				msg.deletedBy.push(req.user._id);
+				await msg.save();
+			}
 		} else {
 			req.user.contacts.push(user._id);
 		}
 		await req.user.save();
-		res.send(req.user.contacts);
+		res.send();
 	} catch (e) {
 		next(e);
 	}

@@ -1,6 +1,5 @@
 const { Schema, model } = require('mongoose');
 const { MODEL_PROPERTIES } = require('../../constants');
-const User = require('./user.model');
 const Message = require('./message.model');
 
 //

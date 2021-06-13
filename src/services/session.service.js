@@ -96,7 +96,6 @@ async function newSessionHandler(sessionParticipants, teamId) {
 		}).lean();
 		users.forEach((user) => {
 			newSession.participants.push({
-				newMessages: 0,
 				userId: user._id,
 			});
 		});
@@ -108,7 +107,6 @@ async function newSessionHandler(sessionParticipants, teamId) {
 			// );
 			// await user.save();
 			newSession.participants.push({
-				newMessages: 0,
 				userId,
 			});
 		}
@@ -131,7 +129,7 @@ async function getSessionMessagesHandler(options, sessionParticipants, teamId) {
 				{
 					sessionId: session._id,
 				},
-				'from text createdAt -_id',
+				'from deletedBy seenBy text createdAt id _id',
 				options
 			);
 		}

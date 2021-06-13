@@ -10,6 +10,20 @@ const messageSchema = new Schema(
 			required: true,
 			maxlength: [250, 'Message too long. (>250)'],
 		},
+		seenBy: [
+			{
+				type: Schema.Types.ObjectId,
+				required: true,
+				ref: MODEL_PROPERTIES.USER.NAME,
+			},
+		],
+		deletedBy: [
+			{
+				type: Schema.Types.ObjectId,
+				required: true,
+				ref: MODEL_PROPERTIES.USER.NAME,
+			},
+		],
 		sessionId: {
 			type: Schema.Types.ObjectId,
 			required: true,

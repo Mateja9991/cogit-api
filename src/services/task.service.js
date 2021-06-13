@@ -100,7 +100,7 @@ async function getUserTasksHandler(req, res, next) {
 	try {
 		const usersTasks = await getTasksHandler(
 			req,
-			{ editors: req.user._id },
+			{ editors: req.user._id, teamId: req.team._id },
 			selectFields
 		);
 		for (const task of usersTasks) {
@@ -128,29 +128,27 @@ async function getSpecificTaskHandler(req, res, next) {
 	}
 }
 async function populateTask(task) {
-	await task.populate('subTasks').execPopulate();
 	if (task.editors && task.editors.length) {
 		await task
 			.populate('editors', MODEL_PROPERTIES.USER.SELECT_FIELDS)
 			.execPopulate();
-		console.log(task);
 		for (const user of task.editors) {
 			await user
 				.populate('avatar', MODEL_PROPERTIES.AVATAR.SELECT_FIELDS)
 				.execPopulate();
 		}
 	}
-	await task
-		.populate('comments', MODEL_PROPERTIES.COMMENT.SELECT_FIELDS)
-		.execPopulate();
-	for (const comment of task.comments) {
-		await comment
-			.populate('creatorId', MODEL_PROPERTIES.USER.SELECT_FIELDS)
-			.execPopulate();
-		await comment.creatorId
-			.populate('avatar', MODEL_PROPERTIES.AVATAR.SELECT_FIELDS)
-			.execPopulate();
-	}
+	// await task
+	// 	.populate('comments', MODEL_PROPERTIES.COMMENT.SELECT_FIELDS)
+	// 	.execPopulate();
+	// for (const comment of task.comments) {
+	// 	await comment
+	// 		.populate('creatorId', MODEL_PROPERTIES.USER.SELECT_FIELDS)
+	// 		.execPopulate();
+	// 	await comment.creatorId
+	// 		.populate('avatar', MODEL_PROPERTIES.AVATAR.SELECT_FIELDS)
+	// 		.execPopulate();
+	// }
 }
 async function getTeamPriorityTasksHandler(req, res, next) {
 	try {
@@ -209,10 +207,22 @@ async function getTasksHandler(req, queryFields) {
 		selectFields,
 		options
 	);
-	for (const task of tasks) {
+	let taskObjects = [];
+	for (let task of tasks) {
 		await populateTask(task);
+		taskObjects.push(attachPriority(task, req.user));
 	}
-	return tasks;
+	return taskObjects;
+}
+
+function toObject(obj) {
+	for (const prop in obj) {
+		if (typeof prop === 'object' && prop !== null && prop !== undefined) {
+			console.log(prop);
+			toObject(prop);
+			prop = prop.toObject();
+		}
+	}
 }
 
 async function updateTaskHandler(req, res, next) {
