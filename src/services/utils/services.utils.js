@@ -79,15 +79,21 @@ function queryHandler(allItems, query, selectFields, subSortBy, subSortValue) {
 			matchKeys.filter((key) => lodash.get(item, key).toString() === match[key])
 				.length
 	);
-	requestedItems.sort((a, b) =>
-		(a[sortBy] !== b[sortBy] && a[sortBy] < b[sortBy]
-			? 1 * sortValue
-			: -1 * sortValue) || b[subSortBy] < a[subSortBy]
-			? 1 * subSortValue
-			: -1 * subSortValue
-	);
-
-	console.log(requestedItems);
+	if (sortBy)
+		requestedItems.sort(
+			(a, b) =>
+				(a[sortBy] !== b[sortBy] &&
+					(a[sortBy] < b[sortBy] ? 1 * sortValue : -1 * sortValue)) ||
+				(subSortBy
+					? b[subSortBy] < a[subSortBy]
+						? 1 * subSortValue
+							? subSortValue
+							: 1
+						: -1 * subSortValue
+						? subSortValue
+						: 1
+					: 0)
+		);
 
 	requestedItems = requestedItems.slice(
 		Number(skip),

@@ -154,7 +154,6 @@ async function getPrivateSessionHandler(sessionParticipants) {
 			{ teamId: { $exists: false } },
 		],
 	});
-	console.log(session);
 	// sessions.forEach((session) => {
 	// 	session.userIds = session.participants.map(
 	// 		(participant) => participant.userId

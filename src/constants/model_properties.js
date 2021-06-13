@@ -71,7 +71,7 @@ const MODEL_PROPERTIES = {
 			CREATE: [],
 			UPDATE: [],
 		},
-		SELECT_FIELDS: '',
+		SELECT_FIELDS: 'createdAt text _id id deletedBy seenBy from sessionId',
 	},
 	SESSION: {
 		NAME: 'Session',

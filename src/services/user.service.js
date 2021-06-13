@@ -2,7 +2,16 @@ const bcrypt = require('bcryptjs');
 
 const Socket = require('../socket/socket');
 const { SOCKET_EVENTS } = require('../constants/socket_events');
-const { User, Project, Task, Avatar, Calendar, Team } = require('../db/models');
+const {
+	User,
+	Project,
+	Task,
+	Avatar,
+	Calendar,
+	Team,
+	Session,
+	Message,
+} = require('../db/models');
 const mongoose = require('mongoose');
 const timeValues = require('../constants/time_values');
 const { deleteSingleTeamHandler } = require('./team.service');
@@ -22,6 +31,7 @@ const {
 	getSessionMessagesHandler,
 	getSessionHandler,
 	addParticipantHandler,
+	getPrivateSessionHandler,
 } = require('./session.service');
 
 const { MODEL_PROPERTIES } = require('../constants');
@@ -123,6 +133,24 @@ async function getAvatarHandler(req, res, next) {
 
 async function getContactsHandler(req, res, next) {
 	try {
+		let session;
+		let lastMessage;
+		const comparable = [];
+		for (const contactId of req.user.contacts) {
+			session = await getPrivateSessionHandler([req.user._id, contactId]);
+			lastMessage = await Message.findOne({ sessionId: session._id }, null, {
+				sort: { createdAt: -1 },
+			});
+			comparable.push({
+				contact: contactId,
+				lastMessage: lastMessage === null ? 0 : lastMessage.createdAt.getTime(),
+			});
+		}
+
+		comparable.sort((a, b) => (a.lastMessage < b.lastMessage ? 1 : -1));
+
+		req.user.contacts = comparable.map((el) => el.contact);
+		await req.user.save();
 		await req.user.populate('contacts').execPopulate();
 		for (const contact of req.user.contacts) {
 			await contact.populate('avatar').execPopulate();
